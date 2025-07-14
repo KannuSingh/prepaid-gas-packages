@@ -40,10 +40,10 @@ export function getMessageHash(
   userOp: PackedUserOperation
 ): Hex {
   try {
-    // PAYMASTER_DATA_OFFSET = 20 (address size) from Constants.sol
-    const PAYMASTER_DATA_OFFSET = 20;
+    // PAYMASTER_DATA_OFFSET = 52 from Constants.sol (20 + 16 + 16 bytes)
+    const PAYMASTER_DATA_OFFSET = 52;
     
-    // Extract only the paymaster address portion (first 20 bytes) from paymasterAndData
+    // Extract only the portion before custom paymaster data (first 52 bytes) from paymasterAndData
     const paymasterAndDataBytes = userOp.paymasterAndData.slice(2); // Remove 0x
     const paymasterOnlyData = '0x' + paymasterAndDataBytes.slice(0, PAYMASTER_DATA_OFFSET * 2);
     
@@ -68,7 +68,7 @@ export function getMessageHash(
           'bytes32', // accountGasLimits
           'uint256', // preVerificationGas
           'bytes32', // gasFees
-          'bytes32'  // keccak256(paymasterAndData[:PAYMASTER_DATA_OFFSET])
+          'bytes32'  // keccak256(paymasterAndData[:52]) - excludes custom paymaster data
         ]),
         [
           userOp.sender as `0x${string}`,
