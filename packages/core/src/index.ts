@@ -33,5 +33,19 @@ export {
   createPaymasterAndData
 } from './utils/paymaster-data';
 
+// Export ZK proof utilities
+export {
+  generatePoolMembershipProof,
+  validatePoolMembership,
+  getIdentityCommitmentFromHex
+} from './utils/zk-proof';
+
+// Export contract utilities
+export {
+  createRpcClient,
+  getMessageHash,
+  getLatestMerkleRootIndex
+} from './utils/contract';
+
 // Package version
 export const VERSION = '1.0.0';

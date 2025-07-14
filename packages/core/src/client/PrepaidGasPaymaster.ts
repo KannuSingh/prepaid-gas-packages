@@ -14,6 +14,8 @@ import {
   createPaymasterAndData 
 } from '../utils/paymaster-data';
 import { SubgraphClient } from './SubgraphClient';
+import { generatePoolMembershipProof, getIdentityCommitmentFromHex, validatePoolMembership } from '../utils/zk-proof';
+import { createRpcClient, getMessageHash, getLatestMerkleRootIndex } from '../utils/contract';
 
 /**
  * Configuration options for PrepaidGasPaymaster
@@ -95,9 +97,82 @@ export class PrepaidGasPaymaster {
    * Get paymaster data for real transactions (with ZK proof)
    * Used by permissionless SDK for actual transactions
    */
-  async getPaymasterData(_parameters: GetPaymasterDataParameters): Promise<GetPaymasterDataReturnType> {
-    // TODO: Implement paymaster data generation with ZK proof
-    throw new Error('getPaymasterData not yet implemented');
+  async getPaymasterData(parameters: GetPaymasterDataParameters): Promise<GetPaymasterDataReturnType> {
+    try {
+      // Extract paymaster context from the user operation
+      const paymasterAndData = parameters.userOperation.paymasterAndData;
+      
+      if (!paymasterAndData || paymasterAndData === '0x') {
+        throw new Error('Paymaster context required for transaction');
+      }
+
+      // Parse the context to get paymaster address, pool ID, and identity
+      const context = parsePaymasterContext(paymasterAndData as `0x${string}`);
+
+      // Create RPC client for contract interactions
+      const rpcClient = createRpcClient(this.chainId, this.options.rpcUrl);
+
+      // Get pool members from subgraph for ZK proof generation
+      const subgraphClient = this.getSubgraphClient();
+      const poolMembersResult = await subgraphClient.getPoolMembers(context.poolId);
+      
+      if (poolMembersResult.error || !poolMembersResult.data.poolMembers) {
+        throw new Error(`Failed to fetch pool members: ${poolMembersResult.error || 'No members found'}`);
+      }
+
+      const poolMembers = poolMembersResult.data.poolMembers.map(m => m.identityCommitment);
+
+      // Validate that the identity is a member of the pool
+      const identityCommitment = getIdentityCommitmentFromHex(context.identityHex);
+      if (!validatePoolMembership(identityCommitment, poolMembers)) {
+        throw new Error('Identity is not a member of the specified pool');
+      }
+
+      // Get message hash from contract
+      const messageHash = await getMessageHash(
+        rpcClient,
+        context.paymasterAddress,
+        parameters.userOperation
+      );
+
+      // Get the latest merkle root index for the pool
+      const merkleRootIndex = await getLatestMerkleRootIndex(
+        rpcClient,
+        context.paymasterAddress,
+        context.poolId
+      );
+
+      // Generate ZK proof using Semaphore protocol
+      const proof = await generatePoolMembershipProof(
+        context.identityHex,
+        poolMembers,
+        messageHash,
+        context.poolId
+      );
+
+      // Create paymaster data with real ZK proof
+      const config = encodePaymasterConfig(PaymasterMode.VALIDATION_MODE, merkleRootIndex);
+      
+      const paymasterData = {
+        config: config,
+        poolId: context.poolId,
+        proof: proof,
+      };
+
+      // Encode the paymaster data
+      const encodedData = encodePaymasterData(paymasterData);
+      
+      // Create the final paymasterAndData: paymaster_address + encoded_data
+      const finalPaymasterAndData = createPaymasterAndData(context.paymasterAddress, encodedData);
+
+      return {
+        paymasterAndData: finalPaymasterAndData,
+        paymasterPostOpGasLimit: GAS_CONSTANTS.POST_OP_GAS_LIMIT.toString(),
+        paymasterVerificationGasLimit: GAS_CONSTANTS.VERIFICATION_GAS_LIMIT.toString(),
+      };
+    } catch (error) {
+      throw new Error(`Failed to generate paymaster data: ${error}`);
+    }
   }
 
   /**
