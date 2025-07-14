@@ -13,7 +13,6 @@ import {
   encodePaymasterData,
   createPaymasterAndData 
 } from '../utils/paymaster-data';
-import { SubgraphClient } from './SubgraphClient';
 import { generatePoolMembershipProof, getIdentityCommitmentFromHex, validatePoolMembership } from '../utils/zk-proof';
 import { createRpcClient, getMessageHash, getLatestMerkleRootIndex } from '../utils/contract';
 import { 
@@ -41,7 +40,6 @@ export interface PrepaidGasPaymasterOptions {
 export class PrepaidGasPaymaster {
   private readonly chainId: number;
   private readonly options: PrepaidGasPaymasterOptions;
-  private subgraphClient?: SubgraphClient;
 
   constructor(chainId: number, options: PrepaidGasPaymasterOptions = {}) {
     this.chainId = chainId;
@@ -157,8 +155,13 @@ export class PrepaidGasPaymaster {
       }
 
       // Get pool members from subgraph for ZK proof generation
-      const subgraphClient = this.getSubgraphClient();
-      const poolMembersResult = await subgraphClient.getPoolMembers(context.poolId);
+      // Dynamic import to keep core package lightweight
+      const { getPoolMembers } = await import('@private-prepaid-gas/data/queries/pool-members');
+      const poolMembersResult = await getPoolMembers(context.poolId, this.chainId, {
+        url: this.options.subgraphUrl,
+        timeout: this.options.timeout,
+        debug: this.options.debug,
+      });
       
       if (poolMembersResult.error) {
         throw new SubgraphError(`Failed to fetch pool members: ${poolMembersResult.error}`);
@@ -249,19 +252,6 @@ export class PrepaidGasPaymaster {
     }
   }
 
-  /**
-   * Get the subgraph client for data layer access
-   */
-  getSubgraphClient(): SubgraphClient {
-    if (!this.subgraphClient) {
-      this.subgraphClient = SubgraphClient.createForNetwork(this.chainId, {
-        url: this.options.subgraphUrl,
-        timeout: this.options.timeout,
-        debug: this.options.debug,
-      });
-    }
-    return this.subgraphClient;
-  }
 
   /**
    * Get the chain ID this client is configured for

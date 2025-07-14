@@ -1,0 +1,48 @@
+{
+  "name": "@private-prepaid-gas/data",
+  "version": "1.0.0",
+  "description": "Data layer for Private Prepaid Gas with fluent query builders",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./queries/pool-members": {
+      "types": "./dist/queries/pool-members.d.ts",
+      "import": "./dist/queries/pool-members.mjs",
+      "require": "./dist/queries/pool-members.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src/",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "subgraph",
+    "graphql",
+    "data-layer",
+    "ethereum",
+    "query-builder"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@private-prepaid-gas/types": "workspace:*"
+  },
+  "devDependencies": {
+    "@private-prepaid-gas/eslint-config": "workspace:*",
+    "@private-prepaid-gas/typescript-config": "workspace:*",
+    "eslint": "^9.17.0",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.3"
+  }
+}

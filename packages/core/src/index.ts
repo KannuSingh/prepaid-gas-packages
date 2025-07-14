@@ -8,9 +8,8 @@
 export { PrepaidGasPaymaster } from './client/PrepaidGasPaymaster';
 export type { PrepaidGasPaymasterOptions } from './client/PrepaidGasPaymaster';
 
-// Export subgraph client
-export { SubgraphClient } from './client/SubgraphClient';
-export type { SubgraphClientOptions, QueryResult } from './client/SubgraphClient';
+// Note: For data layer queries, import directly from @private-prepaid-gas/data
+// Example: import { getPoolMembers } from '@private-prepaid-gas/data/queries/pool-members'
 
 // Export essential utilities
 export { 
