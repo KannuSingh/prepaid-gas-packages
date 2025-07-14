@@ -1,269 +1,497 @@
-import type { 
-  GetPaymasterStubDataV7Parameters, 
-  GetPaymasterStubDataReturnType,
+import {
   GetPaymasterDataParameters,
-  GetPaymasterDataReturnType 
-} from '@private-prepaid-gas/types';
-import { parsePaymasterContext } from '../utils/context';
-import { 
-  PaymasterMode, 
-  GAS_CONSTANTS,
-  encodePaymasterConfig,
-  createDummyProof,
-  encodePaymasterData,
-  createPaymasterAndData 
-} from '../utils/paymaster-data';
-import { generatePoolMembershipProof, getIdentityCommitmentFromHex, validatePoolMembership } from '../utils/zk-proof';
-import { createRpcClient, getMessageHash, getLatestMerkleRootIndex } from '../utils/contract';
-import { 
-  PaymasterContextError, 
-  PoolMembershipError, 
-  SubgraphError, 
-  ProofGenerationError, 
-  NetworkError,
-  ValidationError 
-} from '../errors/PaymasterErrors';
+  GetPaymasterDataReturnType,
+  GetPaymasterStubDataReturnType,
+  UserOperation,
+} from 'viem/account-abstraction';
+import { createPublicClient, fromHex, http } from 'viem';
+// import { getPackedUserOperation } from 'permissionless';
+
+import { ChainId, SubgraphClient } from '@private-prepaid-gas/data';
+
+import { generatePaymasterData, getChainById, parsePaymasterContext, PrepaidGasPaymasterMode } from '../utils';
+import { POST_OP_GAS_LIMIT, GAS_LIMITED_PAYMASTER_ABI } from '../constants';
+import { GetPaymasterStubDataV7Parameters, ProofGenerationParams, ProofGenerationResult, PaymasterOptions } from './';
+import { getValidatedNetworkPreset, type NetworkPreset } from '@private-prepaid-gas/data';
+import { generateProof, SemaphoreProof } from '@semaphore-protocol/proof';
+import { Identity } from '@semaphore-protocol/identity';
+import { Group } from '@semaphore-protocol/group';
+import { getPackedUserOperation } from 'permissionless';
 
 /**
- * Configuration options for PrepaidGasPaymaster
- */
-export interface PrepaidGasPaymasterOptions {
-  subgraphUrl?: string;
-  debug?: boolean;
-  rpcUrl?: string;
-  timeout?: number;
-}
-
-/**
- * Simple PrepaidGasPaymaster client focused on actual usage patterns
+ * Main client for interacting with the Prepaid Gas Paymaster system
+ *
+ * This class provides methods for:
+ * - Generating paymaster stub data for gas estimation
+ * - Creating paymaster data with zero-knowledge proofs
+ * - Managing pool memberships and proof generation
+ *
+ * @example
+ * ```typescript
+ * const paymaster = new PrepaidGasPaymaster({
+ *   subgraphUrl: "https://api.studio.thegraph.com/query/your-subgraph",
+ *   network: {
+ *     name: "Base",
+ *     chainId: 84532,
+ *     chainName: "Base Sepolia",
+ *     networkName: "Sepolia",
+ *     contracts: {
+ *       paymaster: "0xAAdb7b165057fF59a1f2a93C83CE6a183891EAf6",
+ *     },
+ *   },
+ * });
+ *
+ * // Get stub data for gas estimation
+ * const stubData = await paymaster.getPaymasterStubData({
+ *   sender: '0x...',
+ *   callData: '0x...',
+ *   context: encodeContext(poolId),
+ *   chainId: 84532,
+ *   entryPointAddress: '0x...'
+ * });
+ * ```
  */
 export class PrepaidGasPaymaster {
-  private readonly chainId: number;
-  private readonly options: PrepaidGasPaymasterOptions;
+  private subgraphClient: SubgraphClient;
+  private chainId: ChainId;
+  private options: PaymasterOptions;
 
-  constructor(chainId: number, options: PrepaidGasPaymasterOptions = {}) {
+  // Service instances
+
+  constructor(
+    chainId: ChainId,
+    options: {
+      /** Custom subgraph URL (optional, uses default if not provided) */
+      subgraphUrl?: string;
+      /** Enable debug logging */
+      debug?: boolean;
+      /** Custom RPC URL */
+      rpcUrl?: string;
+      /** Request timeout in milliseconds */
+      timeout?: number;
+    } = {}
+  ) {
+    const preset: NetworkPreset = getValidatedNetworkPreset(chainId);
     this.chainId = chainId;
     this.options = options;
+    // Use provided subgraph URL or fall back to preset default
+    const finalSubgraphUrl = options.subgraphUrl || preset.defaultSubgraphUrl;
+
+    if (!finalSubgraphUrl) {
+      throw new Error(
+        `No subgraph URL available for network ${preset.network.name} (chainId: ${chainId}). Please provide one in options.subgraphUrl`
+      );
+    }
+
+    // Initialize subgraph client with explicit configuration
+    this.subgraphClient = new SubgraphClient(chainId, {
+      subgraphUrl: options.subgraphUrl,
+      timeout: options.timeout,
+    });
+
+    // Initialize services
+    if (options.debug) {
+      console.log('✅ PrepaidGasPaymaster initialized:', {
+        subgraphUrl: options.subgraphUrl,
+        chainId: chainId,
+      });
+    }
   }
 
   /**
-   * Factory method to create paymaster client for specific network
-   * This is the primary entry point used by applications
+   * Create a PrepaidGasPaymaster instance for any supported network by chain ID
+   *
+   * @param chainId - The chain ID to create paymaster for
+   * @param options - Optional configuration overrides
+   * @returns Configured PrepaidGasPaymaster instance
+   *
+   * @example
+   * ```typescript
+   * // Create for Base Sepolia using chain ID
+   * const paymaster = PrepaidGasPaymaster.createForNetwork(84532);
+   *
+   * // Create for Base Mainnet with custom options
+   * const paymaster = PrepaidGasPaymaster.createForNetwork(8453, {
+   *   subgraphUrl: "https://custom-subgraph.com",
+   *   debug: true
+   * });
+   * ```
    */
-  static createForNetwork(chainId: number, options: PrepaidGasPaymasterOptions = {}): PrepaidGasPaymaster {
+  static createForNetwork(
+    chainId: ChainId,
+    options: {
+      /** Custom subgraph URL (optional, uses default if not provided) */
+      subgraphUrl?: string;
+      /** Enable debug logging */
+      debug?: boolean;
+      /** Custom RPC URL */
+      rpcUrl?: string;
+      /** Request timeout in milliseconds */
+      timeout?: number;
+    } = {}
+  ): PrepaidGasPaymaster {
     return new PrepaidGasPaymaster(chainId, options);
   }
 
   /**
-   * Get paymaster stub data for gas estimation (without ZK proof)
-   * Used by permissionless SDK for gas estimation
+   * Generate stub paymaster data for gas estimation
+   *
+   * This method creates dummy paymaster data that can be used to estimate
+   * gas costs without requiring a real zero-knowledge proof.
+   *
+   * @param parameters - Parameters for generating stub data
+   * @returns Promise resolving to paymaster stub data
+   */
+  /**
+   * Generate stub paymaster data for gas estimation
+   *
+   * @param parameters - Parameters for generating stub data
+   * @returns Promise resolving to paymaster stub data
    */
   async getPaymasterStubData(parameters: GetPaymasterStubDataV7Parameters): Promise<GetPaymasterStubDataReturnType> {
-    try {
-      // Extract paymaster context from the user operation
-      // The context should be in userOp.paymasterAndData or passed separately
-      // For now, we'll expect it in the paymasterAndData field
-      const paymasterAndData = parameters.userOperation.paymasterAndData;
-      
-      if (!paymasterAndData || paymasterAndData === '0x') {
-        throw new PaymasterContextError('Paymaster context required for gas estimation');
-      }
+    // Validate parameters
+    this.validateStubDataParams(parameters);
 
-      if (typeof paymasterAndData !== 'string' || !paymasterAndData.startsWith('0x')) {
-        throw new PaymasterContextError('Invalid paymaster context format');
-      }
-
-      // Parse the context to get paymaster address and pool ID
-      let context;
-      try {
-        context = parsePaymasterContext(paymasterAndData as `0x${string}`);
-      } catch (error) {
-        throw new PaymasterContextError(`Failed to parse paymaster context: ${error}`);
-      }
-
-      // Validate context fields
-      if (!context.paymasterAddress || !context.poolId) {
-        throw new PaymasterContextError('Invalid context: missing paymaster address or pool ID');
-      }
-
-      // Create dummy paymaster data for gas estimation
-      // Use merkleRootIndex = 0 for gas estimation (no real root needed)
-      const config = encodePaymasterConfig(PaymasterMode.GAS_ESTIMATION_MODE, 0);
-      const dummyProof = createDummyProof();
-      
-      const paymasterData = {
-        config: config,
-        poolId: context.poolId,
-        proof: dummyProof,
-      };
-
-      // Encode the paymaster data
-      const encodedData = encodePaymasterData(paymasterData);
-      
-      // Create the final paymasterAndData: paymaster_address + encoded_data
-      const finalPaymasterAndData = createPaymasterAndData(context.paymasterAddress, encodedData);
-
-      return {
-        paymasterAndData: finalPaymasterAndData,
-        paymasterPostOpGasLimit: GAS_CONSTANTS.POST_OP_GAS_LIMIT.toString(),
-        paymasterVerificationGasLimit: GAS_CONSTANTS.VERIFICATION_GAS_LIMIT.toString(),
-      };
-    } catch (error) {
-      if (error instanceof PaymasterContextError || error instanceof ValidationError) {
-        throw error;
-      }
-      throw new ValidationError(`Failed to generate paymaster stub data: ${error}`);
+    // Check for unsupported features
+    if ('initCode' in parameters) {
+      throw new Error('Gas estimation with initCode is not supported.');
     }
+
+    // Parse context to get paymaster details
+    const parsedContext = parsePaymasterContext(parameters.context as `0x${string}`);
+
+    // Generate stub paymaster data
+    const paymasterData = await this.generateStubData({
+      poolId: parsedContext.poolId,
+      merkleRootIndex: 0, // Default to 0 for gas estimation
+    });
+
+    return {
+      isFinal: false,
+      paymaster: parsedContext.paymasterAddress,
+      paymasterData,
+      paymasterPostOpGasLimit: POST_OP_GAS_LIMIT,
+      sponsor: {
+        name: 'Prepaid Gas Pool',
+        icon: undefined,
+      },
+    };
   }
 
   /**
-   * Get paymaster data for real transactions (with ZK proof)
-   * Used by permissionless SDK for actual transactions
+   * Generate real paymaster data with zero-knowledge proof
+   *
+   * This method creates actual paymaster data that includes a valid
+   * zero-knowledge proof of pool membership.
+   *
+   * @param parameters - Parameters for generating paymaster data
+   * @returns Promise resolving to encoded paymaster data
    */
   async getPaymasterData(parameters: GetPaymasterDataParameters): Promise<GetPaymasterDataReturnType> {
+    if ('initCode' in parameters) {
+      throw new Error('v6-style UserOperation with initCode is not supported.');
+    }
+
+    // Create UserOperation for processing
+    const userOperation: UserOperation<'0.7'> = {
+      ...parameters,
+      sender: parameters.sender,
+      nonce: parameters.nonce,
+      callData: parameters.callData,
+      callGasLimit: parameters.callGasLimit ?? 0n,
+      verificationGasLimit: parameters.verificationGasLimit ?? 0n,
+      preVerificationGas: parameters.preVerificationGas ?? 0n,
+      maxFeePerGas: parameters.maxFeePerGas ?? 0n,
+      maxPriorityFeePerGas: parameters.maxPriorityFeePerGas ?? 0n,
+      signature: '0x',
+    };
+
+    // Get chain and create public client
+    const chain = getChainById(this.chainId);
+    if (!chain) {
+      throw new Error(`Unsupported chainId: ${this.chainId}`);
+    }
+
+    const publicClient = createPublicClient({
+      chain,
+      transport: http(this.options.rpcUrl),
+    });
+
+    // Parse context to get paymaster details
+    const parsedContext = parsePaymasterContext(parameters.context as `0x${string}`);
+
+    if (!parsedContext.identityHex) {
+      throw new Error('Identity string is required for proof generation');
+    }
+
+    // Get message hash from contract
+    const packedUserOpForHash = getPackedUserOperation(userOperation);
+    const messageHash = await publicClient.readContract({
+      abi: GAS_LIMITED_PAYMASTER_ABI,
+      address: parsedContext.paymasterAddress,
+      functionName: 'getMessageHash',
+      args: [packedUserOpForHash],
+    });
+
+    // Get pool members from subgraph
+    const members = await this.subgraphClient
+      .query()
+      .poolMembers()
+      .byPaymaster(parsedContext.paymasterAddress)
+      .byPool(parsedContext.poolId.toString())
+      .orderBy('memberIndex', 'asc')
+      .execute();
+    const poolMembers = members.map((member) => BigInt(member.identityCommitment));
+
+    // Find the best merkle root index
+    const [merkleRootIndex] = await publicClient.readContract({
+      abi: GAS_LIMITED_PAYMASTER_ABI,
+      address: parsedContext.paymasterAddress,
+      functionName: 'getPoolRootHistoryInfo',
+      args: [parsedContext.poolId],
+    });
+
+    if (!merkleRootIndex) {
+      throw new Error('Unable to get merkle root index required for proof generation');
+    }
+    // Generate zero-knowledge proof
+    const proofResult = await this.generateProof({
+      identityHex: parsedContext.identityHex,
+      poolMembers,
+      messageHash: BigInt(messageHash),
+      poolId: parsedContext.poolId,
+    });
+
+    // Generate paymaster data
+    const paymasterData = await this.generatePaymasterDataWithProof({
+      mode: PrepaidGasPaymasterMode.VALIDATION_MODE,
+      poolId: parsedContext.poolId,
+      proof: proofResult.proof,
+      merkleRootIndex: merkleRootIndex,
+    });
+
+    return {
+      paymaster: parsedContext.paymasterAddress,
+      paymasterData: paymasterData,
+    };
+  }
+
+  /**
+   * Get the subgraph client instance
+   *
+   * @returns The configured subgraph client
+   */
+  getSubgraphClient(): SubgraphClient {
+    return this.subgraphClient;
+  }
+
+  // ========================================
+  // PRIVATE METHODS
+  // ========================================
+
+  /**
+   * Generate stub paymaster data for gas estimation
+   *
+   * Creates dummy proof data that can be used to estimate gas costs
+   * without requiring a real zero-knowledge proof.
+   *
+   * @param params - Parameters for stub data generation
+   * @returns Promise resolving to encoded stub paymaster data
+   *
+   * @example
+   * ```typescript
+   * const service = new PaymasterDataService();
+   * const stubData = await service.generateStubData({
+   *   poolId: 1n,
+   *   merkleRootIndex: 0
+   * });
+   * ```
+   */
+  async generateStubData(params: {
+    /** Pool ID for the stub */
+    poolId: bigint;
+    /** Merkle root index (optional, defaults to 0) */
+    merkleRootIndex?: number;
+  }): Promise<`0x${string}`> {
+    const { poolId, merkleRootIndex = 0 } = params;
+
+    // Create dummy proof for gas estimation
+    const dummyProof = {
+      merkleTreeDepth: 1, // MIN_DEPTH
+      merkleTreeRoot: '0x1234567890123456789012345678901234567890123456789012345678901234', // Dummy root
+      nullifier: '0',
+      message: '0',
+      scope: poolId.toString(),
+      points: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n] as [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint],
+    };
+
+    return generatePaymasterData(PrepaidGasPaymasterMode.GAS_ESTIMATION_MODE, poolId, dummyProof, merkleRootIndex);
+  }
+
+  /**
+   * Generate real paymaster data with zero-knowledge proof
+   * (Moved from PaymasterDataService)
+   */
+  private async generatePaymasterDataWithProof(params: {
+    mode: PrepaidGasPaymasterMode;
+    poolId: bigint;
+    proof: SemaphoreProof;
+    merkleRootIndex: number;
+  }): Promise<`0x${string}`> {
+    const { mode, poolId, proof, merkleRootIndex } = params;
+
+    // Validate parameters
+    this.validatePaymasterDataParams(params);
+
+    return generatePaymasterData(mode, poolId, proof, merkleRootIndex);
+  }
+
+  /**
+   * Generate a zero-knowledge proof of pool membership
+   *
+   * @param params - Proof generation parameters
+   * @returns Promise resolving to proof and related objects
+   *
+   * @example
+   * ```typescript
+   * const service = new ProofGenerationService();
+   * const result = await service.generateProof({
+   *   identityString: "0x123...",
+   *   poolMembers: [BigInt("0x456..."), BigInt("0x789...")],
+   *   messageHash: BigInt("0xabc..."),
+   *   poolId: 1n
+   * });
+   * ```
+   */
+  async generateProof(params: ProofGenerationParams): Promise<ProofGenerationResult> {
+    const { identityHex, poolMembers, messageHash, poolId } = params;
+    // Validate inputs
+    this.validateProofParams(params);
+
+    // Convert bytes identity back to string
+    let identityBase64: string;
     try {
-      // Extract paymaster context from the user operation
-      const paymasterAndData = parameters.userOperation.paymasterAndData;
-      
-      if (!paymasterAndData || paymasterAndData === '0x') {
-        throw new PaymasterContextError('Paymaster context required for transaction');
-      }
-
-      if (typeof paymasterAndData !== 'string' || !paymasterAndData.startsWith('0x')) {
-        throw new PaymasterContextError('Invalid paymaster context format');
-      }
-
-      // Parse the context to get paymaster address, pool ID, and identity
-      let context;
+      // Try direct fromHex conversion first
       try {
-        context = parsePaymasterContext(paymasterAndData as `0x${string}`);
-      } catch (error) {
-        throw new PaymasterContextError(`Failed to parse paymaster context: ${error}`);
+        identityBase64 = fromHex(identityHex, 'string');
+        console.log('🔍 Converted identity from hex bytes to string:', {
+          hex: identityHex,
+          string: identityBase64,
+        });
+      } catch (hexError) {
+        // If that fails, the identityString might already be a string, not hex bytes
+        console.log('🔍 Identity may already be a string, not hex bytes');
+        if (typeof identityHex === 'string') {
+          identityBase64 = identityHex;
+          console.log('🔍 Using identity string directly:', identityBase64);
+        } else {
+          throw hexError;
+        }
       }
-
-      // Validate context fields
-      if (!context.paymasterAddress || !context.poolId || !context.identityHex) {
-        throw new PaymasterContextError('Invalid context: missing required fields');
-      }
-
-      // Create RPC client for contract interactions
-      let rpcClient;
-      try {
-        rpcClient = createRpcClient(this.chainId, this.options.rpcUrl);
-      } catch (error) {
-        throw new NetworkError(`Failed to create RPC client: ${error}`);
-      }
-
-      // Get pool members from subgraph for ZK proof generation
-      // Dynamic import to keep core package lightweight
-      const { getPoolMembers } = await import('@private-prepaid-gas/data/queries/pool-members');
-      const poolMembersResult = await getPoolMembers(context.poolId, this.chainId, {
-        url: this.options.subgraphUrl,
-        timeout: this.options.timeout,
-        debug: this.options.debug,
-      });
-      
-      if (poolMembersResult.error) {
-        throw new SubgraphError(`Failed to fetch pool members: ${poolMembersResult.error}`);
-      }
-      
-      if (!poolMembersResult.data.poolMembers || poolMembersResult.data.poolMembers.length === 0) {
-        throw new PoolMembershipError('Pool has no members or pool does not exist');
-      }
-
-      const poolMembers = poolMembersResult.data.poolMembers.map(m => m.identityCommitment);
-
-      // Validate that the identity is a member of the pool
-      let identityCommitment;
-      try {
-        identityCommitment = getIdentityCommitmentFromHex(context.identityHex);
-      } catch (error) {
-        throw new ValidationError(`Invalid identity hex format: ${error}`);
-      }
-      
-      if (!validatePoolMembership(identityCommitment, poolMembers)) {
-        throw new PoolMembershipError('Identity is not a member of the specified pool');
-      }
-
-      // Get message hash locally (no RPC call needed)
-      // EntryPoint V7 address is standardized across networks
-      const ENTRYPOINT_V7 = '0x0000000071727De22E5E9d8BAf0edAc6f37da032' as const;
-      const messageHash = getMessageHash(
-        this.chainId,
-        ENTRYPOINT_V7,
-        parameters.userOperation
+    } catch (conversionError) {
+      console.error('Identity conversion error:', conversionError);
+      throw new Error(
+        `Failed to decode identity from context: ${conversionError instanceof Error ? conversionError.message : 'Unknown error'}`
       );
+    }
+    // Create Semaphore group from pool members
+    const group = new Group(poolMembers);
+    // Create user identity
+    const identity = Identity.import(identityBase64);
 
-      // Get the latest merkle root index for the pool
-      let merkleRootIndex;
-      try {
-        merkleRootIndex = await getLatestMerkleRootIndex(
-          rpcClient,
-          context.paymasterAddress,
-          context.poolId
-        );
-      } catch (error) {
-        throw new NetworkError(`Failed to get merkle root index: ${error}`);
-      }
+    // Verify identity is in the group
+    const memberIndex = group.indexOf(identity.commitment);
+    if (memberIndex === -1) {
+      throw new Error(`Identity commitment ${identity.commitment} is not a member of pool ${poolId}`);
+    }
 
-      // Generate ZK proof using Semaphore protocol
-      let proof;
-      try {
-        proof = await generatePoolMembershipProof(
-          context.identityHex,
-          poolMembers,
-          messageHash,
-          context.poolId
-        );
-      } catch (error) {
-        throw new ProofGenerationError(`Failed to generate ZK proof: ${error}`);
-      }
+    // Generate the proof
+    const proof = await generateProof(identity, group, messageHash, poolId);
 
-      // Create paymaster data with real ZK proof
-      const config = encodePaymasterConfig(PaymasterMode.VALIDATION_MODE, merkleRootIndex);
-      
-      const paymasterData = {
-        config: config,
-        poolId: context.poolId,
-        proof: proof,
-      };
+    return {
+      proof,
+      group,
+      identity,
+    };
+  }
 
-      // Encode the paymaster data
-      const encodedData = encodePaymasterData(paymasterData);
-      
-      // Create the final paymasterAndData: paymaster_address + encoded_data
-      const finalPaymasterAndData = createPaymasterAndData(context.paymasterAddress, encodedData);
+  /**
+   * Validate stub data parameters
+   */
+  private validateStubDataParams(params: GetPaymasterStubDataV7Parameters): void {
+    if (!params.context) {
+      throw new Error('context is required for paymaster operations');
+    }
 
-      return {
-        paymasterAndData: finalPaymasterAndData,
-        paymasterPostOpGasLimit: GAS_CONSTANTS.POST_OP_GAS_LIMIT.toString(),
-        paymasterVerificationGasLimit: GAS_CONSTANTS.VERIFICATION_GAS_LIMIT.toString(),
-      };
-    } catch (error) {
-      if (error instanceof PaymasterContextError || 
-          error instanceof SubgraphError || 
-          error instanceof PoolMembershipError || 
-          error instanceof ProofGenerationError || 
-          error instanceof NetworkError || 
-          error instanceof ValidationError) {
-        throw error;
-      }
-      throw new ValidationError(`Failed to generate paymaster data: ${error}`);
+    if (!params.sender) {
+      throw new Error('sender is required');
+    }
+
+    if (!params.entryPointAddress) {
+      throw new Error('entryPointAddress is required');
     }
   }
 
-
   /**
-   * Get the chain ID this client is configured for
+   * Validate paymaster data parameters
    */
-  getChainId(): number {
-    return this.chainId;
+  private validatePaymasterDataParams(params: {
+    mode: PrepaidGasPaymasterMode;
+    poolId: bigint;
+    proof: SemaphoreProof;
+    merkleRootIndex: number;
+  }): void {
+    const { mode, poolId, proof, merkleRootIndex } = params;
+
+    if (!Object.values(PrepaidGasPaymasterMode).includes(mode)) {
+      throw new Error('Invalid paymaster mode');
+    }
+
+    if (poolId < 0n) {
+      throw new Error('Pool ID must be non-negative');
+    }
+
+    if (!proof) {
+      throw new Error('Proof is required');
+    }
+
+    if (merkleRootIndex < 0) {
+      throw new Error('Merkle root index must be non-negative');
+    }
   }
 
   /**
-   * Get the current options
+   * Validate proof generation parameters
    */
-  getOptions(): PrepaidGasPaymasterOptions {
-    return { ...this.options };
+  private validateProofParams(params: {
+    identityHex: `0x${string}`;
+    poolMembers: bigint[];
+    messageHash: bigint;
+    poolId: bigint;
+  }): void {
+    const { identityHex, poolMembers, messageHash, poolId } = params;
+
+    if (!identityHex || identityHex.length === 0) {
+      throw new Error('Identity string cannot be empty');
+    }
+
+    if (!poolMembers || poolMembers.length === 0) {
+      throw new Error('Pool members array cannot be empty');
+    }
+
+    if (messageHash <= 0n) {
+      throw new Error('Message hash must be a positive BigInt');
+    }
+
+    if (poolId < 0n) {
+      throw new Error('Pool ID must be a non-negative BigInt');
+    }
+
+    // Validate pool members are valid commitments
+    for (const member of poolMembers) {
+      if (member <= 0n) {
+        throw new Error('All pool member commitments must be positive BigInt values');
+      }
+    }
   }
 }

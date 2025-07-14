@@ -11,10 +11,10 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     },
-    "./queries/pool-members": {
-      "types": "./dist/queries/pool-members.d.ts",
-      "import": "./dist/queries/pool-members.mjs",
-      "require": "./dist/queries/pool-members.js"
+    "./query/builders/pool-member-query-builder": {
+      "types": "./dist/query/builders/pool-member-query-builder.d.ts",
+      "import": "./dist/query/builders/pool-member-query-builder.mjs",
+      "require": "./dist/query/builders/pool-member-query-builder.js"
     }
   },
   "files": [
@@ -36,7 +36,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@private-prepaid-gas/types": "workspace:*"
+    "graphql-request": "7.2.0"
   },
   "devDependencies": {
     "@private-prepaid-gas/eslint-config": "workspace:*",

@@ -2,7 +2,8 @@
   "extends": "@private-prepaid-gas/typescript-config/library.json",
   "compilerOptions": {
     "baseUrl": ".",
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDir": "src",
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist"]

@@ -1,61 +1,37 @@
 /**
- * @private-prepaid-gas/core
+ * Prepaid Gas Paymaster SDK - Privacy-preserving paymaster client for Account Abstraction
  *
- * Core SDK for Private Prepaid Gas paymaster integration
+ * This package provides a TypeScript SDK for integrating with privacy-preserving
+ * gas payments using zero-knowledge proofs and Semaphore protocol.
+ *
+ * ⚠️ PRIVACY NOTICE: Transactions within the same pool are linkable via nullifiers.
+ * For unlinkable transactions, users must use different identities across pools.
+ *
+ * @packageDocumentation
  */
 
-// Export main client
-export { PrepaidGasPaymaster } from './client/PrepaidGasPaymaster';
-export type { PrepaidGasPaymasterOptions } from './client/PrepaidGasPaymaster';
+// Main client exports
+export { PrepaidGasPaymaster } from "./client/PrepaidGasPaymaster";
+// Client exports
+export type {
+  PaymasterOptions,
+  GetPaymasterStubDataV7Parameters,
+} from "./client";
 
-// Note: For data layer queries, import directly from @private-prepaid-gas/data
-// Example: import { getPoolMembers } from '@private-prepaid-gas/data/queries/pool-members'
-
-// Export essential utilities
-export { 
-  encodePaymasterContext, 
-  parsePaymasterContext, 
-  PrepaidGasPaymasterMode 
-} from './utils/context';
-export type { 
-  ParsedPaymasterContext, 
-  PrepaidGasPaymasterModeType 
-} from './utils/context';
-
-// Export paymaster data utilities  
+// Utility exports
 export {
-  PaymasterMode,
-  GAS_CONSTANTS,
-  encodePaymasterConfig,
-  createDummyProof,
-  encodePaymasterData,
-  createPaymasterAndData
-} from './utils/paymaster-data';
+  encodePaymasterContext,
+  parsePaymasterContext,
+  PrepaidGasPaymasterMode,
+} from "./utils";
+export type { ParsedPaymasterContext } from "./utils";
 
-// Export ZK proof utilities
+// Constants exports
 export {
-  generatePoolMembershipProof,
-  validatePoolMembership,
-  getIdentityCommitmentFromHex
-} from './utils/zk-proof';
+  GAS_LIMITED_PAYMASTER_ABI,
+  ONE_TIME_USE_PAYMASTER_ABI,
+  POOL_ROOT_HISTORY_SIZE,
+} from "./constants";
 
-// Export contract utilities
-export {
-  createRpcClient,
-  getMessageHash,
-  getLatestMerkleRootIndex
-} from './utils/contract';
-
-// Export error classes
-export {
-  PrepaidGasPaymasterError,
-  PaymasterContextError,
-  PoolMembershipError,
-  SubgraphError,
-  ProofGenerationError,
-  NetworkError,
-  ValidationError
-} from './errors/PaymasterErrors';
-
-// Package version
-export const VERSION = '1.0.0';
+// Version
+export const VERSION = "1.0.0";

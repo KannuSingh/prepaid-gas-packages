@@ -8,8 +8,7 @@ export default defineConfig({
   sourcemap: true,
   minify: false,
   external: [
-    '@private-prepaid-gas/contracts',
-    '@private-prepaid-gas/types',
+    'permissionless',
     '@semaphore-protocol/core',
     '@semaphore-protocol/group',
     '@semaphore-protocol/identity',

@@ -1,0 +1,24 @@
+# Source files
+src/
+test/
+tests/
+
+# Config files
+*.config.js
+*.config.ts
+tsconfig.json
+tsconfig.*.json
+eslint.config.js
+
+# Build artifacts
+node_modules/
+.turbo/
+
+# Development files
+.env*
+*.log
+*.tsbuildinfo
+
+# Documentation
+README.md
+docs/
