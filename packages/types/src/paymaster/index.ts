@@ -130,6 +130,27 @@ export interface PaymasterData {
   proof: PoolMembershipProof; // 416 bytes
 }
 
+// Permissionless SDK integration types
+export interface GetPaymasterStubDataV7Parameters {
+  userOperation: PackedUserOperation;
+}
+
+export interface GetPaymasterStubDataReturnType {
+  paymasterAndData: string;
+  paymasterPostOpGasLimit?: string;
+  paymasterVerificationGasLimit?: string;
+}
+
+export interface GetPaymasterDataParameters {
+  userOperation: PackedUserOperation;
+}
+
+export interface GetPaymasterDataReturnType {
+  paymasterAndData: string;
+  paymasterPostOpGasLimit?: string;
+  paymasterVerificationGasLimit?: string;
+}
+
 // Error types from paymaster contracts
 export type PaymasterError =
   | 'IncorrectJoiningFee'
