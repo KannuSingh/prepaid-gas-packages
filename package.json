@@ -1,0 +1,38 @@
+{
+  "name": "private-prepaid-gas-packages",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Private Prepaid Gas NPM packages monorepo",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/private-prepaid-gas-packages.git"
+  },
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "lint": "turbo lint",
+    "typecheck": "turbo typecheck",
+    "test": "turbo test",
+    "clean": "turbo clean",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "publish-packages": "changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.9",
+    "@typescript-eslint/eslint-plugin": "^8.15.0",
+    "@typescript-eslint/parser": "^8.15.0",
+    "eslint": "^9.17.0",
+    "prettier": "^3.5.1",
+    "turbo": "^2.4.2",
+    "typescript": "^5.7.3",
+    "vitest": "^2.1.8"
+  },
+  "packageManager": "pnpm@10.4.1",
+  "engines": {
+    "node": ">=20",
+    "pnpm": ">=10"
+  }
+}

@@ -1,0 +1,1 @@
+export { BASE_SEPOLIA_ADDRESSES, type BaseSepoliaAddresses } from './baseSepolia';
