@@ -16,6 +16,14 @@ import {
 import { SubgraphClient } from './SubgraphClient';
 import { generatePoolMembershipProof, getIdentityCommitmentFromHex, validatePoolMembership } from '../utils/zk-proof';
 import { createRpcClient, getMessageHash, getLatestMerkleRootIndex } from '../utils/contract';
+import { 
+  PaymasterContextError, 
+  PoolMembershipError, 
+  SubgraphError, 
+  ProofGenerationError, 
+  NetworkError,
+  ValidationError 
+} from '../errors/PaymasterErrors';
 
 /**
  * Configuration options for PrepaidGasPaymaster
@@ -60,11 +68,25 @@ export class PrepaidGasPaymaster {
       const paymasterAndData = parameters.userOperation.paymasterAndData;
       
       if (!paymasterAndData || paymasterAndData === '0x') {
-        throw new Error('Paymaster context required for gas estimation');
+        throw new PaymasterContextError('Paymaster context required for gas estimation');
+      }
+
+      if (typeof paymasterAndData !== 'string' || !paymasterAndData.startsWith('0x')) {
+        throw new PaymasterContextError('Invalid paymaster context format');
       }
 
       // Parse the context to get paymaster address and pool ID
-      const context = parsePaymasterContext(paymasterAndData as `0x${string}`);
+      let context;
+      try {
+        context = parsePaymasterContext(paymasterAndData as `0x${string}`);
+      } catch (error) {
+        throw new PaymasterContextError(`Failed to parse paymaster context: ${error}`);
+      }
+
+      // Validate context fields
+      if (!context.paymasterAddress || !context.poolId) {
+        throw new PaymasterContextError('Invalid context: missing paymaster address or pool ID');
+      }
 
       // Create dummy paymaster data for gas estimation
       // Use merkleRootIndex = 0 for gas estimation (no real root needed)
@@ -89,7 +111,10 @@ export class PrepaidGasPaymaster {
         paymasterVerificationGasLimit: GAS_CONSTANTS.VERIFICATION_GAS_LIMIT.toString(),
       };
     } catch (error) {
-      throw new Error(`Failed to generate paymaster stub data: ${error}`);
+      if (error instanceof PaymasterContextError || error instanceof ValidationError) {
+        throw error;
+      }
+      throw new ValidationError(`Failed to generate paymaster stub data: ${error}`);
     }
   }
 
@@ -103,29 +128,58 @@ export class PrepaidGasPaymaster {
       const paymasterAndData = parameters.userOperation.paymasterAndData;
       
       if (!paymasterAndData || paymasterAndData === '0x') {
-        throw new Error('Paymaster context required for transaction');
+        throw new PaymasterContextError('Paymaster context required for transaction');
+      }
+
+      if (typeof paymasterAndData !== 'string' || !paymasterAndData.startsWith('0x')) {
+        throw new PaymasterContextError('Invalid paymaster context format');
       }
 
       // Parse the context to get paymaster address, pool ID, and identity
-      const context = parsePaymasterContext(paymasterAndData as `0x${string}`);
+      let context;
+      try {
+        context = parsePaymasterContext(paymasterAndData as `0x${string}`);
+      } catch (error) {
+        throw new PaymasterContextError(`Failed to parse paymaster context: ${error}`);
+      }
+
+      // Validate context fields
+      if (!context.paymasterAddress || !context.poolId || !context.identityHex) {
+        throw new PaymasterContextError('Invalid context: missing required fields');
+      }
 
       // Create RPC client for contract interactions
-      const rpcClient = createRpcClient(this.chainId, this.options.rpcUrl);
+      let rpcClient;
+      try {
+        rpcClient = createRpcClient(this.chainId, this.options.rpcUrl);
+      } catch (error) {
+        throw new NetworkError(`Failed to create RPC client: ${error}`);
+      }
 
       // Get pool members from subgraph for ZK proof generation
       const subgraphClient = this.getSubgraphClient();
       const poolMembersResult = await subgraphClient.getPoolMembers(context.poolId);
       
-      if (poolMembersResult.error || !poolMembersResult.data.poolMembers) {
-        throw new Error(`Failed to fetch pool members: ${poolMembersResult.error || 'No members found'}`);
+      if (poolMembersResult.error) {
+        throw new SubgraphError(`Failed to fetch pool members: ${poolMembersResult.error}`);
+      }
+      
+      if (!poolMembersResult.data.poolMembers || poolMembersResult.data.poolMembers.length === 0) {
+        throw new PoolMembershipError('Pool has no members or pool does not exist');
       }
 
       const poolMembers = poolMembersResult.data.poolMembers.map(m => m.identityCommitment);
 
       // Validate that the identity is a member of the pool
-      const identityCommitment = getIdentityCommitmentFromHex(context.identityHex);
+      let identityCommitment;
+      try {
+        identityCommitment = getIdentityCommitmentFromHex(context.identityHex);
+      } catch (error) {
+        throw new ValidationError(`Invalid identity hex format: ${error}`);
+      }
+      
       if (!validatePoolMembership(identityCommitment, poolMembers)) {
-        throw new Error('Identity is not a member of the specified pool');
+        throw new PoolMembershipError('Identity is not a member of the specified pool');
       }
 
       // Get message hash locally (no RPC call needed)
@@ -138,19 +192,29 @@ export class PrepaidGasPaymaster {
       );
 
       // Get the latest merkle root index for the pool
-      const merkleRootIndex = await getLatestMerkleRootIndex(
-        rpcClient,
-        context.paymasterAddress,
-        context.poolId
-      );
+      let merkleRootIndex;
+      try {
+        merkleRootIndex = await getLatestMerkleRootIndex(
+          rpcClient,
+          context.paymasterAddress,
+          context.poolId
+        );
+      } catch (error) {
+        throw new NetworkError(`Failed to get merkle root index: ${error}`);
+      }
 
       // Generate ZK proof using Semaphore protocol
-      const proof = await generatePoolMembershipProof(
-        context.identityHex,
-        poolMembers,
-        messageHash,
-        context.poolId
-      );
+      let proof;
+      try {
+        proof = await generatePoolMembershipProof(
+          context.identityHex,
+          poolMembers,
+          messageHash,
+          context.poolId
+        );
+      } catch (error) {
+        throw new ProofGenerationError(`Failed to generate ZK proof: ${error}`);
+      }
 
       // Create paymaster data with real ZK proof
       const config = encodePaymasterConfig(PaymasterMode.VALIDATION_MODE, merkleRootIndex);
@@ -173,7 +237,15 @@ export class PrepaidGasPaymaster {
         paymasterVerificationGasLimit: GAS_CONSTANTS.VERIFICATION_GAS_LIMIT.toString(),
       };
     } catch (error) {
-      throw new Error(`Failed to generate paymaster data: ${error}`);
+      if (error instanceof PaymasterContextError || 
+          error instanceof SubgraphError || 
+          error instanceof PoolMembershipError || 
+          error instanceof ProofGenerationError || 
+          error instanceof NetworkError || 
+          error instanceof ValidationError) {
+        throw error;
+      }
+      throw new ValidationError(`Failed to generate paymaster data: ${error}`);
     }
   }
 

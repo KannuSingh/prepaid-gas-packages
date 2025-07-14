@@ -47,5 +47,16 @@ export {
   getLatestMerkleRootIndex
 } from './utils/contract';
 
+// Export error classes
+export {
+  PrepaidGasPaymasterError,
+  PaymasterContextError,
+  PoolMembershipError,
+  SubgraphError,
+  ProofGenerationError,
+  NetworkError,
+  ValidationError
+} from './errors/PaymasterErrors';
+
 // Package version
 export const VERSION = '1.0.0';

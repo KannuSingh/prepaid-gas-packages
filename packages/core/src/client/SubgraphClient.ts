@@ -111,6 +111,13 @@ export class SubgraphClient {
    * Based on actual usage in PrepaidGasPaymaster for creating Semaphore groups
    */
   async getPoolMembers(poolId: string): Promise<QueryResult<{ poolMembers: Array<{ identityCommitment: string }> }>> {
+    if (!poolId || typeof poolId !== 'string') {
+      return {
+        data: { poolMembers: [] },
+        error: 'Invalid pool ID provided',
+      };
+    }
+
     const query = `
       query GetPoolMembers($poolId: String!) {
         poolMembers(
@@ -129,6 +136,13 @@ export class SubgraphClient {
    * Get pool information - used for validation and fee checking
    */
   async getPoolInfo(poolId: string): Promise<QueryResult<{ pool: { id: string; joiningFee: string; memberCount: number } | null }>> {
+    if (!poolId || typeof poolId !== 'string') {
+      return {
+        data: { pool: null },
+        error: 'Invalid pool ID provided',
+      };
+    }
+
     const query = `
       query GetPoolInfo($poolId: String!) {
         pool(id: $poolId) {

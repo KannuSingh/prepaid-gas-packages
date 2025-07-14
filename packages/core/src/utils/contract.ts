@@ -24,9 +24,17 @@ function getDefaultRpcUrl(chainId: number): string {
  * Creates a public client for the specified chain
  */
 export function createRpcClient(chainId: number, rpcUrl?: string): PublicClient {
-  return createPublicClient({
-    transport: http(rpcUrl || getDefaultRpcUrl(chainId)),
-  });
+  if (!chainId || typeof chainId !== 'number') {
+    throw new Error('Invalid chain ID provided');
+  }
+
+  try {
+    return createPublicClient({
+      transport: http(rpcUrl || getDefaultRpcUrl(chainId)),
+    });
+  } catch (error) {
+    throw new Error(`Failed to create RPC client: ${error}`);
+  }
 }
 
 /**
@@ -39,6 +47,18 @@ export function getMessageHash(
   entryPointAddress: `0x${string}`,
   userOp: PackedUserOperation
 ): Hex {
+  if (!chainId || typeof chainId !== 'number') {
+    throw new Error('Invalid chain ID provided');
+  }
+  
+  if (!entryPointAddress || !entryPointAddress.startsWith('0x')) {
+    throw new Error('Invalid EntryPoint address provided');
+  }
+  
+  if (!userOp || typeof userOp !== 'object') {
+    throw new Error('Invalid user operation provided');
+  }
+
   try {
     // PAYMASTER_DATA_OFFSET = 52 from Constants.sol (20 + 16 + 16 bytes)
     const PAYMASTER_DATA_OFFSET = 52;
