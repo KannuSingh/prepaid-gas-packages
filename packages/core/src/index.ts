@@ -23,6 +23,8 @@ export {
   encodePaymasterContext,
   parsePaymasterContext,
   PrepaidGasPaymasterMode,
+  validatePoolId,
+  validateMerkleRootIndex,
 } from "./utils";
 export type { ParsedPaymasterContext } from "./utils";
 

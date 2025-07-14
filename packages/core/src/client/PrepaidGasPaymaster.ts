@@ -5,7 +5,7 @@ import {
   UserOperation,
 } from 'viem/account-abstraction';
 import { createPublicClient, fromHex, http } from 'viem';
-// import { getPackedUserOperation } from 'permissionless';
+import { getPackedUserOperation } from 'permissionless';
 
 import { ChainId, SubgraphClient } from '@private-prepaid-gas/data';
 
@@ -16,7 +16,6 @@ import { getValidatedNetworkPreset, type NetworkPreset } from '@private-prepaid-
 import { generateProof, SemaphoreProof } from '@semaphore-protocol/proof';
 import { Identity } from '@semaphore-protocol/identity';
 import { Group } from '@semaphore-protocol/group';
-import { getPackedUserOperation } from 'permissionless';
 
 /**
  * Main client for interacting with the Prepaid Gas Paymaster system
@@ -90,12 +89,6 @@ export class PrepaidGasPaymaster {
     });
 
     // Initialize services
-    if (options.debug) {
-      console.log('✅ PrepaidGasPaymaster initialized:', {
-        subgraphUrl: options.subgraphUrl,
-        chainId: chainId,
-      });
-    }
   }
 
   /**
@@ -374,22 +367,15 @@ export class PrepaidGasPaymaster {
       // Try direct fromHex conversion first
       try {
         identityBase64 = fromHex(identityHex, 'string');
-        console.log('🔍 Converted identity from hex bytes to string:', {
-          hex: identityHex,
-          string: identityBase64,
-        });
       } catch (hexError) {
         // If that fails, the identityString might already be a string, not hex bytes
-        console.log('🔍 Identity may already be a string, not hex bytes');
         if (typeof identityHex === 'string') {
           identityBase64 = identityHex;
-          console.log('🔍 Using identity string directly:', identityBase64);
         } else {
           throw hexError;
         }
       }
     } catch (conversionError) {
-      console.error('Identity conversion error:', conversionError);
       throw new Error(
         `Failed to decode identity from context: ${conversionError instanceof Error ? conversionError.message : 'Unknown error'}`
       );
@@ -416,17 +402,55 @@ export class PrepaidGasPaymaster {
   }
 
   /**
+   * Centralized validation for common parameters
+   */
+  private validateCommonParams(params: {
+    poolId?: bigint;
+    merkleRootIndex?: number;
+    identityHex?: `0x${string}`;
+    poolMembers?: bigint[];
+    messageHash?: bigint;
+  }): void {
+    const { poolId, merkleRootIndex, identityHex, poolMembers, messageHash } = params;
+
+    if (poolId !== undefined && poolId < 0n) {
+      throw new Error('Pool ID must be non-negative');
+    }
+
+    if (merkleRootIndex !== undefined && merkleRootIndex < 0) {
+      throw new Error('Merkle root index must be non-negative');
+    }
+
+    if (identityHex !== undefined && (!identityHex || identityHex.length === 0)) {
+      throw new Error('Identity string cannot be empty');
+    }
+
+    if (poolMembers !== undefined) {
+      if (!poolMembers || poolMembers.length === 0) {
+        throw new Error('Pool members array cannot be empty');
+      }
+      for (const member of poolMembers) {
+        if (member <= 0n) {
+          throw new Error('All pool member commitments must be positive BigInt values');
+        }
+      }
+    }
+
+    if (messageHash !== undefined && messageHash <= 0n) {
+      throw new Error('Message hash must be a positive BigInt');
+    }
+  }
+
+  /**
    * Validate stub data parameters
    */
   private validateStubDataParams(params: GetPaymasterStubDataV7Parameters): void {
     if (!params.context) {
       throw new Error('context is required for paymaster operations');
     }
-
     if (!params.sender) {
       throw new Error('sender is required');
     }
-
     if (!params.entryPointAddress) {
       throw new Error('entryPointAddress is required');
     }
@@ -447,17 +471,11 @@ export class PrepaidGasPaymaster {
       throw new Error('Invalid paymaster mode');
     }
 
-    if (poolId < 0n) {
-      throw new Error('Pool ID must be non-negative');
-    }
-
     if (!proof) {
       throw new Error('Proof is required');
     }
 
-    if (merkleRootIndex < 0) {
-      throw new Error('Merkle root index must be non-negative');
-    }
+    this.validateCommonParams({ poolId, merkleRootIndex });
   }
 
   /**
@@ -469,29 +487,6 @@ export class PrepaidGasPaymaster {
     messageHash: bigint;
     poolId: bigint;
   }): void {
-    const { identityHex, poolMembers, messageHash, poolId } = params;
-
-    if (!identityHex || identityHex.length === 0) {
-      throw new Error('Identity string cannot be empty');
-    }
-
-    if (!poolMembers || poolMembers.length === 0) {
-      throw new Error('Pool members array cannot be empty');
-    }
-
-    if (messageHash <= 0n) {
-      throw new Error('Message hash must be a positive BigInt');
-    }
-
-    if (poolId < 0n) {
-      throw new Error('Pool ID must be a non-negative BigInt');
-    }
-
-    // Validate pool members are valid commitments
-    for (const member of poolMembers) {
-      if (member <= 0n) {
-        throw new Error('All pool member commitments must be positive BigInt values');
-      }
-    }
+    this.validateCommonParams(params);
   }
 }

@@ -1,6 +1,5 @@
 // Utility exports
 export {
-  encodeContext,
   generatePaymasterData,
   encodeConfig,
   decodeConfig,
@@ -11,4 +10,9 @@ export {
 
 export type { ParsedPaymasterContext } from "./encoding";
 
-export { getChainById, validatePaymasterAndData } from "./validation";
+export {
+  getChainById,
+  validatePaymasterAndData,
+  validatePoolId,
+  validateMerkleRootIndex,
+} from "./validation";

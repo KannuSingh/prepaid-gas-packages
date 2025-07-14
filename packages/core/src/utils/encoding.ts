@@ -21,45 +21,6 @@ export enum PrepaidGasPaymasterMode {
   GAS_ESTIMATION_MODE = 1,
 }
 
-/**
- * Encode context data for paymaster operations
- *
- * @param context - Context data (bigint or hex string)
- * @returns Encoded context as hex string
- *
- * @example
- * ```typescript
- * // Encode a pool ID
- * const context = encodeContext(123n);
- *
- * // Encode a hex string
- * const context = encodeContext('0x7b');
- * ```
- */
-export function encodeContext(context: bigint | Hex): Hex {
-  if (typeof context === "bigint") {
-    return encodeAbiParameters(parseAbiParameters("uint256"), [context]);
-  }
-
-  if (typeof context === "string") {
-    if (isHex(context)) {
-      return context;
-    }
-
-    try {
-      const value = BigInt(context);
-      return encodeAbiParameters(parseAbiParameters("uint256"), [value]);
-    } catch {
-      throw new Error(
-        "Invalid string context. Must be a valid hex or decimal string.",
-      );
-    }
-  }
-
-  throw new Error(
-    "Invalid context format. Expected bigint or hex/decimal string.",
-  );
-}
 
 /**
  * Encode paymaster context with all required parameters for coupon/card system

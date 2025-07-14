@@ -44,7 +44,7 @@ export type GetPaymasterStubDataV7Parameters = PartialBy<
   | 'preVerificationGas'
   | 'verificationGasLimit'
 > & {
-  context?: unknown;
+  context?: `0x${string}`;
   chainId: number;
   entryPointAddress: Address;
 };
