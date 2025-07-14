@@ -1,6 +1,6 @@
 /**
  * @private-prepaid-gas/core
- * 
+ *
  * Core SDK for Private Prepaid Gas paymaster integration
  */
 

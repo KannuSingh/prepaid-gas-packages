@@ -6,19 +6,19 @@ A monorepo of NPM packages for building applications with the Private Prepaid Ga
 
 ### Core Packages
 
-| Package | Version | Description |
-|---------|---------|-------------|
+| Package                                                  | Version                                                             | Description                                  |
+| -------------------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------- |
 | [`@private-prepaid-gas/contracts`](./packages/contracts) | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/contracts) | Smart contract ABIs and deployment addresses |
-| [`@private-prepaid-gas/types`](./packages/types) | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/types) | TypeScript types and interfaces |
-| [`@private-prepaid-gas/core`](./packages/core) | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/core) | Main SDK for paymaster integration |
+| [`@private-prepaid-gas/types`](./packages/types)         | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/types)     | TypeScript types and interfaces              |
+| [`@private-prepaid-gas/core`](./packages/core)           | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/core)      | Main SDK for paymaster integration           |
 
 ### Data & Network Packages
 
-| Package | Version | Description |
-|---------|---------|-------------|
-| [`@private-prepaid-gas/data`](./packages/data) | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/data) | Subgraph client and query builders |
-| [`@private-prepaid-gas/networks`](./packages/networks) | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/networks) | Network configurations and multi-chain support |
-| [`@private-prepaid-gas/subgraph-types`](./packages/subgraph-types) | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/subgraph-types) | GraphQL schema and AssemblyScript types |
+| Package                                                            | Version                                                                  | Description                                    |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------ | ---------------------------------------------- |
+| [`@private-prepaid-gas/data`](./packages/data)                     | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/data)           | Subgraph client and query builders             |
+| [`@private-prepaid-gas/networks`](./packages/networks)             | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/networks)       | Network configurations and multi-chain support |
+| [`@private-prepaid-gas/subgraph-types`](./packages/subgraph-types) | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/subgraph-types) | GraphQL schema and AssemblyScript types        |
 
 ## 🚀 Quick Start
 
@@ -125,11 +125,7 @@ graph TD
 Contains smart contract ABIs, deployment addresses, and constants.
 
 ```typescript
-import { 
-  GAS_LIMITED_PAYMASTER_ABI,
-  BASE_SEPOLIA_ADDRESSES,
-  SUPPORTED_CHAIN_IDS 
-} from '@private-prepaid-gas/contracts';
+import { GAS_LIMITED_PAYMASTER_ABI, BASE_SEPOLIA_ADDRESSES, SUPPORTED_CHAIN_IDS } from '@private-prepaid-gas/contracts';
 ```
 
 ### [@private-prepaid-gas/types](./packages/types)
@@ -137,11 +133,7 @@ import {
 TypeScript types for the entire ecosystem.
 
 ```typescript
-import type { 
-  PoolInfo,
-  PaymasterValidationData,
-  NetworkConfig 
-} from '@private-prepaid-gas/types';
+import type { PoolInfo, PaymasterValidationData, NetworkConfig } from '@private-prepaid-gas/types';
 ```
 
 ### [@private-prepaid-gas/core](./packages/core)
@@ -149,11 +141,7 @@ import type {
 Main SDK with paymaster client, encoding utilities, and validation.
 
 ```typescript
-import { 
-  PrepaidGasPaymaster,
-  encodePaymasterData,
-  validateUserOperation 
-} from '@private-prepaid-gas/core';
+import { PrepaidGasPaymaster, encodePaymasterData, validateUserOperation } from '@private-prepaid-gas/core';
 ```
 
 ## 🌐 Supported Networks

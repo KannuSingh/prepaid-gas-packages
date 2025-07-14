@@ -1,6 +1,6 @@
 /**
  * @private-prepaid-gas/contracts
- * 
+ *
  * Smart contract ABIs and deployment addresses for Private Prepaid Gas paymasters
  */
 

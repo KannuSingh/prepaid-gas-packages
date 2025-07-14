@@ -20,25 +20,23 @@ export type BlockHash = Hash;
 export const CONSTANTS = {
   // Pool and root history constants
   POOL_ROOT_HISTORY_SIZE: 64,
-  
+
   // Gas limits and calculations
   POST_OP_GAS_LIMIT: 65000,
-  
+
   // Data structure sizes (in bytes)
   PAYMASTER_DATA_SIZE: 480, // config (32) + poolId (32) + proof (416)
   PROOF_SIZE: 416, // 5 uint256 + 8 uint256 array
   CONFIG_SIZE: 32,
   POOL_ID_SIZE: 32,
-  
+
   // Validation modes
   VALIDATION_MODE: 0,
   GAS_ESTIMATION_MODE: 1,
 } as const;
 
 // Result type for operations that can succeed or fail
-export type Result<T, E = Error> = 
-  | { success: true; data: T }
-  | { success: false; error: E };
+export type Result<T, E = Error> = { success: true; data: T } | { success: false; error: E };
 
 // Async result type
 export type AsyncResult<T, E = Error> = Promise<Result<T, E>>;
@@ -60,14 +58,20 @@ export type RequiredDeep<T> = {
 };
 
 // Pick by value type utility
-export type PickByValue<T, V> = Pick<T, {
-  [K in keyof T]: T[K] extends V ? K : never;
-}[keyof T]>;
+export type PickByValue<T, V> = Pick<
+  T,
+  {
+    [K in keyof T]: T[K] extends V ? K : never;
+  }[keyof T]
+>;
 
 // Omit by value type utility
-export type OmitByValue<T, V> = Omit<T, {
-  [K in keyof T]: T[K] extends V ? K : never;
-}[keyof T]>;
+export type OmitByValue<T, V> = Omit<
+  T,
+  {
+    [K in keyof T]: T[K] extends V ? K : never;
+  }[keyof T]
+>;
 
 // Event listener types
 export type EventListener<T = any> = (event: T) => void;
@@ -75,20 +79,11 @@ export type EventMap = Record<string, any>;
 
 // Generic event emitter interface
 export interface EventEmitter<TEventMap extends EventMap = EventMap> {
-  on<TEventName extends keyof TEventMap>(
-    eventName: TEventName,
-    listener: EventListener<TEventMap[TEventName]>
-  ): void;
-  
-  off<TEventName extends keyof TEventMap>(
-    eventName: TEventName,
-    listener: EventListener<TEventMap[TEventName]>
-  ): void;
-  
-  emit<TEventName extends keyof TEventMap>(
-    eventName: TEventName,
-    event: TEventMap[TEventName]
-  ): void;
+  on<TEventName extends keyof TEventMap>(eventName: TEventName, listener: EventListener<TEventMap[TEventName]>): void;
+
+  off<TEventName extends keyof TEventMap>(eventName: TEventName, listener: EventListener<TEventMap[TEventName]>): void;
+
+  emit<TEventName extends keyof TEventMap>(eventName: TEventName, event: TEventMap[TEventName]): void;
 }
 
 // Logger interface
@@ -141,13 +136,7 @@ export interface Cache<TKey, TValue> {
 }
 
 // Serializable types
-export type Serializable = 
-  | string
-  | number
-  | boolean
-  | null
-  | SerializableObject
-  | SerializableArray;
+export type Serializable = string | number | boolean | null | SerializableObject | SerializableArray;
 
 export interface SerializableObject {
   [key: string]: Serializable;

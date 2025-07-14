@@ -27,4 +27,4 @@ export const SUPPORTED_CHAIN_IDS = {
   OPTIMISM: 10,
 } as const;
 
-export type SupportedChainId = typeof SUPPORTED_CHAIN_IDS[keyof typeof SUPPORTED_CHAIN_IDS];
+export type SupportedChainId = (typeof SUPPORTED_CHAIN_IDS)[keyof typeof SUPPORTED_CHAIN_IDS];

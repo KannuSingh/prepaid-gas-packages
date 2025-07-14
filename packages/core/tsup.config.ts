@@ -15,6 +15,6 @@ export default defineConfig({
     '@semaphore-protocol/identity',
     '@semaphore-protocol/proof',
     'poseidon-lite',
-    'viem'
+    'viem',
   ],
 });

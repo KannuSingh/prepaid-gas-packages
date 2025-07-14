@@ -1,6 +1,6 @@
 /**
  * @private-prepaid-gas/types
- * 
+ *
  * Comprehensive TypeScript types and interfaces for the Private Prepaid Gas paymaster system.
  * This package provides type definitions for paymaster operations, network configurations,
  * subgraph entities, and common utilities.
@@ -112,7 +112,7 @@ export const TYPE_REGISTRY = {
 } as const;
 
 // Type utility for extracting all type names
-export type AllTypeNames = typeof TYPE_REGISTRY[keyof typeof TYPE_REGISTRY][number];
+export type AllTypeNames = (typeof TYPE_REGISTRY)[keyof typeof TYPE_REGISTRY][number];
 
 // Module information
 export const MODULES = {

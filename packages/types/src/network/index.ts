@@ -11,7 +11,7 @@ export const SUPPORTED_CHAIN_IDS = {
   OPTIMISM: 10,
 } as const;
 
-export type SupportedChainId = typeof SUPPORTED_CHAIN_IDS[keyof typeof SUPPORTED_CHAIN_IDS];
+export type SupportedChainId = (typeof SUPPORTED_CHAIN_IDS)[keyof typeof SUPPORTED_CHAIN_IDS];
 
 // Contract addresses by network
 export interface NetworkAddresses {
@@ -22,9 +22,9 @@ export interface NetworkAddresses {
 
 // Base Sepolia specific addresses
 export const BASE_SEPOLIA_ADDRESSES: NetworkAddresses = {
-  GAS_LIMITED_PAYMASTER: "0x3BEeC075aC5A77fFE0F9ee4bbb3DCBd07fA93fbf",
-  ONE_TIME_USE_PAYMASTER: "0x243A735115F34BD5c0F23a33a444a8d26e31E2E7",
-  POSEIDON_T3: "0xB43122Ecb241DD50062641f089876679fd06599a"
+  GAS_LIMITED_PAYMASTER: '0x3BEeC075aC5A77fFE0F9ee4bbb3DCBd07fA93fbf',
+  ONE_TIME_USE_PAYMASTER: '0x243A735115F34BD5c0F23a33a444a8d26e31E2E7',
+  POSEIDON_T3: '0xB43122Ecb241DD50062641f089876679fd06599a',
 } as const;
 
 // Network configuration interface
@@ -124,11 +124,11 @@ export interface NetworkProvider {
 
 // Network events
 export interface NetworkEventMap {
-  'chainChanged': { chainId: SupportedChainId };
-  'accountsChanged': { accounts: string[] };
-  'connect': { chainId: SupportedChainId };
-  'disconnect': { error: Error };
-  'blockUpdate': { blockNumber: string };
+  chainChanged: { chainId: SupportedChainId };
+  accountsChanged: { accounts: string[] };
+  connect: { chainId: SupportedChainId };
+  disconnect: { error: Error };
+  blockUpdate: { blockNumber: string };
 }
 
 export type NetworkEventType = keyof NetworkEventMap;
