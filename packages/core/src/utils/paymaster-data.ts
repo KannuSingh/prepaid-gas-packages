@@ -22,14 +22,16 @@ export const GAS_CONSTANTS = {
 } as const;
 
 /**
- * Encodes paymaster config (mode + poolId packed into 32 bytes)
+ * Encodes paymaster config (mode + merkleRootIndex packed into 32 bytes)
+ * Following the exact pattern from the working website implementation
  */
-export function encodePaymasterConfig(mode: number, poolId: string): Hex {
-  // Pack mode (1 byte) + poolId (32 bytes) 
-  // For simplicity, we'll use the full 32 bytes for the config
+export function encodePaymasterConfig(mode: number, merkleRootIndex: number = 0): Hex {
+  // Pack merkleRootIndex and mode: BigInt(merkleRootIndex) | (BigInt(mode) << 32n)
+  const config = BigInt(merkleRootIndex) | (BigInt(mode) << 32n);
+  
   const encoded = encodeAbiParameters(
-    parseAbiParameters(['uint8 mode', 'uint248 poolId']),
-    [mode, BigInt(poolId)]
+    parseAbiParameters(['uint256 config']),
+    [config]
   );
   return encoded;
 }

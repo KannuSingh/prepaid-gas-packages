@@ -65,7 +65,8 @@ export class PrepaidGasPaymaster {
       const context = parsePaymasterContext(paymasterAndData as `0x${string}`);
 
       // Create dummy paymaster data for gas estimation
-      const config = encodePaymasterConfig(PaymasterMode.GAS_ESTIMATION_MODE, context.poolId);
+      // Use merkleRootIndex = 0 for gas estimation (no real root needed)
+      const config = encodePaymasterConfig(PaymasterMode.GAS_ESTIMATION_MODE, 0);
       const dummyProof = createDummyProof();
       
       const paymasterData = {

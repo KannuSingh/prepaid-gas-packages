@@ -107,85 +107,38 @@ export class SubgraphClient {
   }
 
   /**
-   * Get pools for a specific network and paymaster
+   * Get pool members for ZK proof generation - this is the main query needed
+   * Based on actual usage in PrepaidGasPaymaster for creating Semaphore groups
    */
-  async getPools(networkId: string, paymasterAddress?: string): Promise<QueryResult<unknown>> {
+  async getPoolMembers(poolId: string): Promise<QueryResult<{ poolMembers: Array<{ identityCommitment: string }> }>> {
     const query = `
-      query GetPools($networkId: String!, $paymasterAddress: String) {
-        pools(
-          where: { 
-            networkId: $networkId
-            ${paymasterAddress ? ', paymaster: $paymasterAddress' : ''}
-          }
-          orderBy: createdAt
-          orderDirection: desc
-        ) {
-          id
-          poolId
-          joiningFee
-          totalDeposits
-          memberCount
-          createdAt
-          paymaster {
-            id
-            address
-          }
-        }
-      }
-    `;
-
-    return this.query(query, { networkId, paymasterAddress });
-  }
-
-  /**
-   * Get pool members by identity commitment
-   */
-  async getPoolMembersByIdentity(identityCommitment: string): Promise<QueryResult<unknown>> {
-    const query = `
-      query GetPoolMembersByIdentity($identityCommitment: String!) {
+      query GetPoolMembers($poolId: String!) {
         poolMembers(
-          where: { identityCommitment: $identityCommitment }
+          where: { pool: $poolId }
+          orderBy: memberIndex
         ) {
-          id
-          memberIndex
           identityCommitment
-          pool {
-            id
-            poolId
-            paymaster {
-              address
-            }
-          }
         }
       }
     `;
 
-    return this.query(query, { identityCommitment });
+    return this.query(query, { poolId });
   }
 
   /**
-   * Get user operations sponsored by pools
+   * Get pool information - used for validation and fee checking
    */
-  async getUserOpsSponsored(poolId?: string, limit: number = 100): Promise<QueryResult<unknown>> {
+  async getPoolInfo(poolId: string): Promise<QueryResult<{ pool: { id: string; joiningFee: string; memberCount: number } | null }>> {
     const query = `
-      query GetUserOpsSponsored($poolId: String, $limit: Int!) {
-        userOpsSponsored(
-          ${poolId ? 'where: { poolId: $poolId }' : ''}
-          orderBy: blockTimestamp
-          orderDirection: desc
-          first: $limit
-        ) {
+      query GetPoolInfo($poolId: String!) {
+        pool(id: $poolId) {
           id
-          userOpHash
-          sender
-          actualGasCost
-          nullifier
-          poolId
-          blockTimestamp
+          joiningFee
+          memberCount
         }
       }
     `;
 
-    return this.query(query, { poolId, limit });
+    return this.query(query, { poolId });
   }
 }
