@@ -128,10 +128,12 @@ export class PrepaidGasPaymaster {
         throw new Error('Identity is not a member of the specified pool');
       }
 
-      // Get message hash from contract
-      const messageHash = await getMessageHash(
-        rpcClient,
-        context.paymasterAddress,
+      // Get message hash locally (no RPC call needed)
+      // EntryPoint V7 address is standardized across networks
+      const ENTRYPOINT_V7 = '0x0000000071727De22E5E9d8BAf0edAc6f37da032' as const;
+      const messageHash = getMessageHash(
+        this.chainId,
+        ENTRYPOINT_V7,
         parameters.userOperation
       );
 

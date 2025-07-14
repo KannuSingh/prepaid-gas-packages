@@ -3,7 +3,7 @@
  * For getting message hash and other contract calls
  */
 
-import { createPublicClient, http, type PublicClient, type Hex } from 'viem';
+import { createPublicClient, http, type PublicClient, type Hex, keccak256, encodeAbiParameters, parseAbiParameters } from 'viem';
 import type { PackedUserOperation } from '@private-prepaid-gas/types';
 
 /**
@@ -30,63 +30,70 @@ export function createRpcClient(chainId: number, rpcUrl?: string): PublicClient 
 }
 
 /**
- * Gets the message hash from the paymaster contract for ZK proof generation
+ * Computes the message hash locally without RPC calls
+ * This replicates the DataLib._getMessageHash logic from the contract
  * This hash is used as the message in the Semaphore proof
  */
-export async function getMessageHash(
-  client: PublicClient,
-  paymasterAddress: `0x${string}`,
+export function getMessageHash(
+  chainId: number,
+  entryPointAddress: `0x${string}`,
   userOp: PackedUserOperation
-): Promise<Hex> {
+): Hex {
   try {
-    // Call the getMessageHash function on the paymaster contract
-    // This function takes a packed user operation and returns the hash
-    const messageHash = await client.readContract({
-      address: paymasterAddress,
-      abi: [
-        {
-          inputs: [
-            {
-              components: [
-                { name: 'sender', type: 'address' },
-                { name: 'nonce', type: 'uint256' },
-                { name: 'initCode', type: 'bytes' },
-                { name: 'callData', type: 'bytes' },
-                { name: 'accountGasLimits', type: 'bytes32' },
-                { name: 'preVerificationGas', type: 'uint256' },
-                { name: 'gasFees', type: 'bytes32' },
-                { name: 'paymasterAndData', type: 'bytes' },
-                { name: 'signature', type: 'bytes' },
-              ],
-              name: 'userOp',
-              type: 'tuple',
-            },
-          ],
-          name: 'getMessageHash',
-          outputs: [{ name: '', type: 'bytes32' }],
-          stateMutability: 'view',
-          type: 'function',
-        },
-      ],
-      functionName: 'getMessageHash',
-      args: [
-        {
-          sender: userOp.sender as `0x${string}`,
-          nonce: BigInt(userOp.nonce),
-          initCode: userOp.initCode as Hex,
-          callData: userOp.callData as Hex,
-          accountGasLimits: userOp.accountGasLimits as Hex,
-          preVerificationGas: BigInt(userOp.preVerificationGas),
-          gasFees: userOp.gasFees as Hex,
-          paymasterAndData: userOp.paymasterAndData as Hex,
-          signature: userOp.signature as Hex,
-        },
-      ],
-    });
+    // PAYMASTER_DATA_OFFSET = 20 (address size) from Constants.sol
+    const PAYMASTER_DATA_OFFSET = 20;
+    
+    // Extract only the paymaster address portion (first 20 bytes) from paymasterAndData
+    const paymasterAndDataBytes = userOp.paymasterAndData.slice(2); // Remove 0x
+    const paymasterOnlyData = '0x' + paymasterAndDataBytes.slice(0, PAYMASTER_DATA_OFFSET * 2);
+    
+    // Replicate the DataLib._getMessageHash logic:
+    // keccak256(abi.encode(
+    //   keccak256(abi.encode(
+    //     sender, nonce, initCode_hash, callData_hash,
+    //     accountGasLimits, preVerificationGas, gasFees,
+    //     paymasterAndData_partial_hash
+    //   )),
+    //   entryPoint, chainId
+    // ))
+    
+    // First encode the user operation fields
+    const innerHash = keccak256(
+      encodeAbiParameters(
+        parseAbiParameters([
+          'address', // sender
+          'uint256', // nonce  
+          'bytes32', // keccak256(initCode)
+          'bytes32', // keccak256(callData)
+          'bytes32', // accountGasLimits
+          'uint256', // preVerificationGas
+          'bytes32', // gasFees
+          'bytes32'  // keccak256(paymasterAndData[:PAYMASTER_DATA_OFFSET])
+        ]),
+        [
+          userOp.sender as `0x${string}`,
+          BigInt(userOp.nonce),
+          keccak256(userOp.initCode as Hex),
+          keccak256(userOp.callData as Hex),
+          userOp.accountGasLimits as Hex,
+          BigInt(userOp.preVerificationGas),
+          userOp.gasFees as Hex,
+          keccak256(paymasterOnlyData as Hex)
+        ]
+      )
+    );
 
-    return messageHash as Hex;
+    // Then encode with entryPoint and chainId
+    const finalHash = keccak256(
+      encodeAbiParameters(
+        parseAbiParameters(['bytes32', 'address', 'uint256']),
+        [innerHash, entryPointAddress, BigInt(chainId)]
+      )
+    );
+
+    return finalHash;
   } catch (error) {
-    throw new Error(`Failed to get message hash from contract: ${error}`);
+    throw new Error(`Failed to compute message hash locally: ${error}`);
   }
 }
 
