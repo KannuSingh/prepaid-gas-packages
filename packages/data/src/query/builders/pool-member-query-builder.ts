@@ -3,22 +3,15 @@
  * Updated for the new network-aware schema structure
  */
 
-import type { SubgraphClient } from "../../client/subgraph-client.js";
-import type {
-  PoolMember,
-  NetworkName,
-  SerializedPoolMember,
-} from "../../types/subgraph.js";
+import type { SubgraphClient } from '../../client/subgraph-client.js';
+import type { PoolMember, SerializedPoolMember } from '../../types/subgraph.js';
 
-import { PoolMemberFields, PoolMemberWhereInput } from "../types.js";
-import { BaseQueryBuilder } from "./base-query-builder.js";
-import { serializePoolMember } from "../../transformers/index.js";
+import { PoolMemberFields, PoolMemberWhereInput } from '../types.js';
+import { BaseQueryBuilder } from './base-query-builder.js';
+import { serializePoolMember } from '../../transformers/index.js';
+import { NetworkName } from '@private-prepaid-gas/constants';
 
-export type PoolMemberOrderBy =
-  | "addedAtTimestamp"
-  | "memberIndex"
-  | "gasUsed"
-  | "rootIndexWhenAdded";
+export type PoolMemberOrderBy = 'addedAtTimestamp' | 'memberIndex' | 'gasUsed' | 'rootIndexWhenAdded';
 
 /**
  * Query builder for PoolMember entities
@@ -34,30 +27,19 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
   PoolMemberOrderBy
 > {
   constructor(client: SubgraphClient) {
-    super(client, "poolMembers", "addedAtTimestamp", "desc");
+    super(client, 'poolMembers', 'addedAtTimestamp', 'desc');
   }
 
   protected buildDynamicQuery(): string {
-    const fields =
-      this.config.selectedFields?.join("\n        ") || this.getDefaultFields();
+    const fields = this.config.selectedFields?.join('\n        ') || this.getDefaultFields();
     const variables = this.getVariableDeclarations();
     const whereClause = this.buildWhereClauseString();
-    const orderByClause = this.config.orderBy
-      ? `orderBy: ${this.config.orderBy}`
-      : "";
-    const orderDirectionClause = this.config.orderDirection
-      ? `orderDirection: ${this.config.orderDirection}`
-      : "";
+    const orderByClause = this.config.orderBy ? `orderBy: ${this.config.orderBy}` : '';
+    const orderDirectionClause = this.config.orderDirection ? `orderDirection: ${this.config.orderDirection}` : '';
 
-    const args = [
-      whereClause,
-      orderByClause,
-      orderDirectionClause,
-      "first: $first",
-      "skip: $skip",
-    ]
+    const args = [whereClause, orderByClause, orderDirectionClause, 'first: $first', 'skip: $skip']
       .filter(Boolean)
-      .join(", ");
+      .join(', ');
 
     const queryName = `GetPoolMembers`;
 
@@ -85,11 +67,11 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
 
   protected buildWhereClauseString(): string {
     if (!this.config.where || Object.keys(this.config.where).length === 0) {
-      return "";
+      return '';
     }
 
     const conditions = this.buildWhereConditions(this.config.where);
-    return conditions.length > 0 ? `where: { ${conditions.join(", ")} }` : "";
+    return conditions.length > 0 ? `where: { ${conditions.join(', ')} }` : '';
   }
 
   protected getSerializer(): (entity: PoolMember) => SerializedPoolMember {
@@ -97,63 +79,60 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
   }
 
   private getVariableDeclarations(): string {
-    const declarations = ["$first: Int!", "$skip: Int!"];
+    const declarations = ['$first: Int!', '$skip: Int!'];
 
     if (this.config.where) {
       this.addVariableDeclarations(this.config.where, declarations);
     }
 
-    return declarations.join(", ");
+    return declarations.join(', ');
   }
 
-  private addVariableDeclarations(
-    where: Partial<PoolMemberWhereInput>,
-    declarations: string[],
-  ): void {
+  private addVariableDeclarations(where: Partial<PoolMemberWhereInput>, declarations: string[]): void {
     for (const [key, value] of Object.entries(where)) {
       switch (key) {
-        case "network":
-          declarations.push("$network: String");
+        case 'network':
+          declarations.push('$network: String');
           break;
-        case "id":
-          declarations.push("$id: ID");
+        case 'id':
+          declarations.push('$id: ID');
           break;
-        case "memberIndex":
-          declarations.push("$memberIndex: String");
+        case 'memberIndex':
+          declarations.push('$memberIndex: String');
           break;
-        case "identityCommitment":
-          declarations.push("$identityCommitment: String");
+        case 'identityCommitment':
+          declarations.push('$identityCommitment: String');
           break;
-        case "gasUsed_gte":
-          declarations.push("$gasUsed_gte: String");
+        case 'gasUsed_gte':
+          declarations.push('$gasUsed_gte: String');
           break;
-        case "gasUsed_lte":
-          declarations.push("$gasUsed_lte: String");
+        case 'gasUsed_lte':
+          declarations.push('$gasUsed_lte: String');
           break;
-        case "nullifierUsed":
-          declarations.push("$nullifierUsed: Boolean");
+        case 'nullifierUsed':
+          declarations.push('$nullifierUsed: Boolean');
           break;
-        case "addedAtTimestamp_gte":
-          declarations.push("$addedAtTimestamp_gte: String");
+        case 'addedAtTimestamp_gte':
+          declarations.push('$addedAtTimestamp_gte: String');
           break;
-        case "addedAtTimestamp_lte":
-          declarations.push("$addedAtTimestamp_lte: String");
+        case 'addedAtTimestamp_lte':
+          declarations.push('$addedAtTimestamp_lte: String');
           break;
-        case "rootIndexWhenAdded":
-          declarations.push("$rootIndexWhenAdded: Int");
+        case 'rootIndexWhenAdded':
+          declarations.push('$rootIndexWhenAdded: Int');
           break;
-        case "paymaster_":
-          if (typeof value === "object" && value && "address" in value) {
-            declarations.push("$paymasterAddress: String");
+        case 'paymaster_':
+          if (typeof value === 'object' && value && 'address' in value) {
+            declarations.push('$paymasterAddress: String');
           }
           break;
-        case "pool_":
-          if (typeof value === "object" && value) {
-            if ("id" in value) {
-              declarations.push("$poolId: String");
+        case 'pool_':
+          if (typeof value === 'object' && value) {
+            if ('id' in value) {
+              declarations.push('$poolId: String');
             }
-            if ("poolId" in value) {
-              declarations.push("$poolIdValue: String");
+            if ('poolId' in value) {
+              declarations.push('$poolIdValue: String');
             }
           }
           break;
@@ -161,50 +140,47 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
     }
   }
 
-  private addWhereVariables(
-    where: Partial<PoolMemberWhereInput>,
-    variables: Record<string, any>,
-  ): void {
+  private addWhereVariables(where: Partial<PoolMemberWhereInput>, variables: Record<string, any>): void {
     for (const [key, value] of Object.entries(where)) {
       switch (key) {
-        case "network":
+        case 'network':
           variables.network = value;
           break;
-        case "id":
+        case 'id':
           variables.id = value;
           break;
-        case "memberIndex":
+        case 'memberIndex':
           variables.memberIndex = value;
           break;
-        case "identityCommitment":
+        case 'identityCommitment':
           variables.identityCommitment = value;
           break;
-        case "gasUsed_gte":
-        case "gasUsed_lte":
+        case 'gasUsed_gte':
+        case 'gasUsed_lte':
           variables[key] = value;
           break;
-        case "nullifierUsed":
+        case 'nullifierUsed':
           variables.nullifierUsed = value;
           break;
-        case "addedAtTimestamp_gte":
-        case "addedAtTimestamp_lte":
+        case 'addedAtTimestamp_gte':
+        case 'addedAtTimestamp_lte':
           variables[key] = value;
           break;
-        case "rootIndexWhenAdded":
+        case 'rootIndexWhenAdded':
           variables.rootIndexWhenAdded = value;
           break;
-        case "pool_":
-          if (typeof value === "object" && value) {
-            if ("id" in value) {
+        case 'pool_':
+          if (typeof value === 'object' && value) {
+            if ('id' in value) {
               variables.poolId = value.id;
             }
-            if ("poolId" in value) {
+            if ('poolId' in value) {
               variables.poolIdValue = value.poolId;
             }
           }
           break;
-        case "paymaster_":
-          if (typeof value === "object" && value && "address" in value) {
+        case 'paymaster_':
+          if (typeof value === 'object' && value && 'address' in value) {
             variables.paymasterAddress = value.address;
           }
           break;
@@ -217,52 +193,52 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
 
     for (const [key, value] of Object.entries(where)) {
       switch (key) {
-        case "network":
-          conditions.push("network: $network");
+        case 'network':
+          conditions.push('network: $network');
           break;
-        case "id":
-          conditions.push("id: $id");
+        case 'id':
+          conditions.push('id: $id');
           break;
-        case "memberIndex":
-          conditions.push("memberIndex: $memberIndex");
+        case 'memberIndex':
+          conditions.push('memberIndex: $memberIndex');
           break;
-        case "identityCommitment":
-          conditions.push("identityCommitment: $identityCommitment");
+        case 'identityCommitment':
+          conditions.push('identityCommitment: $identityCommitment');
           break;
-        case "gasUsed_gte":
-          conditions.push("gasUsed_gte: $gasUsed_gte");
+        case 'gasUsed_gte':
+          conditions.push('gasUsed_gte: $gasUsed_gte');
           break;
-        case "gasUsed_lte":
-          conditions.push("gasUsed_lte: $gasUsed_lte");
+        case 'gasUsed_lte':
+          conditions.push('gasUsed_lte: $gasUsed_lte');
           break;
-        case "nullifierUsed":
-          conditions.push("nullifierUsed: $nullifierUsed");
+        case 'nullifierUsed':
+          conditions.push('nullifierUsed: $nullifierUsed');
           break;
-        case "addedAtTimestamp_gte":
-          conditions.push("addedAtTimestamp_gte: $addedAtTimestamp_gte");
+        case 'addedAtTimestamp_gte':
+          conditions.push('addedAtTimestamp_gte: $addedAtTimestamp_gte');
           break;
-        case "addedAtTimestamp_lte":
-          conditions.push("addedAtTimestamp_lte: $addedAtTimestamp_lte");
+        case 'addedAtTimestamp_lte':
+          conditions.push('addedAtTimestamp_lte: $addedAtTimestamp_lte');
           break;
-        case "rootIndexWhenAdded":
-          conditions.push("rootIndexWhenAdded: $rootIndexWhenAdded");
+        case 'rootIndexWhenAdded':
+          conditions.push('rootIndexWhenAdded: $rootIndexWhenAdded');
           break;
-        case "paymaster_":
-          if (typeof value === "object" && value && "address" in value) {
-            conditions.push("paymaster_: { address: $paymasterAddress }");
+        case 'paymaster_':
+          if (typeof value === 'object' && value && 'address' in value) {
+            conditions.push('paymaster_: { address: $paymasterAddress }');
           }
           break;
-        case "pool_":
-          if (typeof value === "object" && value) {
+        case 'pool_':
+          if (typeof value === 'object' && value) {
             const nestedConditions: string[] = [];
-            if ("id" in value) {
-              nestedConditions.push("id: $poolId");
+            if ('id' in value) {
+              nestedConditions.push('id: $poolId');
             }
-            if ("poolId" in value) {
-              nestedConditions.push("poolId: $poolIdValue");
+            if ('poolId' in value) {
+              nestedConditions.push('poolId: $poolIdValue');
             }
             if (nestedConditions.length > 0) {
-              conditions.push(`pool_: { ${nestedConditions.join(", ")} }`);
+              conditions.push(`pool_: { ${nestedConditions.join(', ')} }`);
             }
           }
           break;
@@ -361,11 +337,7 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
    *   .first();
    * ```
    */
-  byId(
-    network: NetworkName,
-    poolId: string,
-    memberIndex: string | number,
-  ): this {
+  byId(network: NetworkName, poolId: string, memberIndex: string | number): this {
     this.where({ id: `${network}-${poolId}-${memberIndex.toString()}` });
     this.byNetwork(network); // Also set network for clarity and consistency
     return this;
@@ -539,8 +511,8 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
    *   .execute();
    * ```
    */
-  orderByJoinDate(direction: "asc" | "desc" = "desc"): this {
-    this.orderBy("addedAtTimestamp", direction);
+  orderByJoinDate(direction: 'asc' | 'desc' = 'desc'): this {
+    this.orderBy('addedAtTimestamp', direction);
     return this;
   }
 
@@ -549,8 +521,8 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
    *
    * @returns PoolMemberQueryBuilder for method chaining
    */
-  orderByMemberIndex(direction: "asc" | "desc" = "asc"): this {
-    this.orderBy("memberIndex", direction);
+  orderByMemberIndex(direction: 'asc' | 'desc' = 'asc'): this {
+    this.orderBy('memberIndex', direction);
     return this;
   }
 
@@ -559,8 +531,8 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
    *
    * @returns PoolMemberQueryBuilder for method chaining
    */
-  orderByGasUsed(direction: "asc" | "desc" = "desc"): this {
-    this.orderBy("gasUsed", direction);
+  orderByGasUsed(direction: 'asc' | 'desc' = 'desc'): this {
+    this.orderBy('gasUsed', direction);
     return this;
   }
 
@@ -569,8 +541,8 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
    *
    * @returns PoolMemberQueryBuilder for method chaining
    */
-  orderByMerkleRootIndex(direction: "asc" | "desc" = "asc"): this {
-    this.orderBy("rootIndexWhenAdded", direction);
+  orderByMerkleRootIndex(direction: 'asc' | 'desc' = 'asc'): this {
+    this.orderBy('rootIndexWhenAdded', direction);
     return this;
   }
 
@@ -587,14 +559,8 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
    * @param network - Network identifier
    * @returns Promise resolving to array of pool memberships
    */
-  async getPoolsByIdentity(
-    identityCommitment: string,
-    network: NetworkName,
-  ): Promise<PoolMember[]> {
-    return this.clone()
-      .byIdentityCommitment(identityCommitment)
-      .byNetwork(network)
-      .execute();
+  async getPoolsByIdentity(identityCommitment: string, network: NetworkName): Promise<PoolMember[]> {
+    return this.clone().byIdentityCommitment(identityCommitment).byNetwork(network).execute();
   }
 
   /**
@@ -606,7 +572,7 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
    */
   async getPoolMemberStats(
     poolId: string,
-    network: NetworkName,
+    network: NetworkName
   ): Promise<{
     totalMembers: number;
     activeMembers: number;
@@ -616,38 +582,22 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
     oldestMember: string;
     newestMember: string;
   }> {
-    const members = await this.clone()
-      .byNetwork(network)
-      .byPool(poolId)
-      .execute();
+    const members = await this.clone().byNetwork(network).byPool(poolId).execute();
 
     const totalMembers = members.length;
-    const activeMembers = members.filter(
-      (member) => member.nullifierUsed,
-    ).length;
-    const totalGasUsed = members.reduce(
-      (sum, member) => sum + (member.gasUsed ? BigInt(member.gasUsed) : 0n),
-      0n,
-    );
-    const averageGasUsed =
-      totalMembers > 0 ? totalGasUsed / BigInt(totalMembers) : 0n;
-    const nullifierUsageRate =
-      totalMembers > 0 ? (activeMembers / totalMembers) * 100 : 0;
+    const activeMembers = members.filter((member) => member.nullifierUsed).length;
+    const totalGasUsed = members.reduce((sum, member) => sum + (member.gasUsed ? BigInt(member.gasUsed) : 0n), 0n);
+    const averageGasUsed = totalMembers > 0 ? totalGasUsed / BigInt(totalMembers) : 0n;
+    const nullifierUsageRate = totalMembers > 0 ? (activeMembers / totalMembers) * 100 : 0;
 
     const oldestMember = members.reduce(
-      (oldest, member) =>
-        BigInt(member.addedAtTimestamp) < BigInt(oldest?.addedAtTimestamp ?? 0)
-          ? member
-          : oldest,
-      members[0],
+      (oldest, member) => (BigInt(member.addedAtTimestamp) < BigInt(oldest?.addedAtTimestamp ?? 0) ? member : oldest),
+      members[0]
     );
 
     const newestMember = members.reduce(
-      (newest, member) =>
-        BigInt(member.addedAtTimestamp) > BigInt(newest?.addedAtTimestamp ?? 0)
-          ? member
-          : newest,
-      members[0],
+      (newest, member) => (BigInt(member.addedAtTimestamp) > BigInt(newest?.addedAtTimestamp ?? 0) ? member : newest),
+      members[0]
     );
 
     return {
@@ -656,8 +606,8 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
       totalGasUsed: totalGasUsed.toString(),
       averageGasUsed: averageGasUsed.toString(),
       nullifierUsageRate: Math.round(nullifierUsageRate * 100) / 100,
-      oldestMember: oldestMember?.addedAtTimestamp.toString() || "N/A",
-      newestMember: newestMember?.addedAtTimestamp.toString() || "N/A",
+      oldestMember: oldestMember?.addedAtTimestamp.toString() || 'N/A',
+      newestMember: newestMember?.addedAtTimestamp.toString() || 'N/A',
     };
   }
 
@@ -672,7 +622,7 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
   async getMemberActivityTimeline(
     poolId: string,
     network: NetworkName,
-    days: number = 30,
+    days: number = 30
   ): Promise<
     Array<{
       date: string;
@@ -688,7 +638,7 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
       .byNetwork(network)
       .byPool(poolId)
       .joinedAfter(startTime)
-      .orderByJoinDate("asc")
+      .orderByJoinDate('asc')
       .execute();
 
     // Group by date
@@ -702,9 +652,7 @@ export class PoolMemberQueryBuilder extends BaseQueryBuilder<
     > = {};
 
     for (const member of members) {
-      const date = new Date(Number(member.addedAtTimestamp) * 1000)
-        .toISOString()
-        .split("T")[0]!;
+      const date = new Date(Number(member.addedAtTimestamp) * 1000).toISOString().split('T')[0]!;
 
       if (!timeline[date]) {
         timeline[date] = {

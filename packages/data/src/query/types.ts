@@ -3,15 +3,8 @@
  * Updated for new subgraph schema structure
  */
 
-import {
-  NetworkInfo,
-  NetworkName,
-  PaymasterContract,
-  PaymasterType,
-  Pool,
-  PoolMember,
-  Transaction,
-} from "../types/subgraph";
+import { NetworkName } from '@private-prepaid-gas/constants';
+import { NetworkInfo, PaymasterContract, PaymasterType, Pool, PoolMember, Transaction } from '../types/subgraph';
 
 /**
  * Base query configuration for GraphQL queries
@@ -24,7 +17,7 @@ export interface QueryConfig<TWhereInput, TOrderBy> {
   /** Field to order by */
   orderBy?: TOrderBy;
   /** Order direction */
-  orderDirection?: "asc" | "desc";
+  orderDirection?: 'asc' | 'desc';
   /** Where conditions */
   where?: Partial<TWhereInput>;
   /** Network name */
@@ -44,9 +37,9 @@ export interface QueryConfig<TWhereInput, TOrderBy> {
  */
 export type PaymasterContractFields =
   | keyof PaymasterContract
-  | "pools { id poolId network }" // Example of nested fields
-  | "transactions { id userOpHash sender executedAtTransaction }"
-  | "revenueWithdrawals { id amount recipient }";
+  | 'pools { id poolId network }' // Example of nested fields
+  | 'transactions { id userOpHash sender executedAtTransaction }'
+  | 'revenueWithdrawals { id amount recipient }';
 
 /**
  * Available fields for Pool entity queries
@@ -54,9 +47,9 @@ export type PaymasterContractFields =
  */
 export type PoolFields =
   | keyof Pool
-  | "paymaster { id contractType address }"
-  | "members { id memberIndex addedAtTimestamp identityCommitment }"
-  | "transactions { id userOpHash sender actualGasCost executedAtTimestamp nullifier executedAtTransaction }";
+  | 'paymaster { id contractType address }'
+  | 'members { id memberIndex addedAtTimestamp identityCommitment }'
+  | 'transactions { id userOpHash sender actualGasCost executedAtTimestamp nullifier executedAtTransaction }';
 
 /**
  * Available fields for PoolMember entity queries
@@ -64,16 +57,16 @@ export type PoolFields =
  */
 export type PoolMemberFields =
   | keyof PoolMember
-  | "pool { id poolId network chainId }"
-  | "pool { paymaster { id address } }";
+  | 'pool { id poolId network chainId }'
+  | 'pool { paymaster { id address } }';
 
 /**
  * Available fields for Transaction entity queries
  */
 export type TransactionFields =
   | keyof Transaction
-  | "paymaster { id address contractType }" // Example of nested fields
-  | "pool { id poolId }";
+  | 'paymaster { id address contractType }' // Example of nested fields
+  | 'pool { id poolId }';
 
 /**
  * Available fields for NetworkInfo entity queries

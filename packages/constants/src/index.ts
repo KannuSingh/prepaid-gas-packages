@@ -3,3 +3,4 @@
 
 export * from './contracts/constants';
 export * from './abi';
+export * from './network';

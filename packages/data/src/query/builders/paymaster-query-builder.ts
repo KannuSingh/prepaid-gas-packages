@@ -3,26 +3,15 @@
  * Updated for the new network-aware schema structure
  */
 
-import type { SubgraphClient } from "../../client/subgraph-client.js";
-import type {
-  PaymasterContract,
-  PaymasterType,
-  NetworkName,
-  SerializedPaymasterContract,
-} from "../../types/subgraph.js";
-import { GET_PAYMASTER_WITH_RELATED } from "../../client/queries.js";
-import { BaseQueryBuilder } from "./base-query-builder.js";
-import {
-  PaymasterContractFields,
-  PaymasterContractWhereInput,
-} from "../types.js";
-import { serializePaymasterContract } from "../../transformers/index.js";
+import type { SubgraphClient } from '../../client/subgraph-client.js';
+import type { PaymasterContract, PaymasterType, SerializedPaymasterContract } from '../../types/subgraph.js';
+import { GET_PAYMASTER_WITH_RELATED } from '../../client/queries.js';
+import { BaseQueryBuilder } from './base-query-builder.js';
+import { PaymasterContractFields, PaymasterContractWhereInput } from '../types.js';
+import { serializePaymasterContract } from '../../transformers/index.js';
+import { NetworkName } from '@private-prepaid-gas/constants';
 
-export type PaymasterContractOrderBy =
-  | "deployedAtTimestamp"
-  | "revenue"
-  | "currentDeposit"
-  | "lastUpdatedTimestamp";
+export type PaymasterContractOrderBy = 'deployedAtTimestamp' | 'revenue' | 'currentDeposit' | 'lastUpdatedTimestamp';
 
 /**
  * Query builder for PaymasterContract entities
@@ -38,30 +27,19 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
   PaymasterContractOrderBy
 > {
   constructor(private subgraphClient: SubgraphClient) {
-    super(subgraphClient, "paymasterContracts", "deployedAtTimestamp", "desc");
+    super(subgraphClient, 'paymasterContracts', 'deployedAtTimestamp', 'desc');
   }
 
   protected buildDynamicQuery(): string {
-    const fields =
-      this.config.selectedFields?.join("\n        ") || this.getDefaultFields();
+    const fields = this.config.selectedFields?.join('\n        ') || this.getDefaultFields();
     const variables = this.getVariableDeclarations();
     const whereClause = this.buildWhereClauseString();
-    const orderByClause = this.config.orderBy
-      ? `orderBy: ${this.config.orderBy}`
-      : "";
-    const orderDirectionClause = this.config.orderDirection
-      ? `orderDirection: ${this.config.orderDirection}`
-      : "";
+    const orderByClause = this.config.orderBy ? `orderBy: ${this.config.orderBy}` : '';
+    const orderDirectionClause = this.config.orderDirection ? `orderDirection: ${this.config.orderDirection}` : '';
 
-    const args = [
-      whereClause,
-      orderByClause,
-      orderDirectionClause,
-      "first: $first",
-      "skip: $skip",
-    ]
+    const args = [whereClause, orderByClause, orderDirectionClause, 'first: $first', 'skip: $skip']
       .filter(Boolean)
-      .join(", ");
+      .join(', ');
 
     const queryName = `GetPaymasterContracts`;
 
@@ -89,146 +67,136 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
 
   protected buildWhereClauseString(): string {
     if (!this.config.where || Object.keys(this.config.where).length === 0) {
-      return "";
+      return '';
     }
 
     const conditions = this.buildWhereConditions(this.config.where);
-    return conditions.length > 0 ? `where: { ${conditions.join(", ")} }` : "";
+    return conditions.length > 0 ? `where: { ${conditions.join(', ')} }` : '';
   }
 
-  protected getSerializer(): (
-    entity: PaymasterContract,
-  ) => SerializedPaymasterContract {
+  protected getSerializer(): (entity: PaymasterContract) => SerializedPaymasterContract {
     return serializePaymasterContract;
   }
 
   private getVariableDeclarations(): string {
-    const declarations = ["$first: Int!", "$skip: Int!"];
+    const declarations = ['$first: Int!', '$skip: Int!'];
 
     if (this.config.where) {
       this.addVariableDeclarations(this.config.where, declarations);
     }
 
-    return declarations.join(", ");
+    return declarations.join(', ');
   }
 
-  private addVariableDeclarations(
-    where: Partial<PaymasterContractWhereInput>,
-    declarations: string[],
-  ): void {
+  private addVariableDeclarations(where: Partial<PaymasterContractWhereInput>, declarations: string[]): void {
     for (const [key] of Object.entries(where)) {
       switch (key) {
-        case "network":
-          declarations.push("$network: String");
+        case 'network':
+          declarations.push('$network: String');
           break;
-        case "contractType":
-          declarations.push("$contractType: String");
+        case 'contractType':
+          declarations.push('$contractType: String');
           break;
-        case "address":
-          declarations.push("$address: String");
+        case 'address':
+          declarations.push('$address: String');
           break;
-        case "id":
-          declarations.push("$id: ID");
+        case 'id':
+          declarations.push('$id: ID');
           break;
-        case "revenue_gte":
-          declarations.push("$revenue_gte: String");
+        case 'revenue_gte':
+          declarations.push('$revenue_gte: String');
           break;
-        case "revenue_lte":
-          declarations.push("$revenue_lte: String");
+        case 'revenue_lte':
+          declarations.push('$revenue_lte: String');
           break;
-        case "revenue_gt":
-          declarations.push("$revenue_gt: String");
+        case 'revenue_gt':
+          declarations.push('$revenue_gt: String');
           break;
-        case "currentDeposit_gte":
-          declarations.push("$currentDeposit_gte: String");
+        case 'currentDeposit_gte':
+          declarations.push('$currentDeposit_gte: String');
           break;
-        case "currentDeposit_lte":
-          declarations.push("$currentDeposit_lte: String");
+        case 'currentDeposit_lte':
+          declarations.push('$currentDeposit_lte: String');
           break;
-        case "deployedAtTimestamp_gte":
-          declarations.push("$deployedAtTimestamp_gte: String");
+        case 'deployedAtTimestamp_gte':
+          declarations.push('$deployedAtTimestamp_gte: String');
           break;
-        case "deployedAtTimestamp_lte":
-          declarations.push("$deployedAtTimestamp_lte: String");
+        case 'deployedAtTimestamp_lte':
+          declarations.push('$deployedAtTimestamp_lte: String');
           break;
       }
     }
   }
 
-  private addWhereVariables(
-    where: Partial<PaymasterContractWhereInput>,
-    variables: Record<string, any>,
-  ): void {
+  private addWhereVariables(where: Partial<PaymasterContractWhereInput>, variables: Record<string, any>): void {
     for (const [key, value] of Object.entries(where)) {
       switch (key) {
-        case "network":
+        case 'network':
           variables.network = value;
           break;
-        case "contractType":
+        case 'contractType':
           variables.contractType = value;
           break;
-        case "address":
+        case 'address':
           variables.address = value;
           break;
-        case "id":
+        case 'id':
           variables.id = value;
           break;
-        case "revenue_gte":
-        case "revenue_lte":
-        case "revenue_gt":
+        case 'revenue_gte':
+        case 'revenue_lte':
+        case 'revenue_gt':
           variables[key] = value;
           break;
-        case "currentDeposit_gte":
-        case "currentDeposit_lte":
+        case 'currentDeposit_gte':
+        case 'currentDeposit_lte':
           variables[key] = value;
           break;
-        case "deployedAtTimestamp_gte":
-        case "deployedAtTimestamp_lte":
+        case 'deployedAtTimestamp_gte':
+        case 'deployedAtTimestamp_lte':
           variables[key] = value;
           break;
       }
     }
   }
 
-  private buildWhereConditions(
-    where: Partial<PaymasterContractWhereInput>,
-  ): string[] {
+  private buildWhereConditions(where: Partial<PaymasterContractWhereInput>): string[] {
     const conditions: string[] = [];
 
     for (const [key] of Object.entries(where)) {
       switch (key) {
-        case "network":
-          conditions.push("network: $network");
+        case 'network':
+          conditions.push('network: $network');
           break;
-        case "contractType":
-          conditions.push("contractType: $contractType");
+        case 'contractType':
+          conditions.push('contractType: $contractType');
           break;
-        case "address":
-          conditions.push("address: $address");
+        case 'address':
+          conditions.push('address: $address');
           break;
-        case "id":
-          conditions.push("id: $id");
+        case 'id':
+          conditions.push('id: $id');
           break;
-        case "revenue_gte":
-          conditions.push("revenue_gte: $revenue_gte");
+        case 'revenue_gte':
+          conditions.push('revenue_gte: $revenue_gte');
           break;
-        case "revenue_lte":
-          conditions.push("revenue_lte: $revenue_lte");
+        case 'revenue_lte':
+          conditions.push('revenue_lte: $revenue_lte');
           break;
-        case "revenue_gt":
-          conditions.push("revenue_gt: $revenue_gt");
+        case 'revenue_gt':
+          conditions.push('revenue_gt: $revenue_gt');
           break;
-        case "currentDeposit_gte":
-          conditions.push("currentDeposit_gte: $currentDeposit_gte");
+        case 'currentDeposit_gte':
+          conditions.push('currentDeposit_gte: $currentDeposit_gte');
           break;
-        case "currentDeposit_lte":
-          conditions.push("currentDeposit_lte: $currentDeposit_lte");
+        case 'currentDeposit_lte':
+          conditions.push('currentDeposit_lte: $currentDeposit_lte');
           break;
-        case "deployedAtTimestamp_gte":
-          conditions.push("deployedAtTimestamp_gte: $deployedAtTimestamp_gte");
+        case 'deployedAtTimestamp_gte':
+          conditions.push('deployedAtTimestamp_gte: $deployedAtTimestamp_gte');
           break;
-        case "deployedAtTimestamp_lte":
-          conditions.push("deployedAtTimestamp_lte: $deployedAtTimestamp_lte");
+        case 'deployedAtTimestamp_lte':
+          conditions.push('deployedAtTimestamp_lte: $deployedAtTimestamp_lte');
           break;
       }
     }
@@ -445,7 +413,7 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
    * ```
    */
   onlyActive(): this {
-    this.where({ revenue_gt: "0" });
+    this.where({ revenue_gt: '0' });
     return this;
   }
 
@@ -469,8 +437,8 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
    *   .execute();
    * ```
    */
-  orderByRevenue(direction: "asc" | "desc" = "desc"): this {
-    this.orderBy("revenue", direction);
+  orderByRevenue(direction: 'asc' | 'desc' = 'desc'): this {
+    this.orderBy('revenue', direction);
     return this;
   }
 
@@ -479,8 +447,8 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
    *
    * @returns PaymasterContractQueryBuilder for method chaining
    */
-  orderByDeposit(direction: "asc" | "desc" = "desc"): this {
-    this.orderBy("currentDeposit", direction);
+  orderByDeposit(direction: 'asc' | 'desc' = 'desc'): this {
+    this.orderBy('currentDeposit', direction);
     return this;
   }
 
@@ -489,8 +457,8 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
    *
    * @returns PaymasterContractQueryBuilder for method chaining
    */
-  orderByDeployment(direction: "asc" | "desc" = "desc"): this {
-    this.orderBy("deployedAtTimestamp", direction);
+  orderByDeployment(direction: 'asc' | 'desc' = 'desc'): this {
+    this.orderBy('deployedAtTimestamp', direction);
     return this;
   }
 
@@ -499,8 +467,8 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
    *
    * @returns PaymasterContractQueryBuilder for method chaining
    */
-  orderByActivity(direction: "asc" | "desc" = "desc"): this {
-    this.orderBy("lastUpdatedTimestamp", direction);
+  orderByActivity(direction: 'asc' | 'desc' = 'desc'): this {
+    this.orderBy('lastUpdatedTimestamp', direction);
     return this;
   }
 
@@ -521,7 +489,7 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
   async withRelated(
     poolsLimit: number = 10,
     transactionsLimit: number = 10,
-    withdrawalsLimit: number = 10,
+    withdrawalsLimit: number = 10
   ): Promise<
     | (PaymasterContract & {
         pools: any[];
@@ -531,7 +499,7 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
     | null
   > {
     if (!this.config.where?.address || !this.config.where?.network) {
-      throw new Error("Address and network are required for withRelated query");
+      throw new Error('Address and network are required for withRelated query');
     }
 
     const network = this.config.where.network;

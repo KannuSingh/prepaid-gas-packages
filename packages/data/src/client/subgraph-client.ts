@@ -1,17 +1,12 @@
-import { GraphQLClient } from "graphql-request";
-import type { ChainId } from "../types/subgraph.js";
-import {
-  getValidatedNetworkPreset,
-  NETWORK_PRESETS,
-  type NetworkPreset,
-} from "../network/presets.js";
-import { QueryBuilder } from "../query/query-builder.js";
+import { GraphQLClient } from 'graphql-request';
+import { getNetworkPreset, type NetworkPreset, type ChainId } from '@private-prepaid-gas/constants';
+import { QueryBuilder } from '../query/query-builder.js';
 
 /**
  * Configuration for the subgraph client
  * Updated to support multiple paymaster contracts
  */
-export type ClientOptions = {
+export type SubClientOptions = {
   subgraphUrl?: string;
   timeout?: number;
 };
@@ -41,7 +36,7 @@ export interface PaymasterQueryOptions extends PaginationOptions {
   /** Specific fields to fetch */
   fields?: string[];
   /** Filter by contract type */
-  contractType?: "GasLimited" | "OneTimeUse";
+  contractType?: 'GasLimited' | 'OneTimeUse';
 }
 
 /**
@@ -66,15 +61,24 @@ export interface TransactionQueryOptions extends PaginationOptions {
 export class SubgraphClient {
   private client: GraphQLClient;
   private chainId: ChainId;
+  private options: SubClientOptions;
   private requestMap: Map<string, Promise<any>> = new Map();
   private readonly maxPendingRequests = 100;
 
-  constructor(chainId: ChainId, options: ClientOptions = {}) {
-    const preset = getValidatedNetworkPreset(chainId);
-    this.client = new GraphQLClient(
-      options.subgraphUrl || preset.defaultSubgraphUrl,
-    );
+  constructor(chainId: ChainId, options: SubClientOptions = {}) {
+    const preset = getNetworkPreset(chainId);
     this.chainId = chainId;
+    this.options = options;
+    // Use provided subgraph URL or fall back to preset default
+    const finalSubgraphUrl = options.subgraphUrl || preset?.defaultSubgraphUrl;
+
+    if (!finalSubgraphUrl) {
+      throw new Error(
+        `No subgraph URL available for network(chainId: ${chainId}). Please provide one in options.subgraphUrl`
+      );
+    }
+
+    this.client = new GraphQLClient(finalSubgraphUrl);
   }
 
   /**
@@ -84,12 +88,9 @@ export class SubgraphClient {
    * @param variables - Query variables
    * @returns Unique key for the request
    */
-  private generateRequestKey(
-    query: string,
-    variables: Record<string, any>,
-  ): string {
+  private generateRequestKey(query: string, variables: Record<string, any>): string {
     // Create a consistent key from query and variables
-    const normalizedQuery = query.replace(/\s+/g, " ").trim();
+    const normalizedQuery = query.replace(/\s+/g, ' ').trim();
     const sortedVariables = Object.keys(variables)
       .sort()
       .reduce(
@@ -97,7 +98,7 @@ export class SubgraphClient {
           sorted[key] = variables[key];
           return sorted;
         },
-        {} as Record<string, any>,
+        {} as Record<string, any>
       );
 
     return `${normalizedQuery}|${JSON.stringify(sortedVariables)}`;
@@ -118,10 +119,7 @@ export class SubgraphClient {
   private cleanupOldRequests(): void {
     if (this.requestMap.size > this.maxPendingRequests) {
       // Clear half of the oldest requests
-      const keysToDelete = Array.from(this.requestMap.keys()).slice(
-        0,
-        this.maxPendingRequests / 2,
-      );
+      const keysToDelete = Array.from(this.requestMap.keys()).slice(0, this.maxPendingRequests / 2);
       keysToDelete.forEach((key) => this.requestMap.delete(key));
     }
   }
@@ -152,56 +150,9 @@ export class SubgraphClient {
       subgraphUrl?: string;
       /** Request timeout in milliseconds */
       timeout?: number;
-    } = {},
+    } = {}
   ): SubgraphClient {
     return new SubgraphClient(chainId, options);
-  }
-
-  /**
-   * Get all supported networks
-   *
-   * @returns Array of all supported network presets
-   *
-   * @example
-   * ```typescript
-   * const networks = SubgraphClient.getSupportedNetworks();
-   * console.log(networks.map(n => n.network.chainName)); // ["Base Sepolia", ...]
-   * ```
-   */
-  static getSupportedNetworks(): NetworkPreset[] {
-    return Object.values(NETWORK_PRESETS);
-  }
-  /**
-   * Get supported network preset
-   *
-   * @returns Supported network preset
-   *
-   * @example
-   * ```typescript
-   * const networkPreset = SubgraphClient.getNetworkPreset(84532);
-   * console.log(networkPreset.chainName); // "Base Sepolia"
-   * ```
-   */
-  static getNetworkPreset(chainId: ChainId): NetworkPreset {
-    const preset = getValidatedNetworkPreset(chainId);
-    return preset;
-  }
-
-  /**
-   * Check if a chain ID is supported
-   *
-   * @param chainId - The chain ID to check
-   * @returns True if supported, false otherwise
-   *
-   * @example
-   * ```typescript
-   * if (SubgraphClient.isNetworkSupported(84532)) {
-   *   const client = SubgraphClient.createForNetwork(84532);
-   * }
-   * ```
-   */
-  static isNetworkSupported(chainId: number): boolean {
-    return chainId in NETWORK_PRESETS;
   }
 
   /**
@@ -269,10 +220,7 @@ export class SubgraphClient {
    * console.log(response.pools);
    * ```
    */
-  async executeQuery<T = any>(
-    query: string,
-    variables: Record<string, any> = {},
-  ): Promise<T> {
+  async executeQuery<T = any>(query: string, variables: Record<string, any> = {}): Promise<T> {
     // Generate unique key for this request
     const requestKey = this.generateRequestKey(query, variables);
 
@@ -298,9 +246,9 @@ export class SubgraphClient {
         this.cleanupRequest(requestKey);
 
         // Enhanced error handling with context
-        console.error("GraphQL query failed:", {
+        console.error('GraphQL query failed:', {
           error,
-          query: query.substring(0, 200) + "...", // Log first 200 chars
+          query: query.substring(0, 200) + '...', // Log first 200 chars
           variables,
           chainId: this.chainId,
         });
@@ -328,142 +276,8 @@ export class SubgraphClient {
    * ]);
    * ```
    */
-  async executeQueries<T = any>(
-    queries: Array<{ query: string; variables?: Record<string, any> }>,
-  ): Promise<T[]> {
-    const promises = queries.map(({ query, variables = {} }) =>
-      this.executeQuery<T>(query, variables),
-    );
+  async executeQueries<T = any>(queries: Array<{ query: string; variables?: Record<string, any> }>): Promise<T[]> {
+    const promises = queries.map(({ query, variables = {} }) => this.executeQuery<T>(query, variables));
     return Promise.all(promises);
-  }
-
-  /**
-   * Test connection to the subgraph
-   *
-   * @returns Promise resolving to true if connection is successful
-   *
-   * @example
-   * ```typescript
-   * const isConnected = await client.testConnection();
-   * if (isConnected) {
-   *   console.log("Subgraph is accessible");
-   * }
-   * ```
-   */
-  async testConnection(): Promise<boolean> {
-    try {
-      await this.executeQuery(`
-        query TestConnection {
-          _meta {
-            block {
-              number
-            }
-          }
-        }
-      `);
-      return true;
-    } catch (error) {
-      console.error("Subgraph connection test failed:", error);
-      return false;
-    }
-  }
-
-  /**
-   * Get subgraph metadata
-   *
-   * @returns Promise resolving to subgraph metadata
-   *
-   * @example
-   * ```typescript
-   * const metadata = await client.getSubgraphMetadata();
-   * console.log("Latest block:", metadata.block.number);
-   * ```
-   */
-  async getSubgraphMetadata(): Promise<{
-    block: {
-      number: number;
-      hash: string;
-    };
-    deployment: string;
-  }> {
-    const response = await this.executeQuery<{
-      _meta: {
-        block: {
-          number: number;
-          hash: string;
-        };
-        deployment: string;
-      };
-    }>(`
-      query GetSubgraphMetadata {
-        _meta {
-          block {
-            number
-            hash
-          }
-          deployment
-        }
-      }
-    `);
-    return response._meta;
-  }
-
-  /**
-   * Get health status of the subgraph
-   *
-   * @returns Promise resolving to health status information
-   *
-   * @example
-   * ```typescript
-   * const health = await client.getHealthStatus();
-   * console.log("Sync status:", health.synced);
-   * ```
-   */
-  async getHealthStatus(): Promise<{
-    synced: boolean;
-    latestBlock: number;
-    chainHeadBlock: number;
-    health: string;
-  }> {
-    try {
-      const metadata = await this.getSubgraphMetadata();
-      const isConnected = await this.testConnection();
-
-      return {
-        synced: isConnected,
-        latestBlock: metadata.block.number,
-        chainHeadBlock: metadata.block.number, // Approximation
-        health: isConnected ? "healthy" : "unhealthy",
-      };
-    } catch (error) {
-      return {
-        synced: false,
-        latestBlock: 0,
-        chainHeadBlock: 0,
-        health: "unhealthy",
-      };
-    }
-  }
-
-  /**
-   * Create a new client for different network
-   *
-   * @param chainId - Target chain ID
-   * @param options - Optional configuration overrides
-   * @returns New SubgraphClient instance for the target network
-   *
-   * @example
-   * ```typescript
-   * const newClient = client.switchNetwork(8453); // Switch to Base Mainnet
-   * ```
-   */
-  switchNetwork(
-    chainId: ChainId,
-    options: {
-      subgraphUrl?: string;
-      timeout?: number;
-    } = {},
-  ): SubgraphClient {
-    return SubgraphClient.createForNetwork(chainId, options);
   }
 }

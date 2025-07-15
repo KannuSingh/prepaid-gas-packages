@@ -33,9 +33,6 @@ export type {
   SerializedTransaction,
 } from './types/subgraph.js';
 
-// Event types
-export type { ChainId, NetworkName } from './types/subgraph.js';
-
 /**
  * ========================================
  * CLIENT TYPES AND CLASSES
@@ -44,45 +41,6 @@ export type { ChainId, NetworkName } from './types/subgraph.js';
 
 // Main client class
 export { SubgraphClient } from './client/subgraph-client.js';
-
-/**
- * ========================================
- * NETWORK CONFIGURATION
- * ========================================
- */
-
-// Network configuration types
-export type { NetworkConfig, PaymasterContractConfig } from './network/config.js';
-
-// Network configurations
-export {
-  BASE_SEPOLIA_NETWORK,
-  getAllPaymasterContracts,
-  getPaymasterByType,
-  hasPaymasterType,
-  getPaymasterByAddress,
-  getDefaultPaymaster,
-  validateNetworkConfig,
-} from './network/config.js';
-
-// Network presets and utilities
-export type { NetworkPreset } from './network/presets.js';
-export {
-  BASE_SEPOLIA_PRESET,
-  NETWORK_PRESETS,
-  NETWORK_PRESETS_BY_NAME,
-  getNetworkPreset,
-  getNetworkPresetByName,
-  getSupportedChainIds,
-  getSupportedNetworkNames,
-  isSupportedChainId,
-  getUnsupportedNetworkError,
-  validateNetworkPreset,
-  getValidatedNetworkPreset,
-  getPaymasterContracts,
-  getPaymasterContract,
-  supportsPaymasterType,
-} from './network/presets.js';
 
 /**
  * ========================================

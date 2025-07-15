@@ -105,6 +105,9 @@ importers:
 
   packages/data:
     dependencies:
+      '@private-prepaid-gas/constants':
+        specifier: workspace:*
+        version: link:../constants
       graphql-request:
         specifier: 7.2.0
         version: 7.2.0(graphql@16.11.0)

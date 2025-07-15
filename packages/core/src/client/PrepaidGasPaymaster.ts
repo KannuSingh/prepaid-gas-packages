@@ -7,12 +7,12 @@ import {
 import { createPublicClient, fromHex, http } from 'viem';
 import { getPackedUserOperation } from 'permissionless';
 
-import { ChainId, SubgraphClient } from '@private-prepaid-gas/data';
+import { SubgraphClient } from '@private-prepaid-gas/data';
 
 import { generatePaymasterData, getChainById, parsePaymasterContext, PrepaidGasPaymasterMode } from '../utils';
 import { POST_OP_GAS_LIMIT, GAS_LIMITED_PAYMASTER_ABI } from '@private-prepaid-gas/constants';
 import { GetPaymasterStubDataV7Parameters, ProofGenerationParams, ProofGenerationResult, PaymasterOptions } from './';
-import { getValidatedNetworkPreset, type NetworkPreset } from '@private-prepaid-gas/data';
+import { ChainId, getNetworkPreset } from '@private-prepaid-gas/constants';
 import { generateProof, SemaphoreProof } from '@semaphore-protocol/proof';
 import { Identity } from '@semaphore-protocol/identity';
 import { Group } from '@semaphore-protocol/group';
@@ -57,15 +57,15 @@ export class PrepaidGasPaymaster {
       rpcUrl?: string;
     } = {}
   ) {
-    const preset: NetworkPreset = getValidatedNetworkPreset(chainId);
+    const preset = getNetworkPreset(chainId);
     this.chainId = chainId;
     this.options = options;
     // Use provided subgraph URL or fall back to preset default
-    const finalSubgraphUrl = options.subgraphUrl || preset.defaultSubgraphUrl;
+    const finalSubgraphUrl = options.subgraphUrl || preset?.defaultSubgraphUrl;
 
     if (!finalSubgraphUrl) {
       throw new Error(
-        `No subgraph URL available for network ${preset.network.name} (chainId: ${chainId}). Please provide one in options.subgraphUrl`
+        `No subgraph URL available for network(chainId: ${chainId}). Please provide one in options.subgraphUrl`
       );
     }
 

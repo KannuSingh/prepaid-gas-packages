@@ -344,22 +344,6 @@ export interface NetworkMetadata {
 }
 
 /**
- * ========================================
- * UTILITY TYPES
- * ========================================
- */
-
-/**
- * Supported network names
- */
-export type NetworkName = 'base-sepolia' | 'base' | 'ethereum' | 'sepolia';
-
-/**
- * Supported chain IDs
- */
-export type ChainId = 84532 | 8453 | 1 | 11155111;
-
-/**
  * Entity types for type guards
  */
 export type EntityType = 'PaymasterContract' | 'Pool' | 'PoolMember' | 'Transaction' | 'NetworkInfo';

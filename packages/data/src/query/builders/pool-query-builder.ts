@@ -3,24 +3,21 @@
  * Updated for the new network-aware schema structure
  */
 
-import type { SubgraphClient } from "../../client/subgraph-client.js";
-import type {
-  Pool,
-  NetworkName,
-  SerializedPool,
-} from "../../types/subgraph.js";
-import { BaseQueryBuilder } from "./base-query-builder.js";
+import type { SubgraphClient } from '../../client/subgraph-client.js';
+import type { Pool, SerializedPool } from '../../types/subgraph.js';
+import { BaseQueryBuilder } from './base-query-builder.js';
 
-import { PoolFields, PoolWhereInput } from "../types.js";
-import { serializePool } from "../../transformers/index.js";
+import { PoolFields, PoolWhereInput } from '../types.js';
+import { serializePool } from '../../transformers/index.js';
+import { NetworkName } from '@private-prepaid-gas/constants';
 
 export type PoolOrderBy =
-  | "createdAtTimestamp"
-  | "memberCount"
-  | "totalDeposits"
-  | "joiningFee"
-  | "lastUpdatedTimestamp"
-  | "poolId";
+  | 'createdAtTimestamp'
+  | 'memberCount'
+  | 'totalDeposits'
+  | 'joiningFee'
+  | 'lastUpdatedTimestamp'
+  | 'poolId';
 
 /**
  * Query builder for Pool entities
@@ -28,43 +25,26 @@ export type PoolOrderBy =
  * Provides a fluent interface for building complex pool queries
  * with full support for the new network-aware schema.
  */
-export class PoolQueryBuilder extends BaseQueryBuilder<
-  Pool,
-  SerializedPool,
-  PoolFields,
-  PoolWhereInput,
-  PoolOrderBy
-> {
+export class PoolQueryBuilder extends BaseQueryBuilder<Pool, SerializedPool, PoolFields, PoolWhereInput, PoolOrderBy> {
   private includeMembers: boolean = false;
   private membersLimit: number = 10;
   private includeTransactions: boolean = false;
   private transactionsLimit: number = 10;
 
   constructor(client: SubgraphClient) {
-    super(client, "pools", "poolId", "desc");
+    super(client, 'pools', 'poolId', 'desc');
   }
 
   protected buildDynamicQuery(): string {
-    const fields =
-      this.config.selectedFields?.join("\n        ") || this.getDefaultFields();
+    const fields = this.config.selectedFields?.join('\n        ') || this.getDefaultFields();
     const variables = this.getVariableDeclarations();
     const whereClause = this.buildWhereClauseString();
-    const orderByClause = this.config.orderBy
-      ? `orderBy: ${this.config.orderBy}`
-      : "";
-    const orderDirectionClause = this.config.orderDirection
-      ? `orderDirection: ${this.config.orderDirection}`
-      : "";
+    const orderByClause = this.config.orderBy ? `orderBy: ${this.config.orderBy}` : '';
+    const orderDirectionClause = this.config.orderDirection ? `orderDirection: ${this.config.orderDirection}` : '';
 
-    const args = [
-      whereClause,
-      orderByClause,
-      orderDirectionClause,
-      "first: $first",
-      "skip: $skip",
-    ]
+    const args = [whereClause, orderByClause, orderDirectionClause, 'first: $first', 'skip: $skip']
       .filter(Boolean)
-      .join(", ");
+      .join(', ');
 
     const queryName = `GetPools`;
 
@@ -90,11 +70,11 @@ export class PoolQueryBuilder extends BaseQueryBuilder<
   }
   protected buildWhereClauseString(): string {
     if (!this.config.where || Object.keys(this.config.where).length === 0) {
-      return "";
+      return '';
     }
 
     const conditions = this.buildWhereConditions(this.config.where);
-    return conditions.length > 0 ? `where: { ${conditions.join(", ")} }` : "";
+    return conditions.length > 0 ? `where: { ${conditions.join(', ')} }` : '';
   }
 
   protected getSerializer(): (entity: Pool) => SerializedPool {
@@ -102,108 +82,101 @@ export class PoolQueryBuilder extends BaseQueryBuilder<
   }
 
   private getVariableDeclarations(): string {
-    const declarations = ["$first: Int!", "$skip: Int!"];
+    const declarations = ['$first: Int!', '$skip: Int!'];
 
     if (this.config.where) {
       this.addVariableDeclarations(this.config.where, declarations);
     }
 
-    return declarations.join(", ");
+    return declarations.join(', ');
   }
 
-  private addVariableDeclarations(
-    where: Partial<PoolWhereInput>,
-    declarations: string[],
-  ): void {
+  private addVariableDeclarations(where: Partial<PoolWhereInput>, declarations: string[]): void {
     for (const [key, value] of Object.entries(where)) {
       switch (key) {
-        case "network":
-          declarations.push("$network: String");
+        case 'network':
+          declarations.push('$network: String');
           break;
-        case "poolId":
-          declarations.push("$poolId: String");
+        case 'poolId':
+          declarations.push('$poolId: String');
           break;
-        case "memberCount_gte":
-          declarations.push("$memberCount_gte: String");
+        case 'memberCount_gte':
+          declarations.push('$memberCount_gte: String');
           break;
-        case "memberCount_lte":
-          declarations.push("$memberCount_lte: String");
+        case 'memberCount_lte':
+          declarations.push('$memberCount_lte: String');
           break;
-        case "totalDeposits_gte":
-          declarations.push("$totalDeposits_gte: String");
+        case 'totalDeposits_gte':
+          declarations.push('$totalDeposits_gte: String');
           break;
-        case "totalDeposits_lte":
-          declarations.push("$totalDeposits_lte: String");
+        case 'totalDeposits_lte':
+          declarations.push('$totalDeposits_lte: String');
           break;
-        case "joiningFee_gte":
-          declarations.push("$joiningFee_gte: String");
+        case 'joiningFee_gte':
+          declarations.push('$joiningFee_gte: String');
           break;
-        case "joiningFee_lte":
-          declarations.push("$joiningFee_lte: String");
+        case 'joiningFee_lte':
+          declarations.push('$joiningFee_lte: String');
           break;
-        case "createdAtTimestamp_gte":
-          declarations.push("$createdAtTimestamp_gte: String");
+        case 'createdAtTimestamp_gte':
+          declarations.push('$createdAtTimestamp_gte: String');
           break;
-        case "createdAtTimestamp_lte":
-          declarations.push("$createdAtTimestamp_lte: String");
+        case 'createdAtTimestamp_lte':
+          declarations.push('$createdAtTimestamp_lte: String');
           break;
-        case "paymaster_":
-          if (typeof value === "object" && value) {
-            if ("address" in value) {
-              declarations.push("$paymasterAddress: String");
+        case 'paymaster_':
+          if (typeof value === 'object' && value) {
+            if ('address' in value) {
+              declarations.push('$paymasterAddress: String');
             }
-            if ("contractType" in value) {
-              declarations.push("$paymasterType: String");
+            if ('contractType' in value) {
+              declarations.push('$paymasterType: String');
             }
           }
           break;
-        case "totalDeposits_gt":
-          declarations.push("$totalDeposits_gt: String");
+        case 'totalDeposits_gt':
+          declarations.push('$totalDeposits_gt: String');
           break;
-        case "memberCount_gt":
-          declarations.push("$memberCount_gt: String");
+        case 'memberCount_gt':
+          declarations.push('$memberCount_gt: String');
           break;
       }
     }
   }
 
-  private addWhereVariables(
-    where: Partial<PoolWhereInput>,
-    variables: Record<string, any>,
-  ): void {
+  private addWhereVariables(where: Partial<PoolWhereInput>, variables: Record<string, any>): void {
     for (const [key, value] of Object.entries(where)) {
       switch (key) {
-        case "network":
+        case 'network':
           variables.network = value;
           break;
-        case "poolId":
+        case 'poolId':
           variables.poolId = value;
           break;
-        case "memberCount_gte":
-        case "memberCount_lte":
-        case "memberCount_gt":
-          variables[key.replace("memberCount_", "memberCount_")] = value;
+        case 'memberCount_gte':
+        case 'memberCount_lte':
+        case 'memberCount_gt':
+          variables[key.replace('memberCount_', 'memberCount_')] = value;
           break;
-        case "totalDeposits_gte":
-        case "totalDeposits_lte":
-        case "totalDeposits_gt":
-          variables[key.replace("totalDeposits_", "totalDeposits_")] = value;
+        case 'totalDeposits_gte':
+        case 'totalDeposits_lte':
+        case 'totalDeposits_gt':
+          variables[key.replace('totalDeposits_', 'totalDeposits_')] = value;
           break;
-        case "joiningFee_gte":
-        case "joiningFee_lte":
-          variables[key.replace("joiningFee_", "joiningFee_")] = value;
+        case 'joiningFee_gte':
+        case 'joiningFee_lte':
+          variables[key.replace('joiningFee_', 'joiningFee_')] = value;
           break;
-        case "createdAtTimestamp_gte":
-        case "createdAtTimestamp_lte":
-          variables[key.replace("createdAtTimestamp_", "createdAtTimestamp_")] =
-            value;
+        case 'createdAtTimestamp_gte':
+        case 'createdAtTimestamp_lte':
+          variables[key.replace('createdAtTimestamp_', 'createdAtTimestamp_')] = value;
           break;
-        case "paymaster_":
-          if (typeof value === "object" && value) {
-            if ("address" in value) {
+        case 'paymaster_':
+          if (typeof value === 'object' && value) {
+            if ('address' in value) {
               variables.paymasterAddress = value.address;
             }
-            if ("contractType" in value) {
+            if ('contractType' in value) {
               variables.paymasterType = value.contractType;
             }
           }
@@ -217,53 +190,53 @@ export class PoolQueryBuilder extends BaseQueryBuilder<
 
     for (const [key, value] of Object.entries(where)) {
       switch (key) {
-        case "network":
-          conditions.push("network: $network");
+        case 'network':
+          conditions.push('network: $network');
           break;
-        case "poolId":
-          conditions.push("poolId: $poolId");
+        case 'poolId':
+          conditions.push('poolId: $poolId');
           break;
-        case "memberCount_gte":
-          conditions.push("memberCount_gte: $memberCount_gte");
+        case 'memberCount_gte':
+          conditions.push('memberCount_gte: $memberCount_gte');
           break;
-        case "memberCount_lte":
-          conditions.push("memberCount_lte: $memberCount_lte");
+        case 'memberCount_lte':
+          conditions.push('memberCount_lte: $memberCount_lte');
           break;
-        case "memberCount_gt":
-          conditions.push("memberCount_gt: $memberCount_gt");
+        case 'memberCount_gt':
+          conditions.push('memberCount_gt: $memberCount_gt');
           break;
-        case "totalDeposits_gte":
-          conditions.push("totalDeposits_gte: $totalDeposits_gte");
+        case 'totalDeposits_gte':
+          conditions.push('totalDeposits_gte: $totalDeposits_gte');
           break;
-        case "totalDeposits_lte":
-          conditions.push("totalDeposits_lte: $totalDeposits_lte");
+        case 'totalDeposits_lte':
+          conditions.push('totalDeposits_lte: $totalDeposits_lte');
           break;
-        case "totalDeposits_gt":
-          conditions.push("totalDeposits_gt: $totalDeposits_gt");
+        case 'totalDeposits_gt':
+          conditions.push('totalDeposits_gt: $totalDeposits_gt');
           break;
-        case "joiningFee_gte":
-          conditions.push("joiningFee_gte: $joiningFee_gte");
+        case 'joiningFee_gte':
+          conditions.push('joiningFee_gte: $joiningFee_gte');
           break;
-        case "joiningFee_lte":
-          conditions.push("joiningFee_lte: $joiningFee_lte");
+        case 'joiningFee_lte':
+          conditions.push('joiningFee_lte: $joiningFee_lte');
           break;
-        case "createdAtTimestamp_gte":
-          conditions.push("createdAtTimestamp_gte: $createdAtTimestamp_gte");
+        case 'createdAtTimestamp_gte':
+          conditions.push('createdAtTimestamp_gte: $createdAtTimestamp_gte');
           break;
-        case "createdAtTimestamp_lte":
-          conditions.push("createdAtTimestamp_lte: $createdAtTimestamp_lte");
+        case 'createdAtTimestamp_lte':
+          conditions.push('createdAtTimestamp_lte: $createdAtTimestamp_lte');
           break;
-        case "paymaster_":
-          if (typeof value === "object" && value) {
+        case 'paymaster_':
+          if (typeof value === 'object' && value) {
             const nestedConditions: string[] = [];
-            if ("address" in value) {
-              nestedConditions.push("address: $paymasterAddress");
+            if ('address' in value) {
+              nestedConditions.push('address: $paymasterAddress');
             }
-            if ("contractType" in value) {
-              nestedConditions.push("contractType: $paymasterType");
+            if ('contractType' in value) {
+              nestedConditions.push('contractType: $paymasterType');
             }
             if (nestedConditions.length > 0) {
-              conditions.push(`paymaster_: { ${nestedConditions.join(", ")} }`);
+              conditions.push(`paymaster_: { ${nestedConditions.join(', ')} }`);
             }
           }
           break;
@@ -577,7 +550,7 @@ export class PoolQueryBuilder extends BaseQueryBuilder<
    * ```
    */
   onlyActive(): this {
-    this.where({ totalDeposits_gt: "0" });
+    this.where({ totalDeposits_gt: '0' });
     return this;
   }
 
@@ -601,8 +574,8 @@ export class PoolQueryBuilder extends BaseQueryBuilder<
    *   .execute();
    * ```
    */
-  orderByPopularity(direction: "asc" | "desc" = "desc"): this {
-    this.orderBy("memberCount", direction);
+  orderByPopularity(direction: 'asc' | 'desc' = 'desc'): this {
+    this.orderBy('memberCount', direction);
     return this;
   }
 
@@ -611,8 +584,8 @@ export class PoolQueryBuilder extends BaseQueryBuilder<
    *
    * @returns PoolQueryBuilder for method chaining
    */
-  orderByDeposits(direction: "asc" | "desc" = "desc"): this {
-    this.orderBy("totalDeposits", direction);
+  orderByDeposits(direction: 'asc' | 'desc' = 'desc'): this {
+    this.orderBy('totalDeposits', direction);
     return this;
   }
 
@@ -621,8 +594,8 @@ export class PoolQueryBuilder extends BaseQueryBuilder<
    *
    * @returns PoolQueryBuilder for method chaining
    */
-  orderByJoiningFee(direction: "asc" | "desc" = "asc"): this {
-    this.orderBy("joiningFee", direction);
+  orderByJoiningFee(direction: 'asc' | 'desc' = 'asc'): this {
+    this.orderBy('joiningFee', direction);
     return this;
   }
 
@@ -631,8 +604,8 @@ export class PoolQueryBuilder extends BaseQueryBuilder<
    *
    * @returns PoolQueryBuilder for method chaining
    */
-  orderByCreation(direction: "asc" | "desc" = "desc"): this {
-    this.orderBy("createdAtTimestamp", direction);
+  orderByCreation(direction: 'asc' | 'desc' = 'desc'): this {
+    this.orderBy('createdAtTimestamp', direction);
     return this;
   }
 
@@ -641,8 +614,8 @@ export class PoolQueryBuilder extends BaseQueryBuilder<
    *
    * @returns PoolQueryBuilder for method chaining
    */
-  orderByActivity(direction: "asc" | "desc" = "desc"): this {
-    this.orderBy("lastUpdatedTimestamp", direction);
+  orderByActivity(direction: 'asc' | 'desc' = 'desc'): this {
+    this.orderBy('lastUpdatedTimestamp', direction);
     return this;
   }
 
@@ -651,8 +624,8 @@ export class PoolQueryBuilder extends BaseQueryBuilder<
    *
    * @returns PoolQueryBuilder for method chaining
    */
-  orderByPoolId(direction: "asc" | "desc" = "asc"): this {
-    this.orderBy("poolId", direction);
+  orderByPoolId(direction: 'asc' | 'desc' = 'asc'): this {
+    this.orderBy('poolId', direction);
     return this;
   }
 }
