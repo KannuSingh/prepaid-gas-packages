@@ -1,5 +1,13 @@
 # @prepaid-gas/data
 
+## 0.0.3
+
+### Patch Changes
+
+- fix: Add 'dom' lib to data package tsconfig for console type
+- Updated dependencies
+  - @prepaid-gas/constants@0.0.3
+
 ## 0.0.2
 
 ### Patch Changes
