@@ -6,8 +6,8 @@ A monorepo of packages for building applications with the Prepaid Gas paymaster 
 
 ### Core Packages
 
-| Package | Version | Description |
-|---------|---------|-------------|
+| Package | Description |
+|---------|-------------|
 | [`@prepaid-gas/constants`](./packages/constants) | Shared constants, ABIs, and network configurations |
 | [`@prepaid-gas/core`](./packages/core) | Main SDK for privacy-preserving paymaster integration |
 | [`@prepaid-gas/data`](./packages/data) | Subgraph client with fluent query builders |
