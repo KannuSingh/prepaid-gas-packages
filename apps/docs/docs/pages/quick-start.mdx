@@ -1,0 +1,192 @@
+# Quick Start
+
+Get started with privacy-preserving gas payments in under 5 minutes.
+
+## Prerequisites
+
+- **Node.js 18+** 
+- **TypeScript** (recommended)
+- **Account Abstraction setup** (e.g., with Permissionless)
+- **Ethereum wallet** for testing
+
+## Step 1: Install Packages
+
+```bash
+npm install @prepaid-gas/core @prepaid-gas/data viem permissionless
+```
+
+## Step 2: Create Paymaster Client
+
+```typescript
+import { PrepaidGasPaymaster } from '@prepaid-gas/core'
+
+// Create client for Base Sepolia testnet
+const paymaster = PrepaidGasPaymaster.createForNetwork(84532)
+```
+
+## Step 3: Set Up Identity
+
+```typescript
+import { Identity } from '@semaphore-protocol/identity'
+
+// Create a new identity (store securely in production)
+const identity = new Identity()
+const identityCommitment = identity.commitment.toString()
+
+// Or import existing identity
+const existingIdentity = Identity.import('your-stored-identity-base64')
+```
+
+## Step 4: Join a Pool
+
+To use the paymaster, you need to join a privacy pool. This requires adding your identity commitment to a pool's Merkle tree (typically done through a frontend interface).
+
+```typescript
+import { SubgraphClient } from '@prepaid-gas/data'
+
+// Query available pools
+const subgraph = SubgraphClient.createForNetwork(84532)
+const pools = await subgraph.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .withMembers(50)
+  .execute()
+
+console.log('Available pools:', pools)
+```
+
+## Step 5: Create User Operation
+
+Set up your Account Abstraction user operation:
+
+```typescript
+import { createSmartAccountClient } from 'permissionless'
+import { http } from 'viem'
+import { baseSepolia } from 'viem/chains'
+
+// Your AA setup (example with Permissionless)
+const smartAccount = createSmartAccountClient({
+  // ... your smart account configuration
+})
+
+// Create user operation for your transaction
+const userOp = await smartAccount.prepareUserOperation({
+  calls: [{
+    to: '0x...',
+    data: '0x...',
+    value: 0n,
+  }]
+})
+```
+
+## Step 6: Generate Paymaster Data
+
+### For Gas Estimation (Fast)
+
+```typescript
+// Get stub data for gas estimation (no ZK proof required)
+const stubResult = await paymaster.getPaymasterStubData({
+  userOp,
+  poolId: '1',
+  identity: identity.export(),
+})
+
+console.log('Gas estimate:', stubResult.callGasLimit)
+```
+
+### For Real Transaction (Generates ZK Proof)
+
+```typescript
+// Generate real paymaster data with ZK proof
+const paymasterResult = await paymaster.getPaymasterData({
+  userOp,
+  poolId: '1', 
+  identity: identity.export(),
+})
+
+// Update user operation with paymaster data
+userOp.paymaster = paymasterResult.paymaster
+userOp.paymasterData = paymasterResult.paymasterData
+userOp.paymasterPostOpGasLimit = paymasterResult.paymasterPostOpGasLimit
+userOp.paymasterVerificationGasLimit = paymasterResult.paymasterVerificationGasLimit
+```
+
+## Step 7: Submit Transaction
+
+```typescript
+// Submit the user operation
+const userOpHash = await smartAccount.sendUserOperation(userOp)
+
+console.log('Transaction submitted:', userOpHash)
+
+// Wait for confirmation
+const receipt = await smartAccount.waitForUserOperationReceipt({
+  hash: userOpHash
+})
+
+console.log('Transaction confirmed:', receipt.receipt.transactionHash)
+```
+
+## Complete Example
+
+Here's a complete working example:
+
+```typescript
+import { PrepaidGasPaymaster } from '@prepaid-gas/core'
+import { SubgraphClient } from '@prepaid-gas/data'
+import { Identity } from '@semaphore-protocol/identity'
+import { createSmartAccountClient } from 'permissionless'
+
+async function sendPrivateTransaction() {
+  // 1. Set up clients
+  const paymaster = PrepaidGasPaymaster.createForNetwork(84532)
+  const subgraph = SubgraphClient.createForNetwork(84532)
+  
+  // 2. Create or import identity
+  const identity = new Identity()
+  
+  // 3. Check pool membership (assume already joined pool 1)
+  const poolData = await subgraph.query()
+    .pools()
+    .byId('1') 
+    .withMembers()
+    .execute()
+    
+  // 4. Create smart account and user operation
+  const smartAccount = createSmartAccountClient({
+    // ... your configuration
+  })
+  
+  const userOp = await smartAccount.prepareUserOperation({
+    calls: [{
+      to: '0x1234567890123456789012345678901234567890',
+      data: '0x',
+      value: 1000000000000000n, // 0.001 ETH
+    }]
+  })
+  
+  // 5. Get paymaster data
+  const paymasterData = await paymaster.getPaymasterData({
+    userOp,
+    poolId: '1',
+    identity: identity.export(),
+  })
+  
+  // 6. Update and submit user operation
+  Object.assign(userOp, paymasterData)
+  
+  const hash = await smartAccount.sendUserOperation(userOp)
+  const receipt = await smartAccount.waitForUserOperationReceipt({ hash })
+  
+  console.log('Private transaction completed:', receipt.receipt.transactionHash)
+}
+```
+
+## What's Next?
+
+- **[Core Package Reference](/core/)** - Deep dive into paymaster client
+- **[Data Package Reference](/data/)** - Learn about pool queries  
+- **[Privacy Best Practices](/guides/privacy)** - Optimize your privacy
+- **[Integration Guide](/guides/integration)** - Production deployment tips
+
+The SDK handles all the complex ZK proof generation and paymaster integration - you just need to provide the user operation and pool information!

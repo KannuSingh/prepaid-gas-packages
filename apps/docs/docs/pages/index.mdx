@@ -1,0 +1,75 @@
+# Prepaid Gas SDK
+
+Privacy-preserving gas payments using Account Abstraction (ERC-4337) and zero-knowledge proofs via the Semaphore protocol.
+
+## What is Prepaid Gas?
+
+The Prepaid Gas SDK enables users to pay for gas fees anonymously by joining privacy pools. Using zero-knowledge proofs, users can prove membership in a pool without revealing their identity, enabling truly private transactions on Ethereum and compatible networks.
+
+## Key Features
+
+- **Privacy-First**: Zero-knowledge proofs ensure transaction privacy
+- **Account Abstraction**: Built on ERC-4337 standard for seamless UX  
+- **Pool-Based System**: Join pools to share gas costs anonymously
+- **Multi-Network**: Support for Base, Optimism, and other EVM chains
+- **Type-Safe**: Full TypeScript support with comprehensive types
+
+## Architecture Overview
+
+The SDK consists of two main packages:
+
+### [@prepaid-gas/core](/core/)
+The primary SDK for paymaster integration:
+- `PrepaidGasPaymaster` client for ZK proof generation
+- Two-phase operations (estimation + validation)
+- Context encoding and paymaster data formatting
+
+### [@prepaid-gas/data](/data/)  
+Data layer with fluent query builders:
+- `SubgraphClient` for pool and transaction data
+- Network-aware multi-chain querying
+- Type-safe GraphQL query construction
+
+## Privacy Model
+
+**Pool-Based Anonymity**: Users join pools by adding identity commitments to Merkle trees. Gas payments prove pool membership without revealing which specific member is transacting.
+
+**Cross-Pool Privacy**: Transactions within the same pool are linkable via nullifiers, but using different identities across pools provides unlinkability.
+
+**Zero-Knowledge Proofs**: Built on Semaphore protocol for computational soundness and privacy guarantees.
+
+## Quick Start
+
+Get started with the Prepaid Gas SDK in minutes:
+
+```bash
+npm install @prepaid-gas/core @prepaid-gas/data
+```
+
+```typescript
+import { PrepaidGasPaymaster } from '@prepaid-gas/core'
+
+// Create paymaster client for Base Sepolia
+const paymaster = PrepaidGasPaymaster.createForNetwork(84532)
+
+// Generate paymaster data for transaction
+const result = await paymaster.getPaymasterData({
+  userOp,
+  poolId: '1',
+  identity: 'your-identity-base64'
+})
+```
+
+[Learn more in our installation guide →](/installation)
+
+## Examples
+
+- [Basic Usage](/examples/basic) - Simple paymaster integration
+- [React Integration](/examples/react) - Frontend integration patterns  
+- [Advanced Features](/examples/advanced) - Pool management and privacy optimization
+
+## Community & Support
+
+- **GitHub**: [Report issues and contribute](https://github.com/your-org/prepaid-gas-packages)
+- **NPM**: [@prepaid-gas packages](https://www.npmjs.com/package/@prepaid-gas/core)
+- **Documentation**: You're reading it!

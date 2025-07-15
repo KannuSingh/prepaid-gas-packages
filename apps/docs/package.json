@@ -1,24 +1,20 @@
 {
-  "name": "@prepaid-gas/docs",
-  "version": "0.0.1",
+  "name": "docs",
   "private": true,
+  "version": "0.0.0",
   "type": "module",
-  "description": "Documentation site for Prepaid Gas SDK",
   "scripts": {
-    "docs:dev": "vocs dev",
-    "docs:build": "vocs build",
-    "docs:preview": "vocs preview",
-    "typecheck": "tsc --noEmit",
-    "lint": "eslint . --max-warnings 0",
-    "clean": "rm -rf dist"
+    "dev": "vocs dev",
+    "build": "vocs build",
+    "preview": "vocs preview"
   },
   "dependencies": {
-    "vocs": "^1.0.0-alpha.57"
+    "react": "latest",
+    "react-dom": "latest",
+    "vocs": "latest"
   },
   "devDependencies": {
-    "@prepaid-gas/eslint-config": "workspace:*",
-    "@prepaid-gas/typescript-config": "workspace:*",
-    "eslint": "^9.17.0",
-    "typescript": "^5.7.3"
+    "@types/react": "latest",
+    "typescript": "latest"
   }
 }

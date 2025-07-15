@@ -132,6 +132,25 @@ importers:
 
   apps/docs:
     dependencies:
+      react:
+        specifier: latest
+        version: 19.1.0
+      react-dom:
+        specifier: latest
+        version: 19.1.0(react@19.1.0)
+      vocs:
+        specifier: latest
+        version: 1.0.13(@types/node@22.7.5)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(acorn@8.15.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(rollup@4.45.0)(typescript@5.8.3)(yaml@2.8.0)
+    devDependencies:
+      '@types/react':
+        specifier: latest
+        version: 19.1.8
+      typescript:
+        specifier: latest
+        version: 5.8.3
+
+  apps/docs-1:
+    dependencies:
       vocs:
         specifier: ^1.0.0-alpha.57
         version: 1.0.13(@types/node@22.7.5)(@types/react-dom@19.1.6(@types/react@19.1.8))(@types/react@19.1.8)(acorn@8.15.0)(jiti@2.4.2)(lightningcss@1.30.1)(react-dom@19.1.0(react@19.1.0))(react@19.1.0)(rollup@4.45.0)(typescript@5.8.3)(yaml@2.8.0)
