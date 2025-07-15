@@ -1,0 +1,367 @@
+# Data Package Overview
+
+The `@prepaid-gas/data` package provides a powerful data layer for querying pool information, transactions, and paymaster data using The Graph protocol with fluent query builders.
+
+## Key Features
+
+- **Fluent Query API**: Chainable, type-safe query construction
+- **Network-Aware**: Multi-chain support with explicit network filtering
+- **Entity Relationships**: Automatic relationship loading with configurable limits
+- **BigInt Serialization**: Safe JSON serialization for API responses
+- **Request Deduplication**: Automatic prevention of redundant queries
+- **Safety Limits**: Built-in query limits to prevent excessive data fetching
+
+## Installation
+
+```bash
+npm install @prepaid-gas/data
+```
+
+## Quick Start
+
+```typescript
+import { SubgraphClient } from '@prepaid-gas/data'
+
+// Create client for specific network
+const client = SubgraphClient.createForNetwork(84532) // Base Sepolia
+
+// Query pools with fluent API
+const pools = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .withMembers(50)
+  .execute()
+
+console.log('Available pools:', pools)
+```
+
+## Architecture
+
+### Network-First Design
+
+All queries require explicit network specification for accurate multi-chain results:
+
+```typescript
+// ✅ Always specify network
+const pools = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')  // Required for multi-chain accuracy
+  .execute()
+
+// ❌ Network-agnostic queries not supported
+const pools = await client.query()
+  .pools()
+  .execute() // This would be ambiguous
+```
+
+### Entity Relationships
+
+The data model follows a clear hierarchy:
+
+```
+PaymasterContract (root)
+├── Pool[] 
+│   ├── PoolMember[]
+│   └── Transaction[]
+└── Transaction[]
+```
+
+**Entity Structure:**
+- **PaymasterContract**: Root entity representing a deployed paymaster
+- **Pool**: Privacy pool within a paymaster with Merkle tree
+- **PoolMember**: Individual member identity commitment in a pool
+- **Transaction**: User operation processed by the paymaster
+
+### Composite IDs
+
+Entities use network-scoped composite IDs for multi-chain support:
+
+```typescript
+// Format: "network-identifier"
+const poolId = "base-sepolia-1"          // Pool 1 on Base Sepolia
+const memberId = "base-sepolia-1-0x..."  // Member in pool 1
+const txId = "base-sepolia-0x..."        // Transaction hash
+```
+
+## Core Classes
+
+### SubgraphClient
+
+The main client for executing queries against The Graph.
+
+**Factory Methods:**
+```typescript
+// Automatic network configuration
+const client = SubgraphClient.createForNetwork(84532)
+
+// Custom configuration
+const client = new SubgraphClient({
+  url: 'https://api.thegraph.com/subgraphs/name/...',
+  network: 'base-sepolia'
+})
+```
+
+**Query Entry Points:**
+- `client.query().pools()` - Query pools
+- `client.query().poolMembers()` - Query pool members
+- `client.query().transactions()` - Query transactions
+- `client.query().paymasters()` - Query paymaster contracts
+- `client.query().networkInfo()` - Query network information
+
+## Query Builders
+
+### Fluent API Pattern
+
+All query builders support method chaining for intuitive query construction:
+
+```typescript
+const pools = await client.query()
+  .pools()                    // Start pools query
+  .byNetwork('base-sepolia')  // Filter by network
+  .byPaymaster('0x...')       // Filter by paymaster
+  .withMembers(50)            // Include up to 50 members
+  .withTransactions(25)       // Include up to 25 transactions
+  .orderBy('createdAt')       // Order by creation time
+  .first(10)                  // Limit to 10 results
+  .execute()                  // Execute query
+```
+
+### Relationship Loading
+
+Control which related entities to include:
+
+```typescript
+// Minimal data (fastest)
+const pools = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .execute()
+
+// Include members (moderate speed)
+const poolsWithMembers = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .withMembers(100) // Include up to 100 members per pool
+  .execute()
+
+// Full data (slower but complete)
+const fullPoolData = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .withMembers(200)
+  .withTransactions(50)
+  .execute()
+```
+
+## Serialization System
+
+### BigInt Handling
+
+The Graph returns large numbers as strings. The package provides safe BigInt conversion:
+
+```typescript
+// Raw entity (GraphQL response)
+interface Pool {
+  id: string
+  poolId: string        // "123" (string from GraphQL)
+  memberCount: string   // "45" (string from GraphQL)
+  totalDeposited: string // "1000000000000000000" (string)
+}
+
+// Serialized entity (safe for JSON)
+interface SerializedPool {
+  id: string
+  poolId: string        // "123" (kept as string for safety)
+  memberCount: number   // 45 (converted to number)
+  totalDeposited: string // "1000000000000000000" (kept as string for precision)
+}
+```
+
+### Transformation Methods
+
+```typescript
+// Execute and transform to serialized entities
+const pools = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .executeAndSerialize() // Returns SerializedPool[]
+
+// Manual transformation
+import { transformPool } from '@prepaid-gas/data'
+
+const serializedPool = transformPool(rawPool)
+```
+
+## Network Support
+
+### Supported Networks
+
+| Network | Identifier | Chain ID | Status |
+|---------|------------|----------|---------|
+| Base Sepolia | `base-sepolia` | 84532 | ✅ Active |
+| Base Mainnet | `base` | 8453 | 🔄 Coming Soon |
+| Optimism Sepolia | `optimism-sepolia` | 11155420 | 🔄 Coming Soon |
+
+### Network Presets
+
+The package includes preset configurations for supported networks:
+
+```typescript
+import { NETWORK_PRESETS } from '@prepaid-gas/data'
+
+const baseSepolia = NETWORK_PRESETS[84532]
+console.log('Subgraph URL:', baseSepolia.subgraphUrl)
+console.log('Network ID:', baseSepolia.networkId)
+```
+
+## Performance Features
+
+### Request Deduplication
+
+Identical queries within a short time window are automatically deduplicated:
+
+```typescript
+// These two identical queries will only make one network request
+const pools1 = client.query().pools().byNetwork('base-sepolia').execute()
+const pools2 = client.query().pools().byNetwork('base-sepolia').execute()
+
+await Promise.all([pools1, pools2]) // Only one actual GraphQL request
+```
+
+### Safety Limits
+
+Built-in limits prevent accidentally fetching too much data:
+
+```typescript
+// Default limits
+const pools = await client.query()
+  .pools()
+  .execute() // Maximum 100 pools by default
+
+// Custom limits
+const morePools = await client.query()
+  .pools()
+  .first(500) // Up to 500 pools (max 1000)
+  .execute()
+```
+
+### Pagination Support
+
+Handle large datasets with pagination:
+
+```typescript
+// Get first page
+const firstPage = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .first(100)
+  .execute()
+
+// Get next page using last item ID
+const nextPage = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .after(firstPage[firstPage.length - 1].id)
+  .first(100)
+  .execute()
+```
+
+## Common Use Cases
+
+### Pool Discovery
+
+Find available pools for joining:
+
+```typescript
+const availablePools = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .withMembers(200) // Include member data for anonymity analysis
+  .orderBy('memberCount', 'desc') // Largest pools first
+  .first(20)
+  .executeAndSerialize()
+
+// Analyze pool sizes
+const largePools = availablePools.filter(pool => pool.memberCount > 50)
+console.log('Large anonymity pools:', largePools)
+```
+
+### Transaction History
+
+Query user transactions (requires knowing specific pool/member):
+
+```typescript
+const recentTxs = await client.query()
+  .transactions()
+  .byNetwork('base-sepolia')
+  .byPool('1') // Pool ID
+  .orderBy('timestamp', 'desc')
+  .first(50)
+  .execute()
+
+console.log('Recent pool transactions:', recentTxs)
+```
+
+### Pool Analytics
+
+Analyze pool health and activity:
+
+```typescript
+const poolDetails = await client.query()
+  .pools()
+  .byId('base-sepolia-1')
+  .withMembers()
+  .withTransactions(100)
+  .executeAndSerialize()
+
+if (poolDetails.length > 0) {
+  const pool = poolDetails[0]
+  console.log(`Pool ${pool.poolId}:`)
+  console.log(`- Members: ${pool.memberCount}`)
+  console.log(`- Total deposited: ${pool.totalDeposited} wei`)
+  console.log(`- Recent transactions: ${pool.transactions?.length || 0}`)
+}
+```
+
+## Error Handling
+
+### Network Errors
+
+```typescript
+import { SubgraphError } from '@prepaid-gas/data'
+
+try {
+  const pools = await client.query().pools().execute()
+} catch (error) {
+  if (error instanceof SubgraphError) {
+    console.error('Subgraph error:', error.message)
+    console.error('Query:', error.query)
+  }
+}
+```
+
+### Validation Errors
+
+```typescript
+try {
+  const pools = await client.query()
+    .pools()
+    .first(2000) // Exceeds maximum limit
+    .execute()
+} catch (error) {
+  console.error('Query validation failed:', error.message)
+}
+```
+
+## Next Steps
+
+- **[SubgraphClient](/data/client)** - Detailed client API reference
+- **[Query Builders](/data/queries)** - Complete query builder documentation  
+- **[Types](/data/types)** - TypeScript type definitions
+- **[Integration Guide](/guides/integration)** - Production usage patterns
+
+## Examples
+
+- **[Basic Queries](/examples/basic)** - Simple data fetching
+- **[Advanced Queries](/examples/advanced)** - Complex filtering and pagination
+- **[React Integration](/examples/react)** - Frontend data patterns

@@ -1,0 +1,471 @@
+# Types
+
+TypeScript type definitions for the data package.
+
+## Entity Types
+
+### Pool
+
+Privacy pool entity from The Graph:
+
+```typescript
+interface Pool {
+  id: string                    // Composite ID: "network-poolId"
+  poolId: string               // Pool identifier (as string from GraphQL)
+  paymasterAddress: string     // Paymaster contract address
+  merkleTreeRoot: string       // Current Merkle tree root
+  memberCount: string          // Number of members (as string from GraphQL)
+  totalDeposited: string       // Total deposited amount (wei as string)
+  createdAt: string           // Creation timestamp
+  updatedAt: string           // Last update timestamp
+  members?: PoolMember[]      // Optional: Pool members
+  transactions?: Transaction[] // Optional: Pool transactions
+}
+```
+
+### SerializedPool
+
+Serialized version safe for JSON:
+
+```typescript
+interface SerializedPool {
+  id: string
+  poolId: string              // Kept as string for safety
+  paymasterAddress: string
+  merkleTreeRoot: string
+  memberCount: number         // Converted to number
+  totalDeposited: string      // Kept as string for precision
+  createdAt: string
+  updatedAt: string
+  members?: SerializedPoolMember[]
+  transactions?: SerializedTransaction[]
+}
+```
+
+### PoolMember
+
+Individual pool member entity:
+
+```typescript
+interface PoolMember {
+  id: string                  // Composite ID: "network-poolId-commitment"
+  poolId: string             // Pool identifier
+  identityCommitment: string // Semaphore identity commitment
+  joinedAt: string          // Join timestamp
+  memberIndex: string       // Index in Merkle tree (as string)
+}
+```
+
+### SerializedPoolMember
+
+```typescript
+interface SerializedPoolMember {
+  id: string
+  poolId: string
+  identityCommitment: string
+  joinedAt: string
+  memberIndex: number        // Converted to number
+}
+```
+
+### Transaction
+
+User operation processed by paymaster:
+
+```typescript
+interface Transaction {
+  id: string                 // Composite ID: "network-txHash"
+  hash: string              // Transaction hash
+  poolId: string           // Pool used for payment
+  paymasterAddress: string // Paymaster contract
+  userOpHash: string       // User operation hash
+  gasUsed: string          // Gas consumed (as string)
+  gasPrice: string         // Gas price (wei as string)
+  status: string           // "success" | "failed"
+  timestamp: string        // Block timestamp
+  blockNumber: string      // Block number (as string)
+}
+```
+
+### SerializedTransaction
+
+```typescript
+interface SerializedTransaction {
+  id: string
+  hash: string
+  poolId: string
+  paymasterAddress: string
+  userOpHash: string
+  gasUsed: string          // Kept as string for precision
+  gasPrice: string         // Kept as string for precision
+  status: string
+  timestamp: string
+  blockNumber: number      // Converted to number
+}
+```
+
+### PaymasterContract
+
+Paymaster contract entity:
+
+```typescript
+interface PaymasterContract {
+  id: string               // Composite ID: "network-address"
+  address: string         // Contract address
+  network: string         // Network identifier
+  totalPools: string      // Number of pools (as string)
+  totalTransactions: string // Total transactions processed
+  totalGasSponsored: string // Total gas sponsored (wei)
+  createdAt: string       // Deployment timestamp
+  pools?: Pool[]          // Optional: Associated pools
+  transactions?: Transaction[] // Optional: All transactions
+}
+```
+
+## Query Types
+
+### SubgraphClientOptions
+
+Configuration for SubgraphClient:
+
+```typescript
+interface SubgraphClientOptions {
+  url: string      // The Graph API endpoint
+  network: string  // Network identifier (e.g., 'base-sepolia')
+}
+```
+
+### NetworkPreset
+
+Predefined network configuration:
+
+```typescript
+interface NetworkPreset {
+  chainId: number          // Blockchain chain ID
+  networkId: string       // Network identifier for queries
+  subgraphUrl: string     // The Graph API endpoint
+}
+```
+
+### QueryResult
+
+Generic query result wrapper:
+
+```typescript
+interface QueryResult<T> {
+  data: T[]
+  hasNextPage: boolean
+  cursor?: string
+}
+```
+
+## Filter Types
+
+### NetworkFilter
+
+```typescript
+type NetworkFilter = 'base-sepolia' | 'base' | 'optimism-sepolia'
+```
+
+### OrderDirection
+
+```typescript
+type OrderDirection = 'asc' | 'desc'
+```
+
+### TransactionStatus
+
+```typescript
+type TransactionStatus = 'success' | 'failed' | 'pending'
+```
+
+## Query Builder Types
+
+### PoolQueryBuilder
+
+```typescript
+interface PoolQueryBuilder {
+  byNetwork(network: NetworkFilter): PoolQueryBuilder
+  byId(id: string): PoolQueryBuilder
+  byPaymaster(address: string): PoolQueryBuilder
+  withMembers(limit?: number): PoolQueryBuilder
+  withTransactions(limit?: number): PoolQueryBuilder
+  orderBy(field: string, direction?: OrderDirection): PoolQueryBuilder
+  first(count: number): PoolQueryBuilder
+  after(cursor: string): PoolQueryBuilder
+  execute(): Promise<Pool[]>
+  executeAndSerialize(): Promise<SerializedPool[]>
+}
+```
+
+### TransactionQueryBuilder
+
+```typescript
+interface TransactionQueryBuilder {
+  byNetwork(network: NetworkFilter): TransactionQueryBuilder
+  byPool(poolId: string): TransactionQueryBuilder
+  byHash(hash: string): TransactionQueryBuilder
+  byPaymaster(address: string): TransactionQueryBuilder
+  byStatus(status: TransactionStatus): TransactionQueryBuilder
+  orderBy(field: string, direction?: OrderDirection): TransactionQueryBuilder
+  first(count: number): TransactionQueryBuilder
+  after(cursor: string): TransactionQueryBuilder
+  execute(): Promise<Transaction[]>
+  executeAndSerialize(): Promise<SerializedTransaction[]>
+}
+```
+
+## Error Types
+
+### SubgraphError
+
+Thrown for subgraph query failures:
+
+```typescript
+class SubgraphError extends Error {
+  readonly query: string
+  readonly variables?: Record<string, unknown>
+  readonly statusCode?: number
+  
+  constructor(message: string, query: string, variables?: Record<string, unknown>)
+}
+```
+
+### ValidationError
+
+Thrown for query validation failures:
+
+```typescript
+class ValidationError extends Error {
+  readonly field: string
+  readonly value: unknown
+  
+  constructor(field: string, message: string, value?: unknown)
+}
+```
+
+## Utility Types
+
+### BigIntString
+
+String representation of BigInt values from GraphQL:
+
+```typescript
+type BigIntString = string
+```
+
+### Address
+
+Ethereum address:
+
+```typescript
+type Address = `0x${string}`
+```
+
+### Timestamp
+
+Unix timestamp as string:
+
+```typescript
+type Timestamp = string
+```
+
+## Transformation Types
+
+### EntityTransformer
+
+Generic entity transformer:
+
+```typescript
+interface EntityTransformer<T, U> {
+  transform(entity: T): U
+  transformArray(entities: T[]): U[]
+}
+```
+
+### Example Transformers
+
+```typescript
+// Pool transformer
+const poolTransformer: EntityTransformer<Pool, SerializedPool> = {
+  transform: (pool: Pool): SerializedPool => ({
+    ...pool,
+    memberCount: parseInt(pool.memberCount),
+    // Other transformations...
+  }),
+  transformArray: (pools: Pool[]) => pools.map(poolTransformer.transform)
+}
+```
+
+## Constants
+
+### Network Identifiers
+
+```typescript
+const NETWORK_IDS = {
+  BASE_SEPOLIA: 'base-sepolia',
+  BASE: 'base',
+  OPTIMISM_SEPOLIA: 'optimism-sepolia'
+} as const
+
+type NetworkId = typeof NETWORK_IDS[keyof typeof NETWORK_IDS]
+```
+
+### Query Limits
+
+```typescript
+const QUERY_LIMITS = {
+  DEFAULT_LIMIT: 100,
+  MAX_LIMIT: 1000,
+  DEFAULT_RELATIONSHIP_LIMIT: 50,
+  MAX_RELATIONSHIP_LIMIT: 1000
+} as const
+```
+
+### Field Names
+
+```typescript
+const POOL_FIELDS = {
+  ID: 'id',
+  POOL_ID: 'poolId',
+  MEMBER_COUNT: 'memberCount',
+  CREATED_AT: 'createdAt',
+  UPDATED_AT: 'updatedAt'
+} as const
+
+const TRANSACTION_FIELDS = {
+  ID: 'id',
+  HASH: 'hash',
+  TIMESTAMP: 'timestamp',
+  BLOCK_NUMBER: 'blockNumber',
+  STATUS: 'status'
+} as const
+```
+
+## Type Guards
+
+### Entity Type Guards
+
+```typescript
+function isPool(entity: unknown): entity is Pool {
+  return typeof entity === 'object' &&
+         entity !== null &&
+         'poolId' in entity &&
+         'paymasterAddress' in entity
+}
+
+function isTransaction(entity: unknown): entity is Transaction {
+  return typeof entity === 'object' &&
+         entity !== null &&
+         'hash' in entity &&
+         'userOpHash' in entity
+}
+```
+
+### Network Type Guards
+
+```typescript
+function isValidNetwork(network: string): network is NetworkFilter {
+  return ['base-sepolia', 'base', 'optimism-sepolia'].includes(network)
+}
+```
+
+## Import Examples
+
+### Core Types
+
+```typescript
+import type {
+  Pool,
+  SerializedPool,
+  PoolMember,
+  Transaction,
+  PaymasterContract,
+  SubgraphClientOptions,
+  NetworkPreset
+} from '@prepaid-gas/data'
+```
+
+### Query Builder Types
+
+```typescript
+import type {
+  PoolQueryBuilder,
+  TransactionQueryBuilder,
+  NetworkFilter,
+  OrderDirection,
+  TransactionStatus
+} from '@prepaid-gas/data'
+```
+
+### Error Types
+
+```typescript
+import {
+  SubgraphError,
+  ValidationError
+} from '@prepaid-gas/data'
+```
+
+## Best Practices
+
+### Type Safety
+
+Always use explicit types:
+
+```typescript
+// ✅ Good: Explicit typing
+const pools: Pool[] = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .execute()
+
+// ✅ Good: Type assertion when needed
+const serializedPools: SerializedPool[] = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .executeAndSerialize()
+```
+
+### BigInt Handling
+
+Use serialized types for JSON operations:
+
+```typescript
+// ✅ Good: Use serialized types for API responses
+app.get('/api/pools', async (req, res) => {
+  const pools = await client.query()
+    .pools()
+    .executeAndSerialize() // Returns SerializedPool[]
+  
+  res.json(pools) // Safe for JSON
+})
+
+// ❌ Avoid: Raw entities with BigInt values
+app.get('/api/pools', async (req, res) => {
+  const pools = await client.query()
+    .pools()
+    .execute() // Returns Pool[] with string numbers
+  
+  res.json(pools) // BigInt values may not serialize correctly
+})
+```
+
+### Error Handling
+
+Use specific error types:
+
+```typescript
+try {
+  const pools = await client.query().pools().execute()
+} catch (error) {
+  if (error instanceof SubgraphError) {
+    console.error('Subgraph error:', error.message)
+    console.error('Query:', error.query)
+  } else if (error instanceof ValidationError) {
+    console.error(`Validation error in ${error.field}:`, error.message)
+  } else {
+    console.error('Unexpected error:', error)
+  }
+}
+```

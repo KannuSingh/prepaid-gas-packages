@@ -1,0 +1,430 @@
+# Types
+
+TypeScript type definitions for the core package.
+
+## Main Types
+
+### PaymasterOptions
+
+Configuration options for creating a `PrepaidGasPaymaster` instance:
+
+```typescript
+interface PaymasterOptions {
+  chainId: number
+  paymasterAddress: Address
+  subgraphUrl: string
+  rpcUrl?: string
+  debug?: boolean
+}
+```
+
+**Fields:**
+- `chainId` - Network chain ID (e.g., 84532 for Base Sepolia)
+- `paymasterAddress` - Deployed paymaster contract address
+- `subgraphUrl` - The Graph API endpoint for pool data
+- `rpcUrl` - Optional custom RPC endpoint
+- `debug` - Enable debug logging for proof generation
+
+### PaymasterResult
+
+Result returned by paymaster operations:
+
+```typescript
+interface PaymasterResult {
+  paymaster: Address
+  paymasterData: Hex
+  paymasterVerificationGasLimit: bigint
+  paymasterPostOpGasLimit: bigint
+  callGasLimit: bigint
+  verificationGasLimit: bigint
+  preVerificationGas: bigint
+  isFinal: boolean
+}
+```
+
+**Fields:**
+- `paymaster` - Paymaster contract address
+- `paymasterData` - 480-byte encoded paymaster data
+- `paymasterVerificationGasLimit` - Gas limit for paymaster verification
+- `paymasterPostOpGasLimit` - Gas limit for post-operation hooks
+- `callGasLimit` - Gas limit for the main call
+- `verificationGasLimit` - Gas limit for user operation verification
+- `preVerificationGas` - Pre-verification gas amount
+- `isFinal` - Whether this data is final (true) or for estimation (false)
+
+### ProofGenerationParams
+
+Parameters for generating ZK proofs:
+
+```typescript
+interface ProofGenerationParams {
+  userOp: UserOperation
+  poolId: string
+  identity: string
+  merkleRootIndex?: number
+}
+```
+
+**Fields:**
+- `userOp` - ERC-4337 user operation
+- `poolId` - Pool identifier as string
+- `identity` - Base64-encoded Semaphore identity
+- `merkleRootIndex` - Optional Merkle root index (0-63)
+
+## Network Types
+
+### NetworkConfig
+
+Network configuration structure:
+
+```typescript
+interface NetworkConfig {
+  chainId: number
+  name: string
+  paymasterAddress: Address
+  subgraphUrl: string
+  rpcUrl?: string
+}
+```
+
+**Example:**
+```typescript
+const baseSepolia: NetworkConfig = {
+  chainId: 84532,
+  name: 'Base Sepolia',
+  paymasterAddress: '0x...',
+  subgraphUrl: 'https://api.thegraph.com/subgraphs/name/...',
+  rpcUrl: 'https://sepolia.base.org'
+}
+```
+
+### ChainId
+
+Supported chain IDs:
+
+```typescript
+type ChainId = 
+  | 84532  // Base Sepolia
+  | 8453   // Base Mainnet (coming soon)
+  | 11155420 // Optimism Sepolia (coming soon)
+```
+
+## Configuration Types
+
+### ConfigParams
+
+Configuration parameters for paymaster data encoding:
+
+```typescript
+interface ConfigParams {
+  merkleRootIndex: number  // 0-63
+  mode: number            // 0 = validation, 1 = estimation
+}
+```
+
+### OperationMode
+
+Operation modes for paymaster:
+
+```typescript
+enum OperationMode {
+  VALIDATION = 0,      // Real ZK proof validation
+  GAS_ESTIMATION = 1   // Dummy data for estimation
+}
+```
+
+## Error Types
+
+### ValidationError
+
+Thrown for input validation failures:
+
+```typescript
+class ValidationError extends Error {
+  readonly field: string
+  readonly value: unknown
+  
+  constructor(field: string, message: string, value?: unknown)
+}
+```
+
+**Usage:**
+```typescript
+try {
+  validatePoolId(poolId)
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.error(`Validation failed for ${error.field}: ${error.message}`)
+    console.error('Invalid value:', error.value)
+  }
+}
+```
+
+### PaymasterError
+
+Thrown for paymaster operation failures:
+
+```typescript
+class PaymasterError extends Error {
+  readonly code: string
+  readonly context?: Record<string, unknown>
+  
+  constructor(code: string, message: string, context?: Record<string, unknown>)
+}
+```
+
+**Usage:**
+```typescript
+try {
+  await paymaster.getPaymasterData(params)
+} catch (error) {
+  if (error instanceof PaymasterError) {
+    console.error(`Paymaster error ${error.code}: ${error.message}`)
+    console.error('Error context:', error.context)
+  }
+}
+```
+
+## Proof Types
+
+### SemaphoreProof
+
+Semaphore protocol ZK proof structure:
+
+```typescript
+interface SemaphoreProof {
+  merkleTreeDepth: number
+  merkleTreeRoot: bigint
+  nullifier: bigint
+  message: bigint
+  scope: bigint
+  points: [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint]
+}
+```
+
+This type is imported from `@semaphore-protocol/proof`.
+
+### ProofData
+
+Internal proof data structure:
+
+```typescript
+interface ProofData {
+  proof: SemaphoreProof
+  merkleRootIndex: number
+  poolId: bigint
+}
+```
+
+## Utility Types
+
+### Address
+
+Ethereum address type (from Viem):
+
+```typescript
+type Address = `0x${string}`
+```
+
+### Hex
+
+Hex-encoded data type (from Viem):
+
+```typescript
+type Hex = `0x${string}`
+```
+
+### UserOperation
+
+ERC-4337 user operation type (from Permissionless):
+
+```typescript
+interface UserOperation {
+  sender: Address
+  nonce: bigint
+  factory?: Address
+  factoryData?: Hex
+  callData: Hex
+  callGasLimit: bigint
+  verificationGasLimit: bigint
+  preVerificationGas: bigint
+  maxFeePerGas: bigint
+  maxPriorityFeePerGas: bigint
+  paymaster?: Address
+  paymasterVerificationGasLimit?: bigint
+  paymasterPostOpGasLimit?: bigint
+  paymasterData?: Hex
+  signature: Hex
+}
+```
+
+## Constants
+
+### Data Size Constants
+
+```typescript
+const PAYMASTER_DATA_SIZE = 480  // Total paymaster data size in bytes
+const CONFIG_SIZE = 32           // Config field size in bytes
+const POOL_ID_SIZE = 32          // Pool ID field size in bytes  
+const PROOF_SIZE = 416           // Proof field size in bytes
+```
+
+### Pool Constants
+
+```typescript
+const POOL_ROOT_HISTORY_SIZE = 64      // Maximum Merkle root history
+const POST_OP_GAS_LIMIT = 100000n      // Default post-operation gas limit
+const MAX_POOL_ID = 2n ** 256n - 1n    // Maximum pool ID value
+```
+
+### Mode Constants
+
+```typescript
+const VALIDATION_MODE = 0       // Real ZK proof validation
+const GAS_ESTIMATION_MODE = 1   // Dummy data for gas estimation
+```
+
+## Type Guards
+
+### isValidAddress()
+
+Type guard for validating Ethereum addresses:
+
+```typescript
+function isValidAddress(value: unknown): value is Address {
+  return typeof value === 'string' && 
+         value.startsWith('0x') && 
+         value.length === 42
+}
+```
+
+### isValidChainId()
+
+Type guard for supported chain IDs:
+
+```typescript
+function isValidChainId(chainId: number): chainId is ChainId {
+  return [84532, 8453, 11155420].includes(chainId)
+}
+```
+
+## Generic Types
+
+### Result Types
+
+Success/error result pattern:
+
+```typescript
+type Result<T, E = Error> = 
+  | { success: true; data: T }
+  | { success: false; error: E }
+```
+
+**Usage:**
+```typescript
+async function safePaymasterOperation(): Promise<Result<PaymasterResult>> {
+  try {
+    const data = await paymaster.getPaymasterData(params)
+    return { success: true, data }
+  } catch (error) {
+    return { success: false, error: error as Error }
+  }
+}
+```
+
+### Optional Configuration
+
+Partial configuration for optional parameters:
+
+```typescript
+type PartialPaymasterOptions = Partial<PaymasterOptions> & {
+  chainId: number  // chainId is always required
+}
+```
+
+## Import Examples
+
+### Core Types
+
+```typescript
+import type {
+  PaymasterOptions,
+  PaymasterResult,
+  ProofGenerationParams,
+  NetworkConfig,
+  ChainId,
+} from '@prepaid-gas/core'
+```
+
+### Error Types
+
+```typescript
+import {
+  ValidationError,
+  PaymasterError,
+} from '@prepaid-gas/core'
+```
+
+### External Types
+
+```typescript
+import type { Address, Hex } from 'viem'
+import type { UserOperation } from 'permissionless'
+import type { SemaphoreProof } from '@semaphore-protocol/proof'
+```
+
+## Best Practices
+
+### Type Safety
+
+Always use explicit types for better IDE support:
+
+```typescript
+// ✅ Good: Explicit typing
+const options: PaymasterOptions = {
+  chainId: 84532,
+  paymasterAddress: '0x...',
+  subgraphUrl: 'https://...',
+}
+
+// ❌ Avoid: Implicit typing
+const options = {
+  chainId: 84532,
+  // Missing other required fields
+}
+```
+
+### Error Handling
+
+Use type guards for error handling:
+
+```typescript
+function handlePaymasterError(error: unknown) {
+  if (error instanceof ValidationError) {
+    // Handle validation errors
+    console.error(`Validation error in ${error.field}:`, error.message)
+  } else if (error instanceof PaymasterError) {
+    // Handle paymaster errors
+    console.error(`Paymaster error ${error.code}:`, error.message)
+  } else {
+    // Handle unexpected errors
+    console.error('Unexpected error:', error)
+  }
+}
+```
+
+### Generic Constraints
+
+Use generic constraints for type safety:
+
+```typescript
+function processChainConfig<T extends ChainId>(
+  chainId: T,
+  config: NetworkConfig
+): NetworkConfig {
+  if (config.chainId !== chainId) {
+    throw new ValidationError('chainId', 'Chain ID mismatch')
+  }
+  return config
+}
+```

@@ -1,0 +1,305 @@
+# PrepaidGasPaymaster Client
+
+The `PrepaidGasPaymaster` class is the main client for generating zero-knowledge proofs and managing paymaster interactions.
+
+## Factory Methods
+
+### createForNetwork()
+
+Create a client with automatic network configuration:
+
+```typescript
+import { PrepaidGasPaymaster } from '@prepaid-gas/core'
+
+// Base Sepolia (testnet)
+const paymaster = PrepaidGasPaymaster.createForNetwork(84532)
+
+// Base Mainnet (coming soon)
+const paymaster = PrepaidGasPaymaster.createForNetwork(8453)
+```
+
+### Constructor
+
+Create a client with custom configuration:
+
+```typescript
+import { PrepaidGasPaymaster, type PaymasterOptions } from '@prepaid-gas/core'
+
+const options: PaymasterOptions = {
+  chainId: 84532,
+  paymasterAddress: '0x...',
+  subgraphUrl: 'https://api.thegraph.com/subgraphs/name/...',
+  rpcUrl: 'https://sepolia.base.org',
+}
+
+const paymaster = new PrepaidGasPaymaster(options)
+```
+
+## Core Methods
+
+### getPaymasterStubData()
+
+Generate dummy paymaster data for gas estimation. Fast operation with no ZK proof generation.
+
+```typescript
+async getPaymasterStubData(params: {
+  userOp: UserOperation
+  poolId: string
+  identity: string
+}): Promise<PaymasterResult>
+```
+
+**Parameters:**
+- `userOp` - The user operation to estimate gas for
+- `poolId` - Pool identifier (string representation of uint256)
+- `identity` - Base64-encoded Semaphore identity
+
+**Returns:**
+```typescript
+{
+  paymaster: Address
+  paymasterData: Hex
+  paymasterVerificationGasLimit: bigint
+  paymasterPostOpGasLimit: bigint
+  callGasLimit: bigint
+  verificationGasLimit: bigint
+  preVerificationGas: bigint
+  isFinal: false // Always false for stub data
+}
+```
+
+**Example:**
+```typescript
+const stubResult = await paymaster.getPaymasterStubData({
+  userOp,
+  poolId: '1',
+  identity: identity.export(),
+})
+
+// Use for gas estimation
+console.log('Estimated gas:', stubResult.callGasLimit)
+```
+
+### getPaymasterData()
+
+Generate real paymaster data with ZK proof for transaction submission.
+
+```typescript
+async getPaymasterData(params: {
+  userOp: UserOperation
+  poolId: string
+  identity: string
+  merkleRootIndex?: number
+}): Promise<PaymasterResult>
+```
+
+**Parameters:**
+- `userOp` - The user operation to generate proof for
+- `poolId` - Pool identifier 
+- `identity` - Base64-encoded Semaphore identity
+- `merkleRootIndex` - Optional Merkle root index (0-63, defaults to latest)
+
+**Returns:**
+```typescript
+{
+  paymaster: Address
+  paymasterData: Hex // 480 bytes: config + poolId + proof
+  paymasterVerificationGasLimit: bigint
+  paymasterPostOpGasLimit: bigint
+  callGasLimit: bigint
+  verificationGasLimit: bigint
+  preVerificationGas: bigint
+  isFinal: true // Always true for real data
+}
+```
+
+**Example:**
+```typescript
+const paymasterData = await paymaster.getPaymasterData({
+  userOp,
+  poolId: '1',
+  identity: identity.export(),
+})
+
+// Update user operation
+Object.assign(userOp, paymasterData)
+
+// Submit transaction
+const hash = await smartAccount.sendUserOperation(userOp)
+```
+
+## Validation Methods
+
+### validatePoolId()
+
+Validate pool ID is within safe integer range:
+
+```typescript
+validatePoolId(poolId: string): void
+```
+
+**Example:**
+```typescript
+import { validatePoolId } from '@prepaid-gas/core'
+
+try {
+  validatePoolId('123')
+  console.log('Valid pool ID')
+} catch (error) {
+  console.error('Invalid pool ID:', error.message)
+}
+```
+
+## Configuration Options
+
+### PaymasterOptions
+
+```typescript
+interface PaymasterOptions {
+  chainId: number
+  paymasterAddress: Address
+  subgraphUrl: string
+  rpcUrl?: string
+  debug?: boolean
+}
+```
+
+**Fields:**
+- `chainId` - Network chain ID (e.g., 84532 for Base Sepolia)
+- `paymasterAddress` - Deployed paymaster contract address
+- `subgraphUrl` - The Graph API endpoint for pool data
+- `rpcUrl` - Optional RPC endpoint (uses public endpoints if not provided)
+- `debug` - Enable debug logging for proof generation
+
+## Error Handling
+
+The client throws specific error types for different failure modes:
+
+### ValidationError
+
+Thrown for invalid input parameters:
+
+```typescript
+import { ValidationError } from '@prepaid-gas/core'
+
+try {
+  await paymaster.getPaymasterData(params)
+} catch (error) {
+  if (error instanceof ValidationError) {
+    console.error(`Validation failed for ${error.field}: ${error.message}`)
+  }
+}
+```
+
+### PaymasterError
+
+Thrown for paymaster-specific failures:
+
+```typescript
+import { PaymasterError } from '@prepaid-gas/core'
+
+try {
+  await paymaster.getPaymasterData(params)
+} catch (error) {
+  if (error instanceof PaymasterError) {
+    console.error(`Paymaster error ${error.code}: ${error.message}`)
+  }
+}
+```
+
+## Performance Considerations
+
+### Gas Estimation vs Real Transactions
+
+**Always use `getPaymasterStubData()` for gas estimation**:
+- ~100x faster than generating real ZK proofs
+- Provides accurate gas estimates without proof overhead
+- Returns `isFinal: false` to indicate estimation mode
+
+**Use `getPaymasterData()` only for real transactions**:
+- Generates actual ZK proof (2-5 seconds)
+- Returns final paymaster data for submission
+- Returns `isFinal: true` to indicate ready for transaction
+
+### Caching and Optimization
+
+The client automatically caches:
+- Network configurations for repeated use
+- Subgraph client instances
+- Pool member data during proof generation
+
+**Example optimization pattern**:
+```typescript
+// 1. Fast gas estimation
+const estimate = await paymaster.getPaymasterStubData(params)
+updateUI({ gasEstimate: estimate.callGasLimit })
+
+// 2. Show loading state for proof generation
+showLoader('Generating privacy proof...')
+
+// 3. Generate real proof
+const finalData = await paymaster.getPaymasterData(params)
+hideLoader()
+
+// 4. Submit transaction
+await submitTransaction(finalData)
+```
+
+## Network Support
+
+### Supported Networks
+
+| Network | Chain ID | Status |
+|---------|----------|---------|
+| Base Sepolia | 84532 | ✅ Active |
+| Base Mainnet | 8453 | 🔄 Coming Soon |
+| Optimism Sepolia | 11155420 | 🔄 Coming Soon |
+
+### Custom Network Setup
+
+For unsupported networks, provide full configuration:
+
+```typescript
+const customPaymaster = new PrepaidGasPaymaster({
+  chainId: 12345,
+  paymasterAddress: '0x...',
+  subgraphUrl: 'https://your-subgraph-url...',
+  rpcUrl: 'https://your-rpc-url...',
+})
+```
+
+## Privacy Considerations
+
+### Identity Management
+
+**Never expose private identity data**:
+
+```typescript
+// ✅ Good: Secure storage
+const identity = Identity.import(await secureStorage.get('identity'))
+
+// ❌ Bad: Plain text storage
+const identity = Identity.import(localStorage.getItem('identity'))
+```
+
+### Pool Selection Strategy
+
+**Consider anonymity set size**:
+```typescript
+// Query pool size before joining
+const poolData = await subgraph.query()
+  .pools()
+  .byId(poolId)
+  .withMembers()
+  .execute()
+
+if (poolData.memberCount < 10) {
+  console.warn('Small anonymity set - consider larger pool')
+}
+```
+
+## Examples
+
+- [Basic Usage](/examples/basic) - Simple integration
+- [React Integration](/examples/react) - Frontend patterns
+- [Advanced Features](/examples/advanced) - Optimization techniques

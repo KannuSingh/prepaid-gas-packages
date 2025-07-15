@@ -1,0 +1,534 @@
+# Query Builders
+
+Comprehensive guide to the fluent query builders for type-safe data fetching.
+
+## Overview
+
+All query builders follow a consistent pattern:
+
+- **Entry Point**: Start with `client.query()`
+- **Entity Selection**: Choose entity type (`.pools()`, `.transactions()`, etc.)
+- **Filtering**: Apply filters (`.byNetwork()`, `.byId()`, etc.)  
+- **Relationships**: Include related data (`.withMembers()`, etc.)
+- **Ordering**: Sort results (`.orderBy()`)
+- **Pagination**: Limit and paginate (`.first()`, `.after()`)
+- **Execution**: Execute query (`.execute()` or `.executeAndSerialize()`)
+
+## Pool Query Builder
+
+Query privacy pools and their relationships.
+
+### Basic Filtering
+
+```typescript
+// Get all pools on a network
+const pools = await client.query()
+  .pools()
+  .byNetwork('base-sepolia') // Required
+  .execute()
+
+// Get specific pool
+const pool = await client.query()
+  .pools()
+  .byId('base-sepolia-1')
+  .execute()
+
+// Filter by paymaster
+const paymasterPools = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .byPaymaster('0x1234567890123456789012345678901234567890')
+  .execute()
+```
+
+### Relationship Loading
+
+```typescript
+// Include members (up to specified limit)
+const poolsWithMembers = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .withMembers(100) // Include up to 100 members per pool
+  .execute()
+
+// Include transactions
+const poolsWithTxs = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .withTransactions(50) // Include up to 50 transactions per pool
+  .execute()
+
+// Include both relationships
+const fullPoolData = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .withMembers(200)
+  .withTransactions(100)
+  .execute()
+```
+
+### Ordering and Pagination
+
+```typescript
+// Order by creation time (newest first)
+const newestPools = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .orderBy('createdAt', 'desc')
+  .first(20)
+  .execute()
+
+// Order by member count (largest anonymity sets first)
+const largestPools = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .orderBy('memberCount', 'desc')
+  .first(10)
+  .execute()
+
+// Pagination
+const secondPage = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .after('base-sepolia-20') // Cursor from previous page
+  .first(20)
+  .execute()
+```
+
+## Pool Member Query Builder
+
+Query individual pool members and their identity commitments.
+
+### Basic Queries
+
+```typescript
+// All members in a pool
+const members = await client.query()
+  .poolMembers()
+  .byNetwork('base-sepolia')
+  .byPool('1') // Pool ID
+  .execute()
+
+// Specific member by commitment
+const member = await client.query()
+  .poolMembers()
+  .byCommitment('0x1234567890abcdef...')
+  .execute()
+
+// All members across all pools (paginated)
+const allMembers = await client.query()
+  .poolMembers()
+  .byNetwork('base-sepolia')
+  .first(500)
+  .execute()
+```
+
+### Member Analysis
+
+```typescript
+// Recent joiners
+const recentJoiners = await client.query()
+  .poolMembers()
+  .byNetwork('base-sepolia')
+  .orderBy('joinedAt', 'desc')
+  .first(50)
+  .execute()
+
+// Members by pool size
+const membersByPool = await client.query()
+  .poolMembers()
+  .byNetwork('base-sepolia')
+  .orderBy('poolId', 'asc')
+  .execute()
+```
+
+## Transaction Query Builder
+
+Query user operations processed by paymasters.
+
+### Basic Filtering
+
+```typescript
+// All transactions on network
+const transactions = await client.query()
+  .transactions()
+  .byNetwork('base-sepolia')
+  .orderBy('timestamp', 'desc')
+  .first(100)
+  .execute()
+
+// Transactions in specific pool
+const poolTxs = await client.query()
+  .transactions()
+  .byNetwork('base-sepolia')
+  .byPool('1')
+  .execute()
+
+// Specific transaction
+const transaction = await client.query()
+  .transactions()
+  .byHash('0xabc123...')
+  .execute()
+
+// Transactions by paymaster
+const paymasterTxs = await client.query()
+  .transactions()
+  .byNetwork('base-sepolia')
+  .byPaymaster('0x1234567890123456789012345678901234567890')
+  .execute()
+```
+
+### Time-based Queries
+
+```typescript
+// Recent transactions (last 24 hours)
+const recent = await client.query()
+  .transactions()
+  .byNetwork('base-sepolia')
+  .orderBy('timestamp', 'desc')
+  .first(200)
+  .execute()
+
+const last24Hours = recent.filter(tx => {
+  const txTime = parseInt(tx.timestamp) * 1000
+  const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000
+  return txTime > oneDayAgo
+})
+```
+
+### Success/Failure Analysis
+
+```typescript
+// Only successful transactions
+const successful = await client.query()
+  .transactions()
+  .byNetwork('base-sepolia')
+  .byStatus('success')
+  .execute()
+
+// Failed transactions for debugging
+const failed = await client.query()
+  .transactions()
+  .byNetwork('base-sepolia')
+  .byStatus('failed')
+  .orderBy('timestamp', 'desc')
+  .first(50)
+  .execute()
+```
+
+## Paymaster Query Builder
+
+Query paymaster contracts and their pools.
+
+### Basic Queries
+
+```typescript
+// All paymasters on network
+const paymasters = await client.query()
+  .paymasters()
+  .byNetwork('base-sepolia')
+  .execute()
+
+// Specific paymaster
+const paymaster = await client.query()
+  .paymasters()
+  .byAddress('0x1234567890123456789012345678901234567890')
+  .execute()
+```
+
+### With Relationships
+
+```typescript
+// Paymasters with their pools
+const paymastersWithPools = await client.query()
+  .paymasters()
+  .byNetwork('base-sepolia')
+  .withPools(50) // Include up to 50 pools per paymaster
+  .execute()
+
+// Full paymaster data
+const fullData = await client.query()
+  .paymasters()
+  .byNetwork('base-sepolia')
+  .withPools(100)
+  .withTransactions(200)
+  .execute()
+```
+
+## Network Info Query Builder
+
+Query network-level statistics and information.
+
+### Basic Usage
+
+```typescript
+// Network overview
+const networkInfo = await client.query()
+  .networkInfo()
+  .byNetwork('base-sepolia')
+  .execute()
+
+// Includes aggregate statistics like:
+// - Total pools
+// - Total members  
+// - Total transactions
+// - Active paymasters
+```
+
+## Advanced Query Patterns
+
+### Multi-Entity Queries
+
+Execute multiple related queries in parallel:
+
+```typescript
+async function getPoolOverview(poolId: string) {
+  const [poolData, members, recentTxs] = await Promise.all([
+    // Pool details
+    client.query()
+      .pools()
+      .byId(`base-sepolia-${poolId}`)
+      .execute(),
+    
+    // All members
+    client.query()
+      .poolMembers()
+      .byNetwork('base-sepolia')
+      .byPool(poolId)
+      .execute(),
+    
+    // Recent transactions
+    client.query()
+      .transactions()
+      .byNetwork('base-sepolia')
+      .byPool(poolId)
+      .orderBy('timestamp', 'desc')
+      .first(50)
+      .execute()
+  ])
+  
+  return {
+    pool: poolData[0],
+    members,
+    recentTransactions: recentTxs
+  }
+}
+```
+
+### Conditional Relationship Loading
+
+Load relationships based on conditions:
+
+```typescript
+async function getPoolData(poolId: string, includeMembers = true) {
+  let query = client.query()
+    .pools()
+    .byId(`base-sepolia-${poolId}`)
+  
+  if (includeMembers) {
+    query = query.withMembers(500)
+  }
+  
+  return query.execute()
+}
+```
+
+### Pagination Helper
+
+```typescript
+async function* paginateQuery<T>(
+  queryBuilder: any,
+  pageSize = 100
+): AsyncGenerator<T[], void, unknown> {
+  let cursor: string | undefined
+  
+  while (true) {
+    let query = queryBuilder.first(pageSize)
+    
+    if (cursor) {
+      query = query.after(cursor)
+    }
+    
+    const page = await query.execute()
+    
+    if (page.length === 0) break
+    
+    yield page
+    
+    cursor = page[page.length - 1].id
+    
+    if (page.length < pageSize) break
+  }
+}
+
+// Usage
+const poolQuery = client.query().pools().byNetwork('base-sepolia')
+
+for await (const poolPage of paginateQuery(poolQuery, 50)) {
+  console.log('Processing page with', poolPage.length, 'pools')
+  // Process each page
+}
+```
+
+## Query Optimization
+
+### Selective Relationship Loading
+
+Only load what you need:
+
+```typescript
+// ✅ Efficient: Only load required relationships
+const pools = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .withMembers(50) // Only members, not transactions
+  .execute()
+
+// ❌ Inefficient: Loading unnecessary data
+const pools = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .withMembers(500)
+  .withTransactions(500) // Might not need all transactions
+  .execute()
+```
+
+### Batch vs Sequential Queries
+
+```typescript
+// ✅ Efficient: Parallel execution
+const [pools, transactions] = await Promise.all([
+  client.query().pools().byNetwork('base-sepolia').execute(),
+  client.query().transactions().byNetwork('base-sepolia').first(100).execute()
+])
+
+// ❌ Inefficient: Sequential execution
+const pools = await client.query().pools().byNetwork('base-sepolia').execute()
+const transactions = await client.query().transactions().byNetwork('base-sepolia').first(100).execute()
+```
+
+### Appropriate Limit Sizes
+
+```typescript
+// ✅ Good: Reasonable limits
+const pools = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .first(50) // Reasonable for UI display
+  .execute()
+
+// ⚠️ Careful: Large limits
+const allPools = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .first(1000) // Use pagination instead
+  .execute()
+```
+
+## Error Handling
+
+### Query Validation
+
+```typescript
+try {
+  const pools = await client.query()
+    .pools()
+    // Missing .byNetwork() - will fail validation
+    .execute()
+} catch (error) {
+  console.error('Query validation failed:', error.message)
+}
+```
+
+### Network-Specific Errors
+
+```typescript
+try {
+  const pools = await client.query()
+    .pools()
+    .byNetwork('unsupported-network')
+    .execute()
+} catch (error) {
+  if (error.message.includes('unsupported')) {
+    console.error('Network not supported:', error.message)
+  }
+}
+```
+
+## Type Safety
+
+### Query Builder Types
+
+All query builders are fully typed:
+
+```typescript
+// TypeScript infers correct return types
+const pools: Pool[] = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .execute()
+
+const serializedPools: SerializedPool[] = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .executeAndSerialize()
+```
+
+### Method Chaining Types
+
+Method chaining maintains type safety:
+
+```typescript
+// All methods are properly typed
+const query = client.query()
+  .pools()                    // PoolQueryBuilder
+  .byNetwork('base-sepolia')  // PoolQueryBuilder
+  .withMembers(50)            // PoolQueryBuilder
+  .orderBy('createdAt')       // PoolQueryBuilder
+  .first(20)                  // PoolQueryBuilder
+// .execute() returns Promise<Pool[]>
+```
+
+## Best Practices
+
+### Always Specify Network
+
+```typescript
+// ✅ Always required for accurate results
+const pools = await client.query()
+  .pools()
+  .byNetwork('base-sepolia') // Required for multi-chain accuracy
+  .execute()
+```
+
+### Use Appropriate Limits
+
+```typescript
+// ✅ Good: Reasonable default
+const pools = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .first(50)
+  .execute()
+
+// ⚠️ Consider pagination for large datasets
+const manyPools = await client.query()
+  .pools()
+  .byNetwork('base-sepolia')
+  .first(500)
+  .execute()
+```
+
+### Serialize for APIs
+
+```typescript
+// ✅ Use serialized entities for API responses
+app.get('/api/pools', async (req, res) => {
+  const pools = await client.query()
+    .pools()
+    .byNetwork('base-sepolia')
+    .executeAndSerialize() // Safe for JSON
+  
+  res.json(pools)
+})
+```
