@@ -5,7 +5,7 @@ import type { NetworkInfo, SerializedNetworkInfo } from '../../types/subgraph.js
 import { serializeNetworkInfo } from '../../transformers/index.js';
 import { NetworkInfoFields, NetworkInfoWhereInput } from '../types.js';
 import { BaseQueryBuilder } from './base-query-builder.js';
-import { NetworkName } from '@private-prepaid-gas/constants';
+import { NetworkName } from '@prepaid-gas/constants';
 
 export type NetworkInfoOrderBy =
   | 'id'

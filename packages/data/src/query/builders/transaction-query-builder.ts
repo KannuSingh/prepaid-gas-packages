@@ -9,7 +9,7 @@ import type { Transaction, PaymasterType, SerializedTransaction } from '../../ty
 import { TransactionFields, TransactionWhereInput } from '../types.js';
 import { BaseQueryBuilder } from './base-query-builder.js';
 import { serializeTransaction } from '../../transformers/index.js';
-import { NetworkName } from '@private-prepaid-gas/constants';
+import { NetworkName } from '@prepaid-gas/constants';
 
 // Define specific types for TransactionQueryBuilder
 export type TransactionOrderBy =

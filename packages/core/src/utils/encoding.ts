@@ -1,15 +1,7 @@
-import {
-  encodeAbiParameters,
-  isHex,
-  parseAbiParameters,
-  toHex,
-  concat,
-  numberToHex,
-  decodeAbiParameters,
-} from "viem";
-import type { Hex } from "viem";
-import { POOL_ROOT_HISTORY_SIZE } from "@private-prepaid-gas/constants";
-import { SemaphoreProof } from "@semaphore-protocol/proof";
+import { encodeAbiParameters, isHex, parseAbiParameters, toHex, concat, numberToHex, decodeAbiParameters } from 'viem';
+import type { Hex } from 'viem';
+import { POOL_ROOT_HISTORY_SIZE } from '@prepaid-gas/constants';
+import { SemaphoreProof } from '@semaphore-protocol/proof';
 
 /**
  * Prepaid Gas Paymaster operation modes
@@ -20,7 +12,6 @@ export enum PrepaidGasPaymasterMode {
   /** Gas estimation mode with dummy data */
   GAS_ESTIMATION_MODE = 1,
 }
-
 
 /**
  * Encode paymaster context with all required parameters for coupon/card system
@@ -44,40 +35,33 @@ export enum PrepaidGasPaymasterMode {
  * );
  * ```
  */
-export function encodePaymasterContext(
-  paymasterAddress: Hex,
-  poolId: string | bigint,
-  identity: string,
-): Hex {
+export function encodePaymasterContext(paymasterAddress: Hex, poolId: string | bigint, identity: string): Hex {
   // Validate inputs
-  if (!paymasterAddress || typeof paymasterAddress !== "string") {
-    throw new Error(
-      "Paymaster address is required and must be a valid hex string",
-    );
+  if (!paymasterAddress || typeof paymasterAddress !== 'string') {
+    throw new Error('Paymaster address is required and must be a valid hex string');
   }
 
-  if (!poolId || (typeof poolId === "string" && !poolId.trim())) {
-    throw new Error("Pool ID is required");
+  if (!poolId || (typeof poolId === 'string' && !poolId.trim())) {
+    throw new Error('Pool ID is required');
   }
 
-  if (!identity || typeof identity !== "string" || !identity.trim()) {
-    throw new Error("Identity is required and must be a non-empty string");
+  if (!identity || typeof identity !== 'string' || !identity.trim()) {
+    throw new Error('Identity is required and must be a non-empty string');
   }
 
   // Convert poolId to bigint
-  const poolIdBigInt = typeof poolId === "bigint" ? poolId : BigInt(poolId);
+  const poolIdBigInt = typeof poolId === 'bigint' ? poolId : BigInt(poolId);
 
   // Convert identity string to bytes
   const identityBytes = toHex(identity);
 
   // Encode using the 3-parameter format that parseContext() expects:
   // (address paymasterAddress, uint256 poolId, bytes identity)
-  return encodeAbiParameters(
-    parseAbiParameters(
-      "address paymasterAddress, uint256 poolId, bytes identity",
-    ),
-    [paymasterAddress, poolIdBigInt, identityBytes],
-  );
+  return encodeAbiParameters(parseAbiParameters('address paymasterAddress, uint256 poolId, bytes identity'), [
+    paymasterAddress,
+    poolIdBigInt,
+    identityBytes,
+  ]);
 }
 
 /**
@@ -93,21 +77,13 @@ export function encodePaymasterContext(
  * const config = encodeConfig(5, PrepaidGasPaymasterMode.VALIDATION_MODE);
  * ```
  */
-export function encodeConfig(
-  merkleRootIndex: number,
-  mode: PrepaidGasPaymasterMode,
-): bigint {
+export function encodeConfig(merkleRootIndex: number, mode: PrepaidGasPaymasterMode): bigint {
   if (merkleRootIndex >= POOL_ROOT_HISTORY_SIZE) {
-    throw new Error(
-      `Invalid merkleRootIndex: must be less than ${POOL_ROOT_HISTORY_SIZE}`,
-    );
+    throw new Error(`Invalid merkleRootIndex: must be less than ${POOL_ROOT_HISTORY_SIZE}`);
   }
 
-  if (
-    mode !== PrepaidGasPaymasterMode.VALIDATION_MODE &&
-    mode !== PrepaidGasPaymasterMode.GAS_ESTIMATION_MODE
-  ) {
-    throw new Error("Invalid mode");
+  if (mode !== PrepaidGasPaymasterMode.VALIDATION_MODE && mode !== PrepaidGasPaymasterMode.GAS_ESTIMATION_MODE) {
+    throw new Error('Invalid mode');
   }
 
   // Pack: merkleRootIndex (bits 0-31) + mode (bit 32) + reserved (bits 33-255)
@@ -131,7 +107,7 @@ export function decodeConfig(config: bigint): {
 } {
   // Validate unused bits are zero (bits 33-255)
   if (config >> 33n !== 0n) {
-    throw new Error("Invalid config format: unused bits must be zero");
+    throw new Error('Invalid config format: unused bits must be zero');
   }
 
   // Extract merkleRootIndex (bits 0-31)
@@ -143,9 +119,7 @@ export function decodeConfig(config: bigint): {
 
   // Validate merkleRootIndex
   if (merkleRootIndex >= POOL_ROOT_HISTORY_SIZE) {
-    throw new Error(
-      `Invalid merkleRootIndex: must be less than ${POOL_ROOT_HISTORY_SIZE}`,
-    );
+    throw new Error(`Invalid merkleRootIndex: must be less than ${POOL_ROOT_HISTORY_SIZE}`);
   }
 
   return { merkleRootIndex, mode };
@@ -174,7 +148,7 @@ export async function generatePaymasterData(
   mode: PrepaidGasPaymasterMode,
   poolId: bigint,
   semaphoreProof: SemaphoreProof,
-  merkleRootIndex: number,
+  merkleRootIndex: number
 ): Promise<Hex> {
   const proof = {
     merkleTreeDepth: BigInt(semaphoreProof.merkleTreeDepth),
@@ -182,16 +156,7 @@ export async function generatePaymasterData(
     nullifier: BigInt(semaphoreProof.nullifier),
     message: BigInt(semaphoreProof.message),
     scope: BigInt(semaphoreProof.scope),
-    points: semaphoreProof.points as [
-      bigint,
-      bigint,
-      bigint,
-      bigint,
-      bigint,
-      bigint,
-      bigint,
-      bigint,
-    ],
+    points: semaphoreProof.points as [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint],
   };
 
   // Encode config (32 bytes) - matches the contract's encodeConfig
@@ -205,19 +170,19 @@ export async function generatePaymasterData(
   const encodedProof = encodeAbiParameters(
     [
       {
-        name: "proof",
-        type: "tuple",
+        name: 'proof',
+        type: 'tuple',
         components: [
-          { name: "merkleTreeDepth", type: "uint256" },
-          { name: "merkleTreeRoot", type: "uint256" },
-          { name: "nullifier", type: "uint256" },
-          { name: "message", type: "uint256" },
-          { name: "scope", type: "uint256" },
-          { name: "points", type: "uint256[8]" },
+          { name: 'merkleTreeDepth', type: 'uint256' },
+          { name: 'merkleTreeRoot', type: 'uint256' },
+          { name: 'nullifier', type: 'uint256' },
+          { name: 'message', type: 'uint256' },
+          { name: 'scope', type: 'uint256' },
+          { name: 'points', type: 'uint256[8]' },
         ],
       },
     ],
-    [proof],
+    [proof]
   );
 
   // Use concat to simulate abi.encodePacked: config + poolId + encodedProof
@@ -254,20 +219,16 @@ export interface ParsedPaymasterContext {
  * console.log(parsed.paymasterAddress); // "0x..."
  * ```
  */
-export function parsePaymasterContext(
-  context: `0x${string}`,
-): ParsedPaymasterContext {
+export function parsePaymasterContext(context: `0x${string}`): ParsedPaymasterContext {
   if (!context) {
-    throw new Error("Context cannot be empty");
+    throw new Error('Context cannot be empty');
   }
 
   try {
     // Parse context with identity (3 parameters)
     const [paymasterAddress, poolId, identityHex] = decodeAbiParameters(
-      parseAbiParameters(
-        "address paymasterAddress, uint256 poolId, bytes identity",
-      ),
-      context,
+      parseAbiParameters('address paymasterAddress, uint256 poolId, bytes identity'),
+      context
     );
 
     return {
@@ -276,8 +237,6 @@ export function parsePaymasterContext(
       identityHex,
     };
   } catch (error) {
-    throw new Error(
-      `Invalid context format: ${error instanceof Error ? error.message : "Unknown error"}`,
-    );
+    throw new Error(`Invalid context format: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
 }

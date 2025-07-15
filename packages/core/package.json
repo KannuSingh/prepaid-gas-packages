@@ -1,7 +1,7 @@
 {
-  "name": "@private-prepaid-gas/core",
-  "version": "1.0.0",
-  "description": "Core SDK for Private Prepaid Gas paymaster integration",
+  "name": "@prepaid-gas/core",
+  "version": "0.0.1",
+  "description": "Core SDK for Prepaid Gas paymaster integration",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -43,8 +43,8 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@private-prepaid-gas/data": "workspace:*",
-    "@private-prepaid-gas/constants": "workspace:*",
+    "@prepaid-gas/data": "workspace:*",
+    "@prepaid-gas/constants": "workspace:*",
     "@semaphore-protocol/core": "^4.11.1",
     "@semaphore-protocol/group": "^4.11.1",
     "@semaphore-protocol/identity": "^4.11.1",
@@ -54,8 +54,8 @@
     "viem": "^2.31.3"
   },
   "devDependencies": {
-    "@private-prepaid-gas/eslint-config": "workspace:*",
-    "@private-prepaid-gas/typescript-config": "workspace:*",
+    "@prepaid-gas/eslint-config": "workspace:*",
+    "@prepaid-gas/typescript-config": "workspace:*",
     "eslint": "^9.17.0",
     "tsup": "^8.3.5",
     "typescript": "^5.7.3",

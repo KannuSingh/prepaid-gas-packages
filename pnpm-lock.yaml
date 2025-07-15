@@ -35,10 +35,10 @@ importers:
 
   packages/constants:
     devDependencies:
-      '@private-prepaid-gas/eslint-config':
+      '@prepaid-gas/eslint-config':
         specifier: workspace:*
         version: link:../../tools/eslint-config
-      '@private-prepaid-gas/typescript-config':
+      '@prepaid-gas/typescript-config':
         specifier: workspace:*
         version: link:../../tools/typescript-config
       eslint:
@@ -56,10 +56,10 @@ importers:
 
   packages/core:
     dependencies:
-      '@private-prepaid-gas/constants':
+      '@prepaid-gas/constants':
         specifier: workspace:*
         version: link:../constants
-      '@private-prepaid-gas/data':
+      '@prepaid-gas/data':
         specifier: workspace:*
         version: link:../data
       '@semaphore-protocol/core':
@@ -84,10 +84,10 @@ importers:
         specifier: ^2.31.3
         version: 2.31.7(typescript@5.8.3)
     devDependencies:
-      '@private-prepaid-gas/eslint-config':
+      '@prepaid-gas/eslint-config':
         specifier: workspace:*
         version: link:../../tools/eslint-config
-      '@private-prepaid-gas/typescript-config':
+      '@prepaid-gas/typescript-config':
         specifier: workspace:*
         version: link:../../tools/typescript-config
       eslint:
@@ -105,17 +105,17 @@ importers:
 
   packages/data:
     dependencies:
-      '@private-prepaid-gas/constants':
+      '@prepaid-gas/constants':
         specifier: workspace:*
         version: link:../constants
       graphql-request:
         specifier: 7.2.0
         version: 7.2.0(graphql@16.11.0)
     devDependencies:
-      '@private-prepaid-gas/eslint-config':
+      '@prepaid-gas/eslint-config':
         specifier: workspace:*
         version: link:../../tools/eslint-config
-      '@private-prepaid-gas/typescript-config':
+      '@prepaid-gas/typescript-config':
         specifier: workspace:*
         version: link:../../tools/typescript-config
       eslint:

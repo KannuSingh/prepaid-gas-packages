@@ -1,5 +1,5 @@
 {
-  "extends": "@private-prepaid-gas/typescript-config/library.json",
+  "extends": "@prepaid-gas/typescript-config/library.json",
   "compilerOptions": {
     "baseUrl": ".",
     "outDir": "dist",

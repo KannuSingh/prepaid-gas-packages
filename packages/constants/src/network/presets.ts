@@ -14,6 +14,10 @@ import type { NetworkName, ChainId, PaymasterType } from './config';
  */
 export interface NetworkPreset {
   name: NetworkName;
+  paymasterAddress: {
+    GasLimitedPaymaster: `0x${string}`;
+    OneTimeUsePaymaster: `0x${string}`;
+  };
   /** Default subgraph URL for this network */
   defaultSubgraphUrl: string;
   /** Default RPC URL for this network */
@@ -40,6 +44,10 @@ export interface NetworkPreset {
  */
 export const BASE_SEPOLIA_PRESET: NetworkPreset = {
   name: 'base-sepolia',
+  paymasterAddress: {
+    GasLimitedPaymaster: '0x3BEeC075aC5A77fFE0F9ee4bbb3DCBd07fA93fbf',
+    OneTimeUsePaymaster: '0x243A735115F34BD5c0F23a33a444a8d26e31E2E7',
+  },
   defaultSubgraphUrl: 'https://api.studio.thegraph.com/query/113435/prepaid-gas-paymaster-base-sepolia/version/latest',
   defaultRpcUrl: 'https://sepolia.base.org',
   description: 'Base Sepolia testnet with GasLimited and OneTimeUse paymasters - ideal for development and testing',

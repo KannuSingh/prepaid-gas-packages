@@ -20,7 +20,7 @@
     ],
     "baseUrl": ".",
     "paths": {
-      "@private-prepaid-gas/*": ["./packages/*/src"]
+      "@prepaid-gas/*": ["./packages/*/src"]
     }
   },
   "include": ["**/*.ts", "**/*.tsx"],

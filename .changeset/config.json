@@ -8,7 +8,7 @@
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
   "ignore": [
-    "@private-prepaid-gas/eslint-config",
-    "@private-prepaid-gas/typescript-config"
+    "@prepaid-gas/eslint-config",
+    "@prepaid-gas/typescript-config"
   ]
 }

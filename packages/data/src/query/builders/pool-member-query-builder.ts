@@ -9,7 +9,7 @@ import type { PoolMember, SerializedPoolMember } from '../../types/subgraph.js';
 import { PoolMemberFields, PoolMemberWhereInput } from '../types.js';
 import { BaseQueryBuilder } from './base-query-builder.js';
 import { serializePoolMember } from '../../transformers/index.js';
-import { NetworkName } from '@private-prepaid-gas/constants';
+import { NetworkName } from '@prepaid-gas/constants';
 
 export type PoolMemberOrderBy = 'addedAtTimestamp' | 'memberIndex' | 'gasUsed' | 'rootIndexWhenAdded';
 

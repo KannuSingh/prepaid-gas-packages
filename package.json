@@ -1,11 +1,10 @@
 {
-  "name": "private-prepaid-gas-packages",
+  "name": "prepaid-gas-packages",
   "version": "0.0.0",
   "private": true,
-  "description": "Private Prepaid Gas NPM packages monorepo",
+  "description": "Prepaid Gas NPM packages monorepo",
   "repository": {
-    "type": "git",
-    "url": "https://github.com/your-org/private-prepaid-gas-packages.git"
+    "type": "git"
   },
   "scripts": {
     "build": "turbo build",

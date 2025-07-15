@@ -3,7 +3,7 @@
  * Updated for new subgraph schema structure
  */
 
-import { NetworkName } from '@private-prepaid-gas/constants';
+import { NetworkName } from '@prepaid-gas/constants';
 import { NetworkInfo, PaymasterContract, PaymasterType, Pool, PoolMember, Transaction } from '../types/subgraph';
 
 /**

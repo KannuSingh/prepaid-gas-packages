@@ -7,12 +7,12 @@ import {
 import { createPublicClient, fromHex, http } from 'viem';
 import { getPackedUserOperation } from 'permissionless';
 
-import { SubgraphClient } from '@private-prepaid-gas/data';
+import { SubgraphClient } from '@prepaid-gas/data';
 
 import { generatePaymasterData, getChainById, parsePaymasterContext, PrepaidGasPaymasterMode } from '../utils';
-import { POST_OP_GAS_LIMIT, GAS_LIMITED_PAYMASTER_ABI } from '@private-prepaid-gas/constants';
-import { GetPaymasterStubDataV7Parameters, ProofGenerationParams, ProofGenerationResult, PaymasterOptions } from './';
-import { ChainId, getNetworkPreset } from '@private-prepaid-gas/constants';
+import { POST_OP_GAS_LIMIT, GAS_LIMITED_PAYMASTER_ABI } from '@prepaid-gas/constants';
+import { GetPaymasterStubDataV7Parameters, ProofGenerationParams, ProofGenerationResult, PaymasterOptions } from '.';
+import { ChainId, getNetworkPreset } from '@prepaid-gas/constants';
 import { generateProof, SemaphoreProof } from '@semaphore-protocol/proof';
 import { Identity } from '@semaphore-protocol/identity';
 import { Group } from '@semaphore-protocol/group';

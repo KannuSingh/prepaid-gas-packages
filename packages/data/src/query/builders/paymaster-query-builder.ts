@@ -9,7 +9,7 @@ import { GET_PAYMASTER_WITH_RELATED } from '../../client/queries.js';
 import { BaseQueryBuilder } from './base-query-builder.js';
 import { PaymasterContractFields, PaymasterContractWhereInput } from '../types.js';
 import { serializePaymasterContract } from '../../transformers/index.js';
-import { NetworkName } from '@private-prepaid-gas/constants';
+import { NetworkName } from '@prepaid-gas/constants';
 
 export type PaymasterContractOrderBy = 'deployedAtTimestamp' | 'revenue' | 'currentDeposit' | 'lastUpdatedTimestamp';
 

@@ -1,1 +1,1 @@
-module.exports = require('@private-prepaid-gas/eslint-config/library');
+module.exports = require('@prepaid-gas/eslint-config/library');

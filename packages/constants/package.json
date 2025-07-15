@@ -1,7 +1,7 @@
 {
-  "name": "@private-prepaid-gas/constants",
-  "version": "1.0.0",
-  "description": "Shared constants for Private Prepaid Gas packages",
+  "name": "@prepaid-gas/constants",
+  "version": "0.0.1",
+  "description": "Shared constants for Prepaid Gas packages",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -41,8 +41,8 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@private-prepaid-gas/eslint-config": "workspace:*",
-    "@private-prepaid-gas/typescript-config": "workspace:*",
+    "@prepaid-gas/eslint-config": "workspace:*",
+    "@prepaid-gas/typescript-config": "workspace:*",
     "eslint": "^9.17.0",
     "tsup": "^8.3.5",
     "typescript": "^5.7.3",

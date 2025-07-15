@@ -1,24 +1,16 @@
-# Private Prepaid Gas Packages
+# Prepaid Gas Packages
 
-A monorepo of NPM packages for building applications with the Private Prepaid Gas paymaster system. This system enables privacy-preserving gas payments using Account Abstraction (ERC-4337) and zero-knowledge proofs with the Semaphore protocol.
+A monorepo of packages for building applications with the Prepaid Gas paymaster system. This system enables privacy-preserving gas payments using Account Abstraction (ERC-4337) and zero-knowledge proofs with the Semaphore protocol.
 
 ## 📦 Packages
 
 ### Core Packages
 
-| Package                                                  | Version                                                             | Description                                  |
-| -------------------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------- |
-| [`@private-prepaid-gas/contracts`](./packages/contracts) | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/contracts) | Smart contract ABIs and deployment addresses |
-| [`@private-prepaid-gas/types`](./packages/types)         | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/types)     | TypeScript types and interfaces              |
-| [`@private-prepaid-gas/core`](./packages/core)           | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/core)      | Main SDK for paymaster integration           |
-
-### Data & Network Packages
-
-| Package                                                            | Version                                                                  | Description                                    |
-| ------------------------------------------------------------------ | ------------------------------------------------------------------------ | ---------------------------------------------- |
-| [`@private-prepaid-gas/data`](./packages/data)                     | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/data)           | Subgraph client and query builders             |
-| [`@private-prepaid-gas/networks`](./packages/networks)             | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/networks)       | Network configurations and multi-chain support |
-| [`@private-prepaid-gas/subgraph-types`](./packages/subgraph-types) | ![npm](https://img.shields.io/npm/v/@private-prepaid-gas/subgraph-types) | GraphQL schema and AssemblyScript types        |
+| Package | Version | Description |
+|---------|---------|-------------|
+| [`@prepaid-gas/constants`](./packages/constants) | ![npm](https://img.shields.io/npm/v/@prepaid-gas/constants) | Shared constants, ABIs, and network configurations |
+| [`@prepaid-gas/core`](./packages/core) | ![npm](https://img.shields.io/npm/v/@prepaid-gas/core) | Main SDK for privacy-preserving paymaster integration |
+| [`@prepaid-gas/data`](./packages/data) | ![npm](https://img.shields.io/npm/v/@prepaid-gas/data) | Subgraph client with fluent query builders |
 
 ## 🚀 Quick Start
 
@@ -26,44 +18,13 @@ A monorepo of NPM packages for building applications with the Private Prepaid Ga
 
 ```bash
 # Install the core SDK
-npm install @private-prepaid-gas/core
-
-# For TypeScript projects, also install types
-npm install @private-prepaid-gas/types
+npm install @prepaid-gas/core
 
 # For subgraph integration
-npm install @private-prepaid-gas/data
-```
+npm install @prepaid-gas/data
 
-### Basic Usage
-
-```typescript
-import { createSDK } from '@private-prepaid-gas/core';
-import { BASE_SEPOLIA_ADDRESSES } from '@private-prepaid-gas/contracts';
-import { http } from 'viem';
-import { baseSepolia } from 'viem/chains';
-
-// Create SDK instance
-const sdk = createSDK({
-  chain: baseSepolia,
-  transport: http('https://sepolia.base.org'),
-  gasLimitedPaymasterAddress: BASE_SEPOLIA_ADDRESSES.GAS_LIMITED_PAYMASTER,
-  oneTimeUsePaymasterAddress: BASE_SEPOLIA_ADDRESSES.ONE_TIME_USE_PAYMASTER,
-});
-
-// Create a new pool
-const poolResult = await sdk.client.createPool({
-  joiningFee: '1000000000000000', // 0.001 ETH
-  paymasterType: 'gas-limited',
-});
-
-// Add a member to the pool
-if (poolResult.success) {
-  await sdk.client.addMember({
-    poolId: poolResult.data.poolId,
-    identityCommitment: '0x...',
-  });
-}
+# For shared constants and ABIs
+npm install @prepaid-gas/constants
 ```
 
 ## 🏗️ Development
@@ -111,62 +72,77 @@ pnpm changeset      # Create a changeset for releases
 
 ```mermaid
 graph TD
-    A[@private-prepaid-gas/contracts] --> B[@private-prepaid-gas/types]
-    B --> C[@private-prepaid-gas/core]
-    B --> D[@private-prepaid-gas/data]
-    A --> E[@private-prepaid-gas/networks]
-    F[@private-prepaid-gas/subgraph-types]
+    A[@prepaid-gas/constants] --> B[@prepaid-gas/core]
+    A --> C[@prepaid-gas/data]
+    C --> B
 ```
 
 ## 🔧 Package Details
 
-### [@private-prepaid-gas/contracts](./packages/contracts)
+### [@prepaid-gas/constants](./packages/constants)
 
-Contains smart contract ABIs, deployment addresses, and constants.
+Shared constants, smart contract ABIs, and network configurations.
+
+**Key Features:**
+- Contract ABIs for GasLimitedPaymaster and OneTimeUsePaymaster
+- Gas limits, data sizes, and validation constants
+- Multi-network support with preset configurations
+- Type-safe network utility functions
 
 ```typescript
-import { GAS_LIMITED_PAYMASTER_ABI, BASE_SEPOLIA_ADDRESSES, SUPPORTED_CHAIN_IDS } from '@private-prepaid-gas/contracts';
+import { 
+  GAS_LIMITED_PAYMASTER_ABI, 
+  POST_OP_GAS_LIMIT,
+  getNetworkPreset,
+  getSupportedChainIds 
+} from '@prepaid-gas/constants';
 ```
 
-### [@private-prepaid-gas/types](./packages/types)
+### [@prepaid-gas/core](./packages/core)
 
-TypeScript types for the entire ecosystem.
+Main SDK with privacy-preserving paymaster client and zero-knowledge proof generation.
+
+**Key Features:**
+- Two-phase operation pattern (gas estimation + real ZK proofs)
+- Semaphore protocol integration for privacy
+- Network-aware configuration with automatic presets
+- Context encoding/decoding utilities
+- Comprehensive validation and error handling
 
 ```typescript
-import type { PoolInfo, PaymasterValidationData, NetworkConfig } from '@private-prepaid-gas/types';
+import { 
+  PrepaidGasPaymaster, 
+  encodePaymasterContext, 
+  validatePoolId 
+} from '@prepaid-gas/core';
 ```
 
-### [@private-prepaid-gas/core](./packages/core)
+### [@prepaid-gas/data](./packages/data)
 
-Main SDK with paymaster client, encoding utilities, and validation.
+Subgraph client with fluent query builders and BigInt serialization.
+
+**Key Features:**
+- Type-safe GraphQL query builders
+- Multi-network support with composite IDs
+- Automatic BigInt ↔ string serialization
+- Request deduplication and caching
+- Relationship loading and pagination
 
 ```typescript
-import { PrepaidGasPaymaster, encodePaymasterData, validateUserOperation } from '@private-prepaid-gas/core';
+import { 
+  SubgraphClient, 
+  convertBigIntsToStrings 
+} from '@prepaid-gas/data';
 ```
 
 ## 🌐 Supported Networks
 
-- **Ethereum Mainnet** (Chain ID: 1)
-- **Base** (Chain ID: 8453)
-- **Base Sepolia** (Chain ID: 84532) - Primary testnet
-- **Optimism** (Chain ID: 10)
-- **Sepolia** (Chain ID: 11155111)
+Currently supported networks:
 
-## 📖 Documentation
+| Network | Chain ID | Status | Paymaster Contracts |
+|---------|----------|--------|-------------------|
+| **Base Sepolia** | 84532 | ✅ Active (Testnet) | GasLimited: `0x3BEeC075aC5A77fFE0F9ee4bbb3DCBd07fA93fbf`<br>OneTimeUse: `0x243A735115F34BD5c0F23a33a444a8d26e31E2E7` |
 
-- [Architecture Overview](./docs/architecture.md)
-- [API Reference](./docs/api-reference.md)
-- [Integration Guide](./docs/integration.md)
-- [Migration Guide](./docs/migration.md)
-
-## 🧪 Examples
-
-Check out the [`apps/playground`](./apps/playground) directory for interactive examples:
-
-- Basic paymaster integration
-- Pool creation and management
-- User operation validation
-- Multi-chain deployment
 
 ## 🤝 Contributing
 
@@ -185,18 +161,6 @@ This monorepo uses [Changesets](https://github.com/changesets/changesets) for ve
 ## 📄 License
 
 MIT License - see [LICENSE](./LICENSE) for details.
-
-## 🔗 Related Projects
-
-- [Prepaid Gas Smart Contracts](https://github.com/your-org/prepaid-gas-paymaster-contracts)
-- [Prepaid Gas Subgraph](https://github.com/your-org/prepaid-gas-paymasters)
-- [Prepaid Gas Website](https://github.com/your-org/prepaid-gas-website)
-
-## 🙋‍♂️ Support
-
-- [Documentation](https://docs.your-domain.com)
-- [Discord Community](https://discord.gg/your-invite)
-- [GitHub Issues](https://github.com/your-org/private-prepaid-gas-packages/issues)
 
 ---
 

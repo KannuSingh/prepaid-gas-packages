@@ -1,4 +1,4 @@
-import * as ViemChains from "viem/chains";
+import * as ViemChains from 'viem/chains';
 import {
   EXPECTED_PAYMASTER_DATA_SIZE,
   CONFIG_OFFSET,
@@ -6,7 +6,7 @@ import {
   POOL_ID_OFFSET,
   POOL_ID_SIZE,
   POOL_ROOT_HISTORY_SIZE,
-} from "@private-prepaid-gas/constants";
+} from '@prepaid-gas/constants';
 
 /**
  * Get chain configuration by chain ID
@@ -24,7 +24,7 @@ import {
  */
 export function getChainById(chainId: number): ViemChains.Chain | undefined {
   const chains: ViemChains.Chain[] = Object.values(ViemChains).filter(
-    (c) => typeof c === "object" && c !== null && "id" in c,
+    (c) => typeof c === 'object' && c !== null && 'id' in c
   );
   return chains.find((chain) => chain.id === chainId);
 }
@@ -46,14 +46,12 @@ export function getChainById(chainId: number): ViemChains.Chain | undefined {
  * }
  * ```
  */
-export function validatePaymasterAndData(
-  paymasterAndData: Uint8Array | string,
-): boolean {
+export function validatePaymasterAndData(paymasterAndData: Uint8Array | string): boolean {
   try {
     // Convert to Uint8Array if string
     const data =
-      typeof paymasterAndData === "string"
-        ? new Uint8Array(Buffer.from(paymasterAndData.replace("0x", ""), "hex"))
+      typeof paymasterAndData === 'string'
+        ? new Uint8Array(Buffer.from(paymasterAndData.replace('0x', ''), 'hex'))
         : paymasterAndData;
 
     // Basic length check
@@ -141,7 +139,5 @@ export function validatePoolId(poolId: bigint): boolean {
  * ```
  */
 export function validateMerkleRootIndex(index: number): boolean {
-  return (
-    Number.isInteger(index) && index >= 0 && index < POOL_ROOT_HISTORY_SIZE
-  );
+  return Number.isInteger(index) && index >= 0 && index < POOL_ROOT_HISTORY_SIZE;
 }

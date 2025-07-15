@@ -9,7 +9,7 @@ import { BaseQueryBuilder } from './base-query-builder.js';
 
 import { PoolFields, PoolWhereInput } from '../types.js';
 import { serializePool } from '../../transformers/index.js';
-import { NetworkName } from '@private-prepaid-gas/constants';
+import { NetworkName } from '@prepaid-gas/constants';
 
 export type PoolOrderBy =
   | 'createdAtTimestamp'

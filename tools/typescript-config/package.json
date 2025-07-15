@@ -1,8 +1,8 @@
 {
-  "name": "@private-prepaid-gas/typescript-config",
+  "name": "@prepaid-gas/typescript-config",
   "version": "0.0.0",
   "private": true,
-  "description": "Shared TypeScript configuration for Private Prepaid Gas packages",
+  "description": "Shared TypeScript configuration for Prepaid Gas packages",
   "main": "index.js",
   "files": [
     "base.json",

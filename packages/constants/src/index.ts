@@ -1,5 +1,5 @@
-// @private-prepaid-gas/constants
-// Shared constants for Private Prepaid Gas packages
+// @prepaid-gas/constants
+// Shared constants for Prepaid Gas packages
 
 export * from './contracts/constants';
 export * from './abi';
