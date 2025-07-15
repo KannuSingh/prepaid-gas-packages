@@ -1,7 +1,7 @@
 {
-  "name": "@private-prepaid-gas/core",
+  "name": "@private-prepaid-gas/constants",
   "version": "1.0.0",
-  "description": "Core SDK for Private Prepaid Gas paymaster integration",
+  "description": "Shared constants for Private Prepaid Gas packages",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -28,31 +28,18 @@
     "registry": "https://registry.npmjs.org/"
   },
   "keywords": [
+    "constants",
     "paymaster",
     "account-abstraction",
     "erc-4337",
-    "zero-knowledge",
-    "semaphore",
-    "privacy",
     "ethereum"
   ],
   "repository": {
     "type": "git",
     "url": "https://github.com/your-org/private-prepaid-gas-packages.git",
-    "directory": "packages/core"
+    "directory": "packages/constants"
   },
   "license": "MIT",
-  "dependencies": {
-    "@private-prepaid-gas/data": "workspace:*",
-    "@private-prepaid-gas/constants": "workspace:*",
-    "@semaphore-protocol/core": "^4.11.1",
-    "@semaphore-protocol/group": "^4.11.1",
-    "@semaphore-protocol/identity": "^4.11.1",
-    "@semaphore-protocol/proof": "^4.11.1",
-    "permissionless": "^0.2.50",
-    "poseidon-lite": "^0.3.0",
-    "viem": "^2.31.3"
-  },
   "devDependencies": {
     "@private-prepaid-gas/eslint-config": "workspace:*",
     "@private-prepaid-gas/typescript-config": "workspace:*",

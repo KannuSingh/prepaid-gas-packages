@@ -33,8 +33,32 @@ importers:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.7.5)
 
+  packages/constants:
+    devDependencies:
+      '@private-prepaid-gas/eslint-config':
+        specifier: workspace:*
+        version: link:../../tools/eslint-config
+      '@private-prepaid-gas/typescript-config':
+        specifier: workspace:*
+        version: link:../../tools/typescript-config
+      eslint:
+        specifier: ^9.17.0
+        version: 9.31.0
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.0(postcss@8.5.6)(typescript@5.8.3)
+      typescript:
+        specifier: ^5.7.3
+        version: 5.8.3
+      vitest:
+        specifier: ^2.1.8
+        version: 2.1.9(@types/node@22.7.5)
+
   packages/core:
     dependencies:
+      '@private-prepaid-gas/constants':
+        specifier: workspace:*
+        version: link:../constants
       '@private-prepaid-gas/data':
         specifier: workspace:*
         version: link:../data

@@ -10,7 +10,7 @@ import { getPackedUserOperation } from 'permissionless';
 import { ChainId, SubgraphClient } from '@private-prepaid-gas/data';
 
 import { generatePaymasterData, getChainById, parsePaymasterContext, PrepaidGasPaymasterMode } from '../utils';
-import { POST_OP_GAS_LIMIT, GAS_LIMITED_PAYMASTER_ABI } from '../constants';
+import { POST_OP_GAS_LIMIT, GAS_LIMITED_PAYMASTER_ABI } from '@private-prepaid-gas/constants';
 import { GetPaymasterStubDataV7Parameters, ProofGenerationParams, ProofGenerationResult, PaymasterOptions } from './';
 import { getValidatedNetworkPreset, type NetworkPreset } from '@private-prepaid-gas/data';
 import { generateProof, SemaphoreProof } from '@semaphore-protocol/proof';
@@ -23,21 +23,12 @@ import { Group } from '@semaphore-protocol/group';
  * This class provides methods for:
  * - Generating paymaster stub data for gas estimation
  * - Creating paymaster data with zero-knowledge proofs
- * - Managing pool memberships and proof generation
  *
  * @example
  * ```typescript
- * const paymaster = new PrepaidGasPaymaster({
+ * const paymaster = new PrepaidGasPaymaster(84532,{
  *   subgraphUrl: "https://api.studio.thegraph.com/query/your-subgraph",
- *   network: {
- *     name: "Base",
- *     chainId: 84532,
- *     chainName: "Base Sepolia",
- *     networkName: "Sepolia",
- *     contracts: {
- *       paymaster: "0xAAdb7b165057fF59a1f2a93C83CE6a183891EAf6",
- *     },
- *   },
+ *   rpcUrl: "https://sepolia.base.org" # provide your own etherum node provider(Alchemy, infura) rpc url
  * });
  *
  * // Get stub data for gas estimation
@@ -62,12 +53,8 @@ export class PrepaidGasPaymaster {
     options: {
       /** Custom subgraph URL (optional, uses default if not provided) */
       subgraphUrl?: string;
-      /** Enable debug logging */
-      debug?: boolean;
       /** Custom RPC URL */
       rpcUrl?: string;
-      /** Request timeout in milliseconds */
-      timeout?: number;
     } = {}
   ) {
     const preset: NetworkPreset = getValidatedNetworkPreset(chainId);
@@ -85,7 +72,6 @@ export class PrepaidGasPaymaster {
     // Initialize subgraph client with explicit configuration
     this.subgraphClient = new SubgraphClient(chainId, {
       subgraphUrl: options.subgraphUrl,
-      timeout: options.timeout,
     });
 
     // Initialize services
@@ -115,12 +101,8 @@ export class PrepaidGasPaymaster {
     options: {
       /** Custom subgraph URL (optional, uses default if not provided) */
       subgraphUrl?: string;
-      /** Enable debug logging */
-      debug?: boolean;
       /** Custom RPC URL */
       rpcUrl?: string;
-      /** Request timeout in milliseconds */
-      timeout?: number;
     } = {}
   ): PrepaidGasPaymaster {
     return new PrepaidGasPaymaster(chainId, options);
@@ -317,8 +299,9 @@ export class PrepaidGasPaymaster {
       scope: poolId.toString(),
       points: [0n, 0n, 0n, 0n, 0n, 0n, 0n, 0n] as [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint],
     };
+    const mode = PrepaidGasPaymasterMode.GAS_ESTIMATION_MODE;
 
-    return generatePaymasterData(PrepaidGasPaymasterMode.GAS_ESTIMATION_MODE, poolId, dummyProof, merkleRootIndex);
+    return generatePaymasterData(mode, poolId, dummyProof, merkleRootIndex);
   }
 
   /**

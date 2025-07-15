@@ -8,7 +8,7 @@ import {
   decodeAbiParameters,
 } from "viem";
 import type { Hex } from "viem";
-import { POOL_ROOT_HISTORY_SIZE } from "../constants";
+import { POOL_ROOT_HISTORY_SIZE } from "@private-prepaid-gas/constants";
 import { SemaphoreProof } from "@semaphore-protocol/proof";
 
 /**

@@ -6,7 +6,7 @@ import {
   POOL_ID_OFFSET,
   POOL_ID_SIZE,
   POOL_ROOT_HISTORY_SIZE,
-} from "../constants";
+} from "@private-prepaid-gas/constants";
 
 /**
  * Get chain configuration by chain ID
