@@ -134,9 +134,6 @@ export class TransactionQueryBuilder extends BaseQueryBuilder<
         case 'executedAtBlock':
           declarations.push('$executedAtBlock: String');
           break;
-        case 'transactionHash':
-          declarations.push('$transactionHash: String');
-          break;
         case 'paymaster_':
           if (typeof value === 'object' && value) {
             if ('address' in value) {
@@ -190,9 +187,6 @@ export class TransactionQueryBuilder extends BaseQueryBuilder<
           break;
         case 'executedAtBlock':
           variables.executedAtBlock = value;
-          break;
-        case 'transactionHash':
-          variables.transactionHash = value;
           break;
         case 'paymaster_':
           if (typeof value === 'object' && value) {
@@ -255,9 +249,6 @@ export class TransactionQueryBuilder extends BaseQueryBuilder<
           break;
         case 'executedAtBlock':
           conditions.push('executedAtBlock: $executedAtBlock');
-          break;
-        case 'transactionHash':
-          conditions.push('transactionHash: $transactionHash');
           break;
         case 'paymaster_':
           if (typeof value === 'object' && value) {
