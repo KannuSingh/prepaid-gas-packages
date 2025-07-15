@@ -245,14 +245,6 @@ export class SubgraphClient {
         // Clean up this request from the map even on error
         this.cleanupRequest(requestKey);
 
-        // Enhanced error handling with context
-        console.error('GraphQL query failed:', {
-          error,
-          query: query.substring(0, 200) + '...', // Log first 200 chars
-          variables,
-          chainId: this.chainId,
-        });
-
         throw error;
       });
 
