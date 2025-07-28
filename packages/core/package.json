@@ -1,6 +1,6 @@
 {
   "name": "@prepaid-gas/core",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Core SDK for Prepaid Gas paymaster integration",
   "main": "dist/index.js",
   "module": "dist/index.mjs",

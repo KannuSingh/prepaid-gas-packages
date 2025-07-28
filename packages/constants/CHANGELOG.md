@@ -1,5 +1,11 @@
 # @prepaid-gas/constants
 
+## 0.0.5
+
+### Patch Changes
+
+- fix paymaster type
+
 ## 0.0.4
 
 ### Patch Changes

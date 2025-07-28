@@ -1,5 +1,14 @@
 # @prepaid-gas/core
 
+## 0.0.5
+
+### Patch Changes
+
+- fix paymaster type
+- Updated dependencies
+  - @prepaid-gas/constants@0.0.5
+  - @prepaid-gas/data@0.0.5
+
 ## 0.0.4
 
 ### Patch Changes
