@@ -78,7 +78,7 @@ export const BASE_SEPOLIA_PRESET: NetworkPreset = {
   defaultRpcUrl: 'https://sepolia.base.org',
   description:
     'Base Sepolia testnet with GasLimited, OneTimeUse and CacheEnabledGasLimited paymasters - ideal for development and testing',
-  supportedPaymasterTypes: ['GasLimited', 'OneTimeUse', 'CacheEnabledGasLimitedPaymaster'],
+  supportedPaymasterTypes: ['GasLimited', 'OneTimeUse', 'CacheEnabledGasLimited'],
   isProduction: false,
   deploymentStatus: 'active',
 };

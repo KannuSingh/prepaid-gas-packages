@@ -5,7 +5,7 @@
 /**
  * Paymaster contract types
  */
-export type PaymasterType = 'GasLimited' | 'OneTimeUse' | 'CacheEnabledGasLimitedPaymaster';
+export type PaymasterType = 'GasLimited' | 'OneTimeUse' | 'CacheEnabledGasLimited';
 
 /**
  * Supported network names
