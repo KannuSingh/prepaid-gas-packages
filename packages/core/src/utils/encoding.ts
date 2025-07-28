@@ -1,4 +1,4 @@
-import { encodeAbiParameters, isHex, parseAbiParameters, toHex, concat, numberToHex, decodeAbiParameters } from 'viem';
+import { encodeAbiParameters, parseAbiParameters, toHex, concat, numberToHex, decodeAbiParameters } from 'viem';
 import type { Hex } from 'viem';
 import { POOL_ROOT_HISTORY_SIZE } from '@prepaid-gas/constants';
 import { SemaphoreProof } from '@semaphore-protocol/proof';
@@ -30,36 +30,27 @@ export enum PrepaidGasPaymasterMode {
  * ```typescript
  * const context = encodePaymasterContext(
  *   "0x123...abc",
- *   "1",
  *   "eyJrZXkiOiJ2YWx1ZSJ9"
  * );
  * ```
  */
-export function encodePaymasterContext(paymasterAddress: Hex, poolId: string | bigint, identity: string): Hex {
+export function encodePaymasterContext(paymasterAddress: Hex, identity: string): Hex {
   // Validate inputs
   if (!paymasterAddress || typeof paymasterAddress !== 'string') {
     throw new Error('Paymaster address is required and must be a valid hex string');
-  }
-
-  if (!poolId || (typeof poolId === 'string' && !poolId.trim())) {
-    throw new Error('Pool ID is required');
   }
 
   if (!identity || typeof identity !== 'string' || !identity.trim()) {
     throw new Error('Identity is required and must be a non-empty string');
   }
 
-  // Convert poolId to bigint
-  const poolIdBigInt = typeof poolId === 'bigint' ? poolId : BigInt(poolId);
-
   // Convert identity string to bytes
   const identityBytes = toHex(identity);
 
   // Encode using the 3-parameter format that parseContext() expects:
   // (address paymasterAddress, uint256 poolId, bytes identity)
-  return encodeAbiParameters(parseAbiParameters('address paymasterAddress, uint256 poolId, bytes identity'), [
+  return encodeAbiParameters(parseAbiParameters('address paymasterAddress, bytes identity'), [
     paymasterAddress,
-    poolIdBigInt,
     identityBytes,
   ]);
 }
@@ -129,7 +120,6 @@ export function decodeConfig(config: bigint): {
  * Generate complete paymaster data for UserOperation
  *
  * @param mode - Operation mode (validation or estimation)
- * @param poolId - Pool ID to use for the operation
  * @param semaphoreProof - Semaphore zero-knowledge proof
  * @param merkleRootIndex - Index of the merkle root in pool history
  * @returns Encoded paymaster data as hex string
@@ -138,7 +128,6 @@ export function decodeConfig(config: bigint): {
  * ```typescript
  * const paymasterData = await generatePaymasterData(
  *   PrepaidGasPaymasterMode.VALIDATION_MODE,
- *   123n,
  *   proof,
  *   5
  * );
@@ -146,7 +135,6 @@ export function decodeConfig(config: bigint): {
  */
 export async function generatePaymasterData(
   mode: PrepaidGasPaymasterMode,
-  poolId: bigint,
   semaphoreProof: SemaphoreProof,
   merkleRootIndex: number
 ): Promise<Hex> {
@@ -162,9 +150,6 @@ export async function generatePaymasterData(
   // Encode config (32 bytes) - matches the contract's encodeConfig
   const config = encodeConfig(merkleRootIndex, mode);
   const configBytes = numberToHex(config, { size: 32 });
-
-  // Encode poolId (32 bytes)
-  const poolIdBytes = numberToHex(poolId, { size: 32 });
 
   // Encode proof using abi.encode (416 bytes) - matches contract's abi.encode(data.proof)
   const encodedProof = encodeAbiParameters(
@@ -185,9 +170,9 @@ export async function generatePaymasterData(
     [proof]
   );
 
-  // Use concat to simulate abi.encodePacked: config + poolId + encodedProof
-  // This matches the contract's: abi.encodePacked(config, data.poolId, encodedProof)
-  return concat([configBytes, poolIdBytes, encodedProof]);
+  // Use concat to simulate abi.encodePacked: config + encodedProof
+  // This matches the contract's: abi.encodePacked(config, encodedProof)
+  return concat([configBytes, encodedProof]);
 }
 
 /**
@@ -196,8 +181,6 @@ export async function generatePaymasterData(
 export interface ParsedPaymasterContext {
   /** Paymaster contract address */
   paymasterAddress: `0x${string}`;
-  /** Pool ID for the operation */
-  poolId: bigint;
   /** Identity string for proof generation */
   identityHex: `0x${string}`;
 }
@@ -205,7 +188,7 @@ export interface ParsedPaymasterContext {
 /**
  * Parse paymaster context data
  *
- * Supports context format: (address paymasterAddress, uint256 poolId, bytes identity)
+ * Supports context format: (address paymasterAddress, bytes identity)
  *
  * @param context - Encoded context data as hex string
  * @returns Parsed context information
@@ -215,7 +198,6 @@ export interface ParsedPaymasterContext {
  * import { parsePaymasterContext } from "@workspace/core";
  *
  * const parsed = parsePaymasterContext("0x123...");
- * console.log(parsed.poolId); // bigint
  * console.log(parsed.paymasterAddress); // "0x..."
  * ```
  */
@@ -225,15 +207,14 @@ export function parsePaymasterContext(context: `0x${string}`): ParsedPaymasterCo
   }
 
   try {
-    // Parse context with identity (3 parameters)
-    const [paymasterAddress, poolId, identityHex] = decodeAbiParameters(
-      parseAbiParameters('address paymasterAddress, uint256 poolId, bytes identity'),
+    // Parse context with identity (2 parameters)
+    const [paymasterAddress, identityHex] = decodeAbiParameters(
+      parseAbiParameters('address paymasterAddress, bytes identity'),
       context
     );
 
     return {
       paymasterAddress,
-      poolId,
       identityHex,
     };
   } catch (error) {
