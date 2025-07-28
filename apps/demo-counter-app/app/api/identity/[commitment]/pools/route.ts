@@ -26,7 +26,12 @@ export async function GET(request: NextRequest, context: { params: Promise<{ com
     // ✨ NEW: Use query builder instead of direct method call
     // Before: const poolsResponse = await subgraphClient.getPoolsByIdentity(commitment);
     // After: Use the convenience method from QueryBuilder
-    const poolsData = await subgraphClient.query().poolMembers().byIdentityCommitment(commitment).executeAndSerialize();
+    const poolsData = await subgraphClient
+      .query()
+      .activities()
+      .byType('DEPOSIT')
+      .byCommitment(commitment)
+      .executeAndSerialize();
 
     console.log({ poolsData });
     // Return with caching headers (5 minutes cache)

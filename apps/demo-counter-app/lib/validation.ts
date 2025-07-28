@@ -9,14 +9,6 @@ export function validatePaymasterConfig(config: PaymasterConfig): {
 } {
   const errors: string[] = [];
 
-  if (
-    !config.poolId ||
-    (typeof config.poolId === 'string' && !config.poolId.trim()) ||
-    (typeof config.poolId === 'number' && config.poolId <= 0)
-  ) {
-    errors.push('Valid pool ID is required');
-  }
-
   if (!config.identity || typeof config.identity !== 'string') {
     errors.push('Valid identity string is required');
   }

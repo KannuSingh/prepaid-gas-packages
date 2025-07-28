@@ -20,7 +20,6 @@ import { fromHex } from "viem";
 interface DirectContextInputProps {
   onValidContext: (config: {
     paymasterAddress: string;
-    poolId: string;
     identity: Identity;
     paymasterContext: string;
   }) => void;
@@ -69,10 +68,6 @@ export function DirectContextInput({
       // Validate that we have all required fields
       if (!parsedContext.paymasterAddress) {
         throw new Error("Missing paymaster address in context");
-      }
-
-      if (parsedContext.poolId === undefined || parsedContext.poolId === null) {
-        throw new Error("Missing pool ID in context");
       }
 
       if (!parsedContext.identityHex) {
@@ -128,14 +123,12 @@ export function DirectContextInput({
 
       console.log("✅ Successfully parsed paymaster context:", {
         paymasterAddress: parsedContext.paymasterAddress,
-        poolId: parsedContext.poolId.toString(),
         identityCommitment: identity.commitment.toString(),
       });
 
       // Call the callback with parsed data
       onValidContext({
         paymasterAddress: parsedContext.paymasterAddress,
-        poolId: parsedContext.poolId.toString(),
         identity: identity,
         paymasterContext: trimmedContext,
       });
