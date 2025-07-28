@@ -1,10 +1,15 @@
 /**
- * Core query builder types and interfaces
- * Updated for new subgraph schema structure
+ * Core query builder types and interfaces (Updated)
+ * For the new single-pool-per-contract architecture
+ *
+ * Supports queries for:
+ * - PaymasterContract (each contract IS a pool)
+ * - Activity (unified timeline of all events)
+ * - UserOperation (detailed operation tracking)
  */
 
-import { NetworkName } from '@prepaid-gas/constants';
-import { NetworkInfo, PaymasterContract, PaymasterType, Pool, PoolMember, Transaction } from '../types/subgraph';
+import { PaymasterType } from '@prepaid-gas/constants';
+import type { PaymasterContract, Activity, UserOperation, ActivityType } from '../types/subgraph';
 
 /**
  * Base query configuration for GraphQL queries
@@ -21,14 +26,14 @@ export interface QueryConfig<TWhereInput, TOrderBy> {
   /** Where conditions */
   where?: Partial<TWhereInput>;
   /** Network name */
-  network?: NetworkName;
-  // For dynamic selection
+  network?: string;
+  /** For dynamic field selection */
   selectedFields?: string[];
 }
 
 /**
  * ========================================
- * FIELD TYPE DEFINITIONS
+ * FIELD TYPE DEFINITIONS (Updated)
  * ========================================
  */
 
@@ -37,51 +42,63 @@ export interface QueryConfig<TWhereInput, TOrderBy> {
  */
 export type PaymasterContractFields =
   | keyof PaymasterContract
-  | 'pools { id poolId network }' // Example of nested fields
-  | 'transactions { id userOpHash sender executedAtTransaction }'
-  | 'revenueWithdrawals { id amount recipient }';
+  | 'activities { id type timestamp sender userOpHash actualGasCost }'
+  | 'activities { id type depositor commitment memberIndex newRoot }'
+  | 'activities { id type withdrawAddress amount }';
 
 /**
- * Available fields for Pool entity queries
- * Updated to match new subgraph schema
+ * Available fields for Activity entity queries
  */
-export type PoolFields =
-  | keyof Pool
-  | 'paymaster { id contractType address }'
-  | 'members { id memberIndex addedAtTimestamp identityCommitment }'
-  | 'transactions { id userOpHash sender actualGasCost executedAtTimestamp nullifier executedAtTransaction }';
+export type ActivityFields =
+  | keyof Activity
+  | 'paymaster { id address contractType network }'
+  | 'paymaster { joiningAmount scope verifier }';
 
 /**
- * Available fields for PoolMember entity queries
- * Updated to match new subgraph schema
+ * Available fields for UserOperation entity queries
  */
-export type PoolMemberFields =
-  | keyof PoolMember
-  | 'pool { id poolId network chainId }'
-  | 'pool { paymaster { id address } }';
-
-/**
- * Available fields for Transaction entity queries
- */
-export type TransactionFields =
-  | keyof Transaction
-  | 'paymaster { id address contractType }' // Example of nested fields
-  | 'pool { id poolId }';
-
-/**
- * Available fields for NetworkInfo entity queries
- */
-export type NetworkInfoFields = keyof NetworkInfo;
+export type UserOperationFields = keyof UserOperation | 'paymaster { id address contractType network }';
 
 /**
  * ========================================
- * WHERE CONDITION TYPES
+ * ORDER BY TYPES (Updated)
+ * ========================================
+ */
+
+/**
+ * Available order by fields for PaymasterContract
+ */
+export type PaymasterContractOrderBy =
+  | 'id'
+  | 'contractType'
+  | 'network'
+  | 'totalDeposit'
+  | 'currentDeposit'
+  | 'revenue'
+  | 'treeSize'
+  | 'deployedBlock'
+  | 'deployedTimestamp'
+  | 'lastBlock'
+  | 'lastTimestamp';
+
+/**
+ * Available order by fields for Activity
+ */
+export type ActivityOrderBy = 'id' | 'type' | 'network' | 'block' | 'timestamp' | 'actualGasCost' | 'amount';
+
+/**
+ * Available order by fields for UserOperation
+ */
+export type UserOperationOrderBy = 'id' | 'network' | 'sender' | 'actualGasCost' | 'nullifier' | 'block' | 'timestamp';
+
+/**
+ * ========================================
+ * WHERE CONDITION TYPES (Updated)
  * ========================================
  */
 
 /**
  * Where condition operators for filtering
- * Supports common GraphQL filtering operations
  */
 export interface WhereCondition<T = any> {
   /** Equal to */
@@ -114,89 +131,219 @@ export interface WhereCondition<T = any> {
  * Typed where conditions for PaymasterContract entity
  */
 export interface PaymasterContractWhereInput {
-  id?: string; // network-address composite ID
-  network?: NetworkName;
+  id?: string; // network-contractAddress
+  network?: string;
   contractType?: PaymasterType;
   address?: string;
-  revenue_gte?: string; // GraphQL expects BigInt as string
-  revenue_lte?: string; // GraphQL expects BigInt as string
-  currentDeposit_gte?: string; // GraphQL expects BigInt as string
-  currentDeposit_lte?: string; // GraphQL expects BigInt as string
-  deployedAtTimestamp_gte?: string; // GraphQL expects BigInt as string
-  deployedAtTimestamp_lte?: string; // GraphQL expects BigInt as string
+
+  // Financial filtering
+  totalDeposit_gte?: string; // GraphQL expects BigInt as string
+  totalDeposit_lte?: string;
+  currentDeposit_gte?: string;
+  currentDeposit_lte?: string;
+  revenue_gte?: string;
+  revenue_lte?: string;
   revenue_gt?: string; // For isActive
+
+  // Merkle tree filtering
+  treeSize_gte?: string; // Number of members
+  treeSize_lte?: string;
+  treeSize_gt?: string; // For hasMembers
+
+  // Configuration filtering
+  joiningAmount_gte?: string;
+  joiningAmount_lte?: string;
+  scope?: string;
+  verifier?: string;
+
+  // Status filtering
+  isDead?: boolean;
+
+  // Time filtering
+  deployedTimestamp_gte?: string;
+  deployedTimestamp_lte?: string;
+  lastTimestamp_gte?: string;
+  lastTimestamp_lte?: string;
 }
 
 /**
- * Typed where conditions for Pool entity
- * Updated to match new subgraph schema
+ * Typed where conditions for Activity entity
  */
-export interface PoolWhereInput {
-  id?: string;
-  poolId?: string; // GraphQL expects BigInt as string
-  network?: NetworkName;
-  paymaster_?: { address?: string };
-  memberCount_gte?: string;
-  memberCount_lte?: string;
-  totalDeposits_gte?: string;
-  totalDeposits_lte?: string;
-  joiningFee_gte?: string;
-  joiningFee_lte?: string;
-  createdAtTimestamp_gte?: string;
-  createdAtTimestamp_lte?: string;
-  memberCount_gt?: string; // For hasMembers
-  totalDeposits_gt?: string; // For isActive
-}
+export interface ActivityWhereInput {
+  id?: string; // network-contractAddress-txHash-logIndex
+  type?: ActivityType;
+  network?: string;
 
-/**
- * Typed where conditions for PoolMember entity
- * Updated to match new subgraph schema
- */
-export interface PoolMemberWhereInput {
-  id?: string;
-  network?: NetworkName;
-  pool_?: {
-    id?: string;
-    poolId?: string; // GraphQL expects BigInt as string for poolId
-  };
-  paymaster_?: { address?: string };
-  memberIndex?: string; // GraphQL expects BigInt as string
-  identityCommitment?: string; // GraphQL expects BigInt as string
-  gasUsed_gte?: string;
-  gasUsed_lte?: string;
-  nullifierUsed?: boolean;
-  addedAtTimestamp_gte?: string;
-  addedAtTimestamp_lte?: string;
-  rootIndexWhenAdded?: number;
-}
-
-/**
- * Typed where conditions for Transaction entity
- */
-export interface TransactionWhereInput {
-  id?: string; // network-userOpHash composite ID
-  network?: NetworkName;
-  userOpHash?: string;
+  // Paymaster filtering
+  paymaster?: string; // PaymasterContract ID
   paymaster_?: {
     address?: string;
     contractType?: PaymasterType;
+    network?: string;
   };
-  pool_?: { poolId?: string };
+
+  // Time filtering
+  block_gte?: string;
+  block_lte?: string;
+  timestamp_gte?: string;
+  timestamp_lte?: string;
+
+  // Deposit-specific filtering (when type = DEPOSIT)
+  depositor?: string;
+  commitment?: string;
+  memberIndex_gte?: string;
+  memberIndex_lte?: string;
+
+  // UserOp-specific filtering (when type = USER_OP_SPONSORED)
   sender?: string;
-  nullifier?: string; // GraphQL expects BigInt as string
-  actualGasCost_gte?: string; // GraphQL expects BigInt as string
-  actualGasCost_lte?: string; // GraphQL expects BigInt as string
-  gasPrice_gte?: string; // GraphQL expects BigInt as string
-  gasPrice_lte?: string; // GraphQL expects BigInt as string
-  executedAtTimestamp_gte?: string; // GraphQL expects BigInt as string
-  executedAtTimestamp_lte?: string; // GraphQL expects BigInt as string
-  executedAtBlock?: string; // GraphQL expects BigInt as string
-  transactionHash?: string;
+  userOpHash?: string;
+  actualGasCost_gte?: string;
+  actualGasCost_lte?: string;
+
+  // Revenue-specific filtering (when type = REVENUE_WITHDRAWN)
+  withdrawAddress?: string;
+  amount_gte?: string;
+  amount_lte?: string;
 }
 
 /**
- * Typed where conditions for NetworkInfo entity
+ * Typed where conditions for UserOperation entity
  */
-export interface NetworkInfoWhereInput {
-  id?: NetworkName; // The ID is typically the network name in this entity
+export interface UserOperationWhereInput {
+  id?: string; // network-contractAddress-userOpHash
+  hash?: string; // userOpHash
+  network?: string;
+
+  // Paymaster filtering
+  paymaster?: string; // PaymasterContract ID
+  paymaster_?: {
+    address?: string;
+    contractType?: PaymasterType;
+    network?: string;
+  };
+
+  // Operation filtering
+  sender?: string;
+  actualGasCost_gte?: string;
+  actualGasCost_lte?: string;
+  nullifier?: string;
+
+  // Time filtering
+  block_gte?: string;
+  block_lte?: string;
+  timestamp_gte?: string;
+  timestamp_lte?: string;
 }
+
+/**
+ * ========================================
+ * QUERY CONFIGURATION TYPES (Updated)
+ * ========================================
+ */
+
+/**
+ * PaymasterContract query configuration
+ */
+export type PaymasterContractQuery = QueryConfig<PaymasterContractWhereInput, PaymasterContractOrderBy>;
+
+/**
+ * Activity query configuration
+ */
+export type ActivityQuery = QueryConfig<ActivityWhereInput, ActivityOrderBy>;
+
+/**
+ * UserOperation query configuration
+ */
+export type UserOperationQuery = QueryConfig<UserOperationWhereInput, UserOperationOrderBy>;
+
+/**
+ * ========================================
+ * CONVENIENCE FILTER TYPES
+ * ========================================
+ */
+
+/**
+ * Common filter combinations for PaymasterContract
+ */
+export interface PaymasterContractFilters {
+  /** Filter by contract type */
+  contractType?: PaymasterType;
+  /** Filter by network */
+  network?: string;
+  /** Only active contracts (has revenue) */
+  isActive?: boolean;
+  /** Only contracts with members */
+  hasMembers?: boolean;
+  /** Minimum total deposit */
+  minTotalDeposit?: string;
+  /** Deployed after timestamp */
+  deployedAfter?: string;
+  /** Not dead pools */
+  isAlive?: boolean;
+}
+
+/**
+ * Common filter combinations for Activity
+ */
+export interface ActivityFilters {
+  /** Filter by activity type */
+  type?: ActivityType;
+  /** Filter by network */
+  network?: string;
+  /** Filter by paymaster address */
+  paymasterAddress?: string;
+  /** Filter by contract type */
+  contractType?: PaymasterType;
+  /** Activities after timestamp */
+  after?: string;
+  /** Activities before timestamp */
+  before?: string;
+  /** Minimum gas cost (for USER_OP_SPONSORED) */
+  minGasCost?: string;
+}
+
+/**
+ * Common filter combinations for UserOperation
+ */
+export interface UserOperationFilters {
+  /** Filter by network */
+  network?: string;
+  /** Filter by paymaster address */
+  paymasterAddress?: string;
+  /** Filter by sender */
+  sender?: string;
+  /** Operations after timestamp */
+  after?: string;
+  /** Operations before timestamp */
+  before?: string;
+  /** Minimum gas cost */
+  minGasCost?: string;
+  /** Maximum gas cost */
+  maxGasCost?: string;
+}
+
+/**
+ * ========================================
+ * HELPER TYPES FOR DYNAMIC QUERIES
+ * ========================================
+ */
+
+/**
+ * Entity types for dynamic query building
+ */
+export type EntityType = 'paymasterContract' | 'activity' | 'userOperation';
+
+/**
+ * All where input types
+ */
+export type AllWhereInputs = PaymasterContractWhereInput | ActivityWhereInput | UserOperationWhereInput;
+
+/**
+ * All order by types
+ */
+export type AllOrderByTypes = PaymasterContractOrderBy | ActivityOrderBy | UserOperationOrderBy;
+
+/**
+ * All field types
+ */
+export type AllFieldTypes = PaymasterContractFields | ActivityFields | UserOperationFields;

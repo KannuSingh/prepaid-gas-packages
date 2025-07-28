@@ -1,24 +1,32 @@
 /**
- * Main query builder that provides access to all entity-specific query builders
- * Updated for the new network-aware schema structure
+ * Main query builder for the paymaster subgraph (Updated)
+ * Provides access to all entity-specific query builders
  *
- * This is the entry point for the fluent query API. It provides methods to start
- * building queries for different entity types and includes convenience methods
- * for common cross-entity queries.
+ * This is the entry point for the fluent query API for the new
+ * single-pool-per-contract architecture with 3 core entities:
+ * - PaymasterContract (each contract IS a pool)
+ * - Activity (unified timeline of all events)
+ * - UserOperation (detailed operation tracking)
  */
 
 import type { SubgraphClient } from '../client/subgraph-client.js';
 import { PaymasterContractQueryBuilder } from './builders/paymaster-query-builder.js';
-import { PoolQueryBuilder } from './builders/pool-query-builder.js';
-import { PoolMemberQueryBuilder } from './builders/pool-member-query-builder.js';
-import { TransactionQueryBuilder } from './builders/transaction-query-builder.js';
-import { NetworkInfoQueryBuilder } from './builders/network-info-query-builder.js';
+import {
+  ActivityQueryBuilder,
+  createDepositActivityQueryBuilder,
+  createRevenueActivityQueryBuilder,
+} from './builders/activity-query-builder.js';
+import { UserOperationQueryBuilder } from './builders/user-operation-query-builder.js';
+import type {
+  DepositActivity,
+  RevenueActivity,
+  SerializedDepositActivity,
+  SerializedRevenueActivity,
+} from '../types/subgraph.js';
 
 /**
  * Main query builder that provides access to all entity-specific query builders
  *
- * This class serves as the entry point for the fluent query API and provides
- * methods to start building queries for different entity types.
  */
 export class QueryBuilder {
   constructor(private client: SubgraphClient) {}
@@ -31,6 +39,7 @@ export class QueryBuilder {
 
   /**
    * Start building a query for paymaster contracts
+   * Each contract IS a pool in the new architecture
    *
    * @returns PaymasterContractQueryBuilder for fluent query building
    *
@@ -39,7 +48,7 @@ export class QueryBuilder {
    * const paymasters = await client.query()
    *   .paymasters()
    *   .byNetwork("base-sepolia")
-   *   .byType("GasLimited")
+   *   .byContractType("OneTimeUse")
    *   .withMinRevenue("1000000000000000000")
    *   .orderByRevenue()
    *   .limit(10)
@@ -51,82 +60,99 @@ export class QueryBuilder {
   }
 
   /**
-   * Start building a query for pools
+   * Start building a query for activities
+   * Unified timeline of all events (deposits, user ops, revenue withdrawals)
    *
-   * @returns PoolQueryBuilder for fluent query building
+   * @returns ActivityQueryBuilder for fluent query building
    *
    * @example
    * ```typescript
-   * const pools = await client.query()
-   *   .pools()
+   * // Mixed timeline view - all activity types together
+   * const activities = await client.query()
+   *   .activities()
    *   .byNetwork("base-sepolia")
    *   .byPaymaster("0x456...")
-   *   .withMinMembers(10)
-   *   .orderByPopularity()
-   *   .limit(20)
-   *   .execute();
-   * ```
-   */
-  pools(): PoolQueryBuilder {
-    return new PoolQueryBuilder(this.client);
-  }
-
-  /**
-   * Start building a query for pool members
-   *
-   * @returns PoolMemberQueryBuilder for fluent query building
-   *
-   * @example
-   * ```typescript
-   * const members = await client.query()
-   *   .poolMembers()
-   *   .byNetwork("base-sepolia")
-   *   .byPool("123")
-   *   .withNullifierUsed()
-   *   .orderByJoinDate()
+   *   .afterTimestamp("1640995200")
+   *   .orderByTimestamp()
    *   .limit(50)
    *   .execute();
+   *
+   * // For detailed user operation data with nullifier, use userOperations() instead
    * ```
    */
-  poolMembers(): PoolMemberQueryBuilder {
-    return new PoolMemberQueryBuilder(this.client);
+  activities(): ActivityQueryBuilder {
+    return new ActivityQueryBuilder(this.client);
   }
 
   /**
    * Start building a query for user operations
+   * Detailed tracking for specialized analytics including nullifier data
    *
-   * @returns TransactionQueryBuilder for fluent query building
+   * @returns UserOperationQueryBuilder for fluent query building
    *
    * @example
    * ```typescript
-   * const transactions = await client.query()
-   *   .transactions()
+   * const userOps = await client.query()
+   *   .userOperations()
    *   .byNetwork("base-sepolia")
    *   .byPaymaster("0x456...")
    *   .bySender("0x789...")
+   *   .withMinGasCost("1000000000000000")
    *   .orderByTimestamp()
    *   .limit(25)
    *   .execute();
    * ```
    */
-  transactions(): TransactionQueryBuilder {
-    return new TransactionQueryBuilder(this.client);
+  userOperations(): UserOperationQueryBuilder {
+    return new UserOperationQueryBuilder(this.client);
   }
 
   /**
-   * Start building a query for network information
+   * ========================================
+   * TYPED ACTIVITY QUERY BUILDERS
+   * ========================================
+   */
+
+  /**
+   * Start building a query for deposit activities only
+   * Returns typed DepositActivity[] results
    *
-   * @returns NetworkInfoQueryBuilder for fluent query building
+   * @returns ActivityQueryBuilder<DepositActivity> for fluent query building
    *
    * @example
    * ```typescript
-   * const networkInfo = await client.query()
-   *   .networkInfo()
+   * const deposits = await client.query()
+   *   .depositActivities()
    *   .byNetwork("base-sepolia")
+   *   .byDepositor("0x123...")
+   *   .orderByTimestamp()
+   *   .limit(20)
    *   .execute();
    * ```
    */
-  networkInfo(): NetworkInfoQueryBuilder {
-    return new NetworkInfoQueryBuilder(this.client);
+  depositActivities(): ActivityQueryBuilder<DepositActivity, SerializedDepositActivity> {
+    return createDepositActivityQueryBuilder(this.client);
+  }
+
+  /**
+   * Start building a query for revenue withdrawal activities only
+   * Returns typed RevenueActivity[] results
+   *
+   * @returns ActivityQueryBuilder<RevenueActivity> for fluent query building
+   *
+   * @example
+   * ```typescript
+   * const revenues = await client.query()
+   *   .revenueActivities()
+   *   .byNetwork("base-sepolia")
+   *   .byWithdrawAddress("0x789...")
+   *   .withMinAmount("5000000000000000000")
+   *   .orderByAmount()
+   *   .limit(10)
+   *   .execute();
+   * ```
+   */
+  revenueActivities(): ActivityQueryBuilder<RevenueActivity, SerializedRevenueActivity> {
+    return createRevenueActivityQueryBuilder(this.client);
   }
 }

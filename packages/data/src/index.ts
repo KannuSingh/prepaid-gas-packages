@@ -15,23 +15,10 @@
  */
 
 // Main entity types
-export type {
-  PaymasterContract,
-  Pool,
-  PoolMember,
-  Transaction,
-  NetworkMetadata,
-  PaymasterType,
-} from './types/subgraph.js';
+export type { PaymasterContract, Activity, ActivityType, EntityType, NetworkMetadata } from './types/subgraph.js';
 
 // Serialized type definitions
-export type {
-  SerializedPaymasterContract,
-  SerializedPool,
-  SerializedPoolMember,
-  SerializedNetworkInfo,
-  SerializedTransaction,
-} from './types/subgraph.js';
+export type { SerializedPaymasterContract, SerializedActivity, SerializedUserOperation } from './types/subgraph.js';
 
 /**
  * ========================================
@@ -54,13 +41,7 @@ export { QueryBuilder } from './query/query-builder.js';
 // Entity-specific query builders
 export { PaymasterContractQueryBuilder } from './query/builders/paymaster-query-builder.js';
 
-export { PoolQueryBuilder } from './query/builders/pool-query-builder.js';
-
-export { PoolMemberQueryBuilder } from './query/builders/pool-member-query-builder.js';
-
-export { TransactionQueryBuilder } from './query/builders/transaction-query-builder.js';
-
-export { NetworkInfoQueryBuilder } from './query/builders/network-info-query-builder.js';
+export { UserOperationQueryBuilder } from './query/builders/user-operation-query-builder.js';
 
 export { BaseQueryBuilder } from './query/builders/base-query-builder.js';
 

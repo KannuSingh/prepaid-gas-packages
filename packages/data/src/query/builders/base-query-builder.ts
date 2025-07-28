@@ -1,5 +1,5 @@
-import { SubgraphClient } from "../../client/subgraph-client.js";
-import { QueryConfig } from "../types.js";
+import { SubgraphClient } from '../../client/subgraph-client.js';
+import { QueryConfig } from '../types.js';
 
 /**
  * Base query builder with common functionality
@@ -30,11 +30,11 @@ export abstract class BaseQueryBuilder<
     protected client: SubgraphClient,
     protected entityName: string,
     defaultOrderBy: TOrderBy,
-    defaultOrderDirection: "asc" | "desc" = "desc",
+    defaultOrderDirection: 'asc' | 'desc' = 'desc'
   ) {
     // Basic validation
-    if (!entityName || typeof entityName !== "string") {
-      throw new Error("Entity name must be a non-empty string");
+    if (!entityName || typeof entityName !== 'string') {
+      throw new Error('Entity name must be a non-empty string');
     }
 
     this.entityName = entityName;
@@ -81,11 +81,11 @@ export abstract class BaseQueryBuilder<
    */
   select(fields: TFields[]): this {
     if (!Array.isArray(fields)) {
-      throw new Error("Fields must be an array");
+      throw new Error('Fields must be an array');
     }
 
     if (fields.length === 0) {
-      throw new Error("Fields array cannot be empty");
+      throw new Error('Fields array cannot be empty');
     }
 
     this.config.selectedFields = fields;
@@ -98,14 +98,11 @@ export abstract class BaseQueryBuilder<
    * @returns The query builder instance for chaining
    */
   where(where: Partial<TWhereInput>): this {
-    if (typeof where !== "object" || where === null) {
-      throw new Error("Where conditions must be an object");
+    if (typeof where !== 'object' || where === null) {
+      throw new Error('Where conditions must be an object');
     }
 
-    this.config.where = this.deepMergeWhereConditions(
-      this.config.where || {},
-      where,
-    );
+    this.config.where = this.deepMergeWhereConditions(this.config.where || {}, where);
     return this;
   }
 
@@ -113,9 +110,9 @@ export abstract class BaseQueryBuilder<
     const result = { ...existing };
 
     for (const [key, value] of Object.entries(newWhere)) {
-      if (key.endsWith("_") && typeof value === "object" && value !== null) {
+      if (key.endsWith('_') && typeof value === 'object' && value !== null) {
         // Deep merge for GraphQL relationship fields (pool_, paymaster_, etc.)
-        if (typeof result[key] === "object" && result[key] !== null) {
+        if (typeof result[key] === 'object' && result[key] !== null) {
           result[key] = { ...result[key], ...value };
         } else {
           result[key] = value;
@@ -135,15 +132,13 @@ export abstract class BaseQueryBuilder<
    */
   limit(limit: number): this {
     if (!Number.isInteger(limit) || limit <= 0) {
-      throw new Error("Limit must be a positive integer");
+      throw new Error('Limit must be a positive integer');
     }
 
     const safeLimit = Math.min(limit, BaseQueryBuilder.MAX_SAFE_LIMIT);
 
     if (safeLimit < limit) {
-      console.warn(
-        `Limit ${limit} exceeds maximum ${BaseQueryBuilder.MAX_SAFE_LIMIT}, using ${safeLimit}`,
-      );
+      console.warn(`Limit ${limit} exceeds maximum ${BaseQueryBuilder.MAX_SAFE_LIMIT}, using ${safeLimit}`);
     }
 
     this.config.first = safeLimit;
@@ -157,7 +152,7 @@ export abstract class BaseQueryBuilder<
    */
   skip(skip: number): this {
     if (!Number.isInteger(skip) || skip < 0) {
-      throw new Error("Skip must be a non-negative integer");
+      throw new Error('Skip must be a non-negative integer');
     }
 
     this.config.skip = skip;
@@ -170,12 +165,12 @@ export abstract class BaseQueryBuilder<
    * @param direction - Order direction ("asc" or "desc")
    * @returns The query builder instance for chaining
    */
-  orderBy(orderBy: TOrderBy, direction: "asc" | "desc" = "desc"): this {
-    if (!orderBy || typeof orderBy !== "string") {
-      throw new Error("OrderBy field must be a non-empty string");
+  orderBy(orderBy: TOrderBy, direction: 'asc' | 'desc' = 'desc'): this {
+    if (!orderBy || typeof orderBy !== 'string') {
+      throw new Error('OrderBy field must be a non-empty string');
     }
 
-    if (direction !== "asc" && direction !== "desc") {
+    if (direction !== 'asc' && direction !== 'desc') {
       throw new Error('Order direction must be "asc" or "desc"');
     }
 
@@ -200,19 +195,13 @@ export abstract class BaseQueryBuilder<
 
     const query = this.buildDynamicQuery();
     const variables = this.buildVariables();
-
-    const result = await this.client.executeQuery<{ [key: string]: TEntity[] }>(
-      query,
-      variables,
-    );
+    const result = await this.client.executeQuery<{ [key: string]: TEntity[] }>(query, variables);
 
     const data = result[this.entityName] || [];
 
     // Warn if hitting limits
     if (data.length === this.config.first) {
-      console.warn(
-        `Query returned maximum results (${this.config.first}). Consider using pagination.`,
-      );
+      console.warn(`Query returned maximum results (${this.config.first}). Consider using pagination.`);
     }
 
     return data;
@@ -286,16 +275,14 @@ export abstract class BaseQueryBuilder<
       this.client,
       this.entityName,
       this.config.orderBy,
-      this.config.orderDirection,
+      this.config.orderDirection
     );
 
     // Deep clone the configuration
     cloned.config = {
       ...this.config,
       where: this.config.where ? { ...this.config.where } : undefined,
-      selectedFields: this.config.selectedFields
-        ? [...this.config.selectedFields]
-        : undefined,
+      selectedFields: this.config.selectedFields ? [...this.config.selectedFields] : undefined,
     };
 
     return cloned;
