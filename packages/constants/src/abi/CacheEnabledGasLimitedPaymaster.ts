@@ -1,4 +1,4 @@
-export const ONE_TIME_USE_PAYMASTER_ABI = [
+export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI = [
   {
     inputs: [
       {
@@ -19,6 +19,11 @@ export const ONE_TIME_USE_PAYMASTER_ABI = [
     ],
     stateMutability: 'nonpayable',
     type: 'constructor',
+  },
+  {
+    inputs: [],
+    name: 'AllNullifierSlotsActive',
+    type: 'error',
   },
   {
     inputs: [],
@@ -97,11 +102,6 @@ export const ONE_TIME_USE_PAYMASTER_ABI = [
   },
   {
     inputs: [],
-    name: 'NullifierAlreadyUsed',
-    type: 'error',
-  },
-  {
-    inputs: [],
     name: 'OnlyPrepaidGasEntrypoint',
     type: 'error',
   },
@@ -145,6 +145,11 @@ export const ONE_TIME_USE_PAYMASTER_ABI = [
   {
     inputs: [],
     name: 'ScopeMismatch',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'SenderNotCached',
     type: 'error',
   },
   {
@@ -221,6 +226,37 @@ export const ONE_TIME_USE_PAYMASTER_ABI = [
     inputs: [
       {
         indexed: true,
+        internalType: 'bytes32',
+        name: 'userOpHash',
+        type: 'bytes32',
+      },
+      {
+        indexed: true,
+        internalType: 'uint256',
+        name: 'nullifier',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'gasUsed',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint8',
+        name: 'index',
+        type: 'uint8',
+      },
+    ],
+    name: 'NullifierConsumed',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
         internalType: 'address',
         name: 'previousOwner',
         type: 'address',
@@ -281,14 +317,8 @@ export const ONE_TIME_USE_PAYMASTER_ABI = [
         name: 'actualGasCost',
         type: 'uint256',
       },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'nullifierUsed',
-        type: 'uint256',
-      },
     ],
-    name: 'UserOpSponsoredWithNullifier',
+    name: 'UserOpSponsored',
     type: 'event',
   },
   {
@@ -487,8 +517,93 @@ export const ONE_TIME_USE_PAYMASTER_ABI = [
     type: 'function',
   },
   {
+    inputs: [
+      {
+        components: [
+          {
+            internalType: 'address',
+            name: 'sender',
+            type: 'address',
+          },
+          {
+            internalType: 'uint256',
+            name: 'nonce',
+            type: 'uint256',
+          },
+          {
+            internalType: 'bytes',
+            name: 'initCode',
+            type: 'bytes',
+          },
+          {
+            internalType: 'bytes',
+            name: 'callData',
+            type: 'bytes',
+          },
+          {
+            internalType: 'bytes32',
+            name: 'accountGasLimits',
+            type: 'bytes32',
+          },
+          {
+            internalType: 'uint256',
+            name: 'preVerificationGas',
+            type: 'uint256',
+          },
+          {
+            internalType: 'bytes32',
+            name: 'gasFees',
+            type: 'bytes32',
+          },
+          {
+            internalType: 'bytes',
+            name: 'paymasterAndData',
+            type: 'bytes',
+          },
+          {
+            internalType: 'bytes',
+            name: 'signature',
+            type: 'bytes',
+          },
+        ],
+        internalType: 'struct PackedUserOperation',
+        name: 'userOp',
+        type: 'tuple',
+      },
+    ],
+    name: 'getMessageHash',
+    outputs: [
+      {
+        internalType: 'bytes32',
+        name: '',
+        type: 'bytes32',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [],
     name: 'getRevenue',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
+    ],
+    name: 'nullifierGasUsage',
     outputs: [
       {
         internalType: 'uint256',
@@ -602,17 +717,36 @@ export const ONE_TIME_USE_PAYMASTER_ABI = [
   {
     inputs: [
       {
+        internalType: 'bytes32',
+        name: '',
+        type: 'bytes32',
+      },
+    ],
+    name: 'userNullifiers',
+    outputs: [
+      {
         internalType: 'uint256',
         name: '',
         type: 'uint256',
       },
     ],
-    name: 'usedNullifiers',
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'address',
+        name: '',
+        type: 'address',
+      },
+    ],
+    name: 'userNullifiersStates',
     outputs: [
       {
-        internalType: 'bool',
+        internalType: 'uint256',
         name: '',
-        type: 'bool',
+        type: 'uint256',
       },
     ],
     stateMutability: 'view',

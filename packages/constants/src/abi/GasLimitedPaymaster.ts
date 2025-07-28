@@ -2,13 +2,18 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
   {
     inputs: [
       {
-        internalType: 'address',
+        internalType: 'uint256',
+        name: '_joiningAmount',
+        type: 'uint256',
+      },
+      {
+        internalType: 'contract IEntryPoint',
         name: '_entryPoint',
         type: 'address',
       },
       {
         internalType: 'address',
-        name: '_verifier',
+        name: '_membershipVerifier',
         type: 'address',
       },
     ],
@@ -16,35 +21,8 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
     type: 'constructor',
   },
   {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'provided',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'expected',
-        type: 'uint256',
-      },
-    ],
-    name: 'IncorrectJoiningFee',
-    type: 'error',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'available',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'required',
-        type: 'uint256',
-      },
-    ],
-    name: 'InsufficientDeposits',
+    inputs: [],
+    name: 'ContextMismatch',
     type: 'error',
   },
   {
@@ -53,29 +31,17 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
     type: 'error',
   },
   {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'config',
-        type: 'uint256',
-      },
-    ],
-    name: 'InvalidConfigFormat',
+    inputs: [],
+    name: 'InsufficientValue',
     type: 'error',
   },
   {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'provided',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'expected',
-        type: 'uint256',
-      },
-    ],
+    inputs: [],
+    name: 'InvalidCommitment',
+    type: 'error',
+  },
+  {
+    inputs: [],
     name: 'InvalidDataLength',
     type: 'error',
   },
@@ -85,110 +51,18 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
     type: 'error',
   },
   {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'provided',
-        type: 'uint256',
-      },
-    ],
-    name: 'InvalidJoiningFee',
-    type: 'error',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint32',
-        name: 'index',
-        type: 'uint32',
-      },
-      {
-        internalType: 'uint32',
-        name: 'maxIndex',
-        type: 'uint32',
-      },
-    ],
-    name: 'InvalidMerkleRootIndex',
-    type: 'error',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'provided',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'expected',
-        type: 'uint256',
-      },
-    ],
-    name: 'InvalidMerkleTreeRoot',
-    type: 'error',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint8',
-        name: 'mode',
-        type: 'uint8',
-      },
-    ],
-    name: 'InvalidMode',
+    inputs: [],
+    name: 'InvalidJoiningAmount',
     type: 'error',
   },
   {
     inputs: [],
-    name: 'InvalidPaymasterData',
-    type: 'error',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'provided',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'expected',
-        type: 'uint256',
-      },
-    ],
-    name: 'InvalidProofMessage',
-    type: 'error',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'provided',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'expected',
-        type: 'uint256',
-      },
-    ],
-    name: 'InvalidProofScope',
-    type: 'error',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'providedLength',
-        type: 'uint256',
-      },
-    ],
-    name: 'InvalidStubContextLength',
+    name: 'InvalidProof',
     type: 'error',
   },
   {
     inputs: [],
-    name: 'InvalidVerifierAddress',
+    name: 'InvalidTreeDepth',
     type: 'error',
   },
   {
@@ -203,49 +77,27 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
   },
   {
     inputs: [],
-    name: 'LeafDoesNotExist',
-    type: 'error',
-  },
-  {
-    inputs: [],
     name: 'LeafGreaterThanSnarkScalarField',
     type: 'error',
   },
   {
-    inputs: [
-      {
-        internalType: 'uint32',
-        name: 'index',
-        type: 'uint32',
-      },
-      {
-        internalType: 'uint32',
-        name: 'historyCount',
-        type: 'uint32',
-      },
-    ],
-    name: 'MerkleRootNotInHistory',
+    inputs: [],
+    name: 'MaxTreeDepthReached',
     type: 'error',
   },
   {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'provided',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'min',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'max',
-        type: 'uint256',
-      },
-    ],
-    name: 'MerkleTreeDepthUnsupported',
+    inputs: [],
+    name: 'MessageMismatch',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'NullifierAlreadySpent',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'OnlyPrepaidGasEntrypoint',
     type: 'error',
   },
   {
@@ -271,30 +123,13 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
     type: 'error',
   },
   {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-    ],
-    name: 'PoolAlreadyExists',
-    type: 'error',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-    ],
-    name: 'PoolDoesNotExist',
+    inputs: [],
+    name: 'PoolHasNoMembers',
     type: 'error',
   },
   {
     inputs: [],
-    name: 'PoolHasNoMembers',
+    name: 'PoolIsDead',
     type: 'error',
   },
   {
@@ -304,12 +139,22 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
   },
   {
     inputs: [],
+    name: 'ScopeMismatch',
+    type: 'error',
+  },
+  {
+    inputs: [],
     name: 'UnauthorizedCaller',
     type: 'error',
   },
   {
     inputs: [],
-    name: 'UserExceededGasFund',
+    name: 'UnknownStateRoot',
+    type: 'error',
+  },
+  {
+    inputs: [],
+    name: 'UserOpExceedsGasAmount',
     type: 'error',
   },
   {
@@ -318,77 +163,52 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
     type: 'error',
   },
   {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-      {
-        indexed: true,
-        internalType: 'uint256',
-        name: 'memberIndex',
-        type: 'uint256',
-      },
-      {
-        indexed: true,
-        internalType: 'uint256',
-        name: 'identityCommitment',
-        type: 'uint256',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'merkleTreeRoot',
-        type: 'uint256',
-      },
-      {
-        indexed: false,
-        internalType: 'uint32',
-        name: 'merkleRootIndex',
-        type: 'uint32',
-      },
-    ],
-    name: 'MemberAdded',
-    type: 'event',
+    inputs: [],
+    name: 'ZeroAddress',
+    type: 'error',
   },
   {
     anonymous: false,
     inputs: [
       {
         indexed: true,
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
+        internalType: 'address',
+        name: '_depositor',
+        type: 'address',
       },
       {
         indexed: false,
         internalType: 'uint256',
-        name: 'startIndex',
+        name: '_commitment',
         type: 'uint256',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256[]',
-        name: 'identityCommitments',
-        type: 'uint256[]',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'merkleTreeRoot',
-        type: 'uint256',
-      },
-      {
-        indexed: false,
-        internalType: 'uint32',
-        name: 'merkleRootIndex',
-        type: 'uint32',
       },
     ],
-    name: 'MembersAdded',
+    name: 'Deposited',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: '_index',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: '_leaf',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: '_root',
+        type: 'uint256',
+      },
+    ],
+    name: 'LeafInserted',
     type: 'event',
   },
   {
@@ -412,30 +232,17 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
   },
   {
     anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'joiningFee',
-        type: 'uint256',
-      },
-    ],
-    name: 'PoolCreated',
+    inputs: [],
+    name: 'PoolDied',
     type: 'event',
   },
   {
     anonymous: false,
     inputs: [
       {
-        indexed: true,
+        indexed: false,
         internalType: 'address',
-        name: 'recipient',
+        name: 'withdrawAddress',
         type: 'address',
       },
       {
@@ -453,21 +260,15 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
     inputs: [
       {
         indexed: true,
-        internalType: 'bytes32',
-        name: 'userOpHash',
-        type: 'bytes32',
-      },
-      {
-        indexed: true,
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-      {
-        indexed: false,
         internalType: 'address',
         name: 'sender',
         type: 'address',
+      },
+      {
+        indexed: true,
+        internalType: 'bytes32',
+        name: 'userOpHash',
+        type: 'bytes32',
       },
       {
         indexed: false,
@@ -478,59 +279,89 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
       {
         indexed: false,
         internalType: 'uint256',
-        name: 'nullifier',
+        name: 'nullifierUsed',
         type: 'uint256',
       },
     ],
-    name: 'UserOpSponsored',
+    name: 'UserOpSponsoredWithNullifier',
     type: 'event',
   },
   {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'identityCommitment',
-        type: 'uint256',
-      },
-    ],
-    name: 'addMember',
+    inputs: [],
+    name: 'JOINING_AMOUNT',
     outputs: [
       {
         internalType: 'uint256',
-        name: 'merkleTreeRoot',
+        name: '',
         type: 'uint256',
       },
     ],
-    stateMutability: 'payable',
+    stateMutability: 'view',
     type: 'function',
   },
   {
-    inputs: [
+    inputs: [],
+    name: 'MAX_TREE_DEPTH',
+    outputs: [
       {
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256[]',
-        name: 'identityCommitments',
-        type: 'uint256[]',
+        internalType: 'uint32',
+        name: '',
+        type: 'uint32',
       },
     ],
-    name: 'addMembers',
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'MEMBERSHIP_VERIFIER',
+    outputs: [
+      {
+        internalType: 'contract IVerifier',
+        name: '',
+        type: 'address',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'MIN_TREE_DEPTH',
+    outputs: [
+      {
+        internalType: 'uint32',
+        name: '',
+        type: 'uint32',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'ROOT_HISTORY_SIZE',
+    outputs: [
+      {
+        internalType: 'uint32',
+        name: '',
+        type: 'uint32',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'SCOPE',
     outputs: [
       {
         internalType: 'uint256',
-        name: 'merkleTreeRoot',
+        name: '',
         type: 'uint256',
       },
     ],
-    stateMutability: 'payable',
+    stateMutability: 'view',
     type: 'function',
   },
   {
@@ -547,22 +378,81 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
     type: 'function',
   },
   {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'joiningFee',
-        type: 'uint256',
-      },
-    ],
-    name: 'createPool',
+    inputs: [],
+    name: 'currentRoot',
     outputs: [
       {
         internalType: 'uint256',
-        name: 'poolId',
+        name: '_root',
         type: 'uint256',
       },
     ],
-    stateMutability: 'nonpayable',
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'currentRootIndex',
+    outputs: [
+      {
+        internalType: 'uint32',
+        name: '',
+        type: 'uint32',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'currentTreeDepth',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '_depth',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'currentTreeSize',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '_size',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [],
+    name: 'dead',
+    outputs: [
+      {
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '_commitment',
+        type: 'uint256',
+      },
+    ],
+    name: 'deposit',
+    outputs: [],
+    stateMutability: 'payable',
     type: 'function',
   },
   {
@@ -579,35 +469,6 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
     type: 'function',
   },
   {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'merkleRoot',
-        type: 'uint256',
-      },
-    ],
-    name: 'findRootIndex',
-    outputs: [
-      {
-        internalType: 'uint32',
-        name: 'index',
-        type: 'uint32',
-      },
-      {
-        internalType: 'bool',
-        name: 'found',
-        type: 'bool',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
     inputs: [],
     name: 'getDeposit',
     outputs: [
@@ -615,239 +476,6 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
         internalType: 'uint256',
         name: '',
         type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-    ],
-    name: 'getJoiningFee',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-    ],
-    name: 'getLatestValidRootInfo',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: 'latestRoot',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint32',
-        name: 'rootIndex',
-        type: 'uint32',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-    ],
-    name: 'getMerkleTreeDepth',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-    ],
-    name: 'getMerkleTreeRoot',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-    ],
-    name: 'getMerkleTreeSize',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        components: [
-          {
-            internalType: 'address',
-            name: 'sender',
-            type: 'address',
-          },
-          {
-            internalType: 'uint256',
-            name: 'nonce',
-            type: 'uint256',
-          },
-          {
-            internalType: 'bytes',
-            name: 'initCode',
-            type: 'bytes',
-          },
-          {
-            internalType: 'bytes',
-            name: 'callData',
-            type: 'bytes',
-          },
-          {
-            internalType: 'bytes32',
-            name: 'accountGasLimits',
-            type: 'bytes32',
-          },
-          {
-            internalType: 'uint256',
-            name: 'preVerificationGas',
-            type: 'uint256',
-          },
-          {
-            internalType: 'bytes32',
-            name: 'gasFees',
-            type: 'bytes32',
-          },
-          {
-            internalType: 'bytes',
-            name: 'paymasterAndData',
-            type: 'bytes',
-          },
-          {
-            internalType: 'bytes',
-            name: 'signature',
-            type: 'bytes',
-          },
-        ],
-        internalType: 'struct PackedUserOperation',
-        name: 'userOp',
-        type: 'tuple',
-      },
-    ],
-    name: 'getMessageHash',
-    outputs: [
-      {
-        internalType: 'bytes32',
-        name: '',
-        type: 'bytes32',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'bytes',
-        name: 'context',
-        type: 'bytes',
-      },
-    ],
-    name: 'getPaymasterStubData',
-    outputs: [
-      {
-        internalType: 'bytes',
-        name: '',
-        type: 'bytes',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-    ],
-    name: 'getPoolDeposits',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-    ],
-    name: 'getPoolRootHistoryInfo',
-    outputs: [
-      {
-        internalType: 'uint32',
-        name: 'currentIndex',
-        type: 'uint32',
-      },
-      {
-        internalType: 'uint32',
-        name: 'historyCount',
-        type: 'uint32',
-      },
-      {
-        internalType: 'uint32',
-        name: 'validCount',
-        type: 'uint32',
       },
     ],
     stateMutability: 'view',
@@ -870,88 +498,11 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
     inputs: [
       {
         internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint32',
-        name: 'index',
-        type: 'uint32',
-      },
-    ],
-    name: 'getValidRootAtIndex',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: 'root',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-    ],
-    name: 'getValidRoots',
-    outputs: [
-      {
-        internalType: 'uint32[]',
-        name: 'indices',
-        type: 'uint32[]',
-      },
-      {
-        internalType: 'uint256[]',
-        name: 'roots',
-        type: 'uint256[]',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'identityCommitment',
-        type: 'uint256',
-      },
-    ],
-    name: 'hasMember',
-    outputs: [
-      {
-        internalType: 'bool',
         name: '',
-        type: 'bool',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: 'poolId',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'identityCommitment',
         type: 'uint256',
       },
     ],
-    name: 'indexOf',
+    name: 'nullifierGasUsage',
     outputs: [
       {
         internalType: 'uint256',
@@ -970,91 +521,6 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
         internalType: 'address',
         name: '',
         type: 'address',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'poolCounter',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    name: 'poolExists',
-    outputs: [
-      {
-        internalType: 'bool',
-        name: '',
-        type: 'bool',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    name: 'poolMembersGasData',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    name: 'pools',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: 'joiningFee',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'totalDeposits',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint32',
-        name: 'rootHistoryCurrentIndex',
-        type: 'uint32',
-      },
-      {
-        internalType: 'uint32',
-        name: 'rootHistoryCount',
-        type: 'uint32',
       },
     ],
     stateMutability: 'view',
@@ -1096,8 +562,27 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
     type: 'function',
   },
   {
+    inputs: [
+      {
+        internalType: 'uint256',
+        name: '_index',
+        type: 'uint256',
+      },
+    ],
+    name: 'roots',
+    outputs: [
+      {
+        internalType: 'uint256',
+        name: '_root',
+        type: 'uint256',
+      },
+    ],
+    stateMutability: 'view',
+    type: 'function',
+  },
+  {
     inputs: [],
-    name: 'totalUsersDeposit',
+    name: 'totalDeposit',
     outputs: [
       {
         internalType: 'uint256',
@@ -1207,70 +692,6 @@ export const GAS_LIMITED_PAYMASTER_ABI = [
       },
     ],
     stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'verifier',
-    outputs: [
-      {
-        internalType: 'contract IPoolMembershipProofVerifier',
-        name: '',
-        type: 'address',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        components: [
-          {
-            internalType: 'uint256',
-            name: 'merkleTreeDepth',
-            type: 'uint256',
-          },
-          {
-            internalType: 'uint256',
-            name: 'merkleTreeRoot',
-            type: 'uint256',
-          },
-          {
-            internalType: 'uint256',
-            name: 'nullifier',
-            type: 'uint256',
-          },
-          {
-            internalType: 'uint256',
-            name: 'message',
-            type: 'uint256',
-          },
-          {
-            internalType: 'uint256',
-            name: 'scope',
-            type: 'uint256',
-          },
-          {
-            internalType: 'uint256[8]',
-            name: 'points',
-            type: 'uint256[8]',
-          },
-        ],
-        internalType: 'struct DataLib.PoolMembershipProof',
-        name: 'proof',
-        type: 'tuple',
-      },
-    ],
-    name: 'verifyProof',
-    outputs: [
-      {
-        internalType: 'bool',
-        name: '',
-        type: 'bool',
-      },
-    ],
-    stateMutability: 'view',
     type: 'function',
   },
   {

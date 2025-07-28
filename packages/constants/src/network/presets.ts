@@ -14,9 +14,22 @@ import type { NetworkName, ChainId, PaymasterType } from './config';
  */
 export interface NetworkPreset {
   name: NetworkName;
-  paymasterAddress: {
-    GasLimitedPaymaster: `0x${string}`;
-    OneTimeUsePaymaster: `0x${string}`;
+  paymasters: {
+    GasLimitedPaymaster: {
+      address: `0x${string}`;
+      joiningAmount: bigint;
+      scope: bigint;
+    };
+    CacheEnabledGasLimitedPaymaster: {
+      address: `0x${string}`;
+      joiningAmount: bigint;
+      scope: bigint;
+    };
+    OneTimeUsePaymaster: {
+      address: `0x${string}`;
+      joiningAmount: bigint;
+      scope: bigint;
+    };
   };
   /** Default subgraph URL for this network */
   defaultSubgraphUrl: string;
@@ -44,14 +57,28 @@ export interface NetworkPreset {
  */
 export const BASE_SEPOLIA_PRESET: NetworkPreset = {
   name: 'base-sepolia',
-  paymasterAddress: {
-    GasLimitedPaymaster: '0x3BEeC075aC5A77fFE0F9ee4bbb3DCBd07fA93fbf',
-    OneTimeUsePaymaster: '0x243A735115F34BD5c0F23a33a444a8d26e31E2E7',
+  paymasters: {
+    GasLimitedPaymaster: {
+      address: '0x20f406AB21D2D8e998303e554546D868B6d36A60',
+      joiningAmount: 10000000000000000n,
+      scope: 9234769077604601027982583105758731062986554690706365089562321625893671675654n,
+    },
+    CacheEnabledGasLimitedPaymaster: {
+      address: '0x84184bC6943789C7C6303630cd3e878B54d5c2f7',
+      joiningAmount: 1000000000000000n,
+      scope: 16494317814818683610351311587514631773778077926540499944316189133269937569898n,
+    },
+    OneTimeUsePaymaster: {
+      address: '0xBd3d3f86b811B4c3b177891b5d1bdDA1Dbfd561a',
+      joiningAmount: 1000000000000000n,
+      scope: 19302705144954613091203138408427347025879183417141992020243793472026374472668n,
+    },
   },
-  defaultSubgraphUrl: 'https://api.studio.thegraph.com/query/113435/prepaid-gas-paymaster-base-sepolia/version/latest',
+  defaultSubgraphUrl: 'https://api.studio.thegraph.com/query/113435/prepaid-gas-paymasters/version/latest',
   defaultRpcUrl: 'https://sepolia.base.org',
-  description: 'Base Sepolia testnet with GasLimited and OneTimeUse paymasters - ideal for development and testing',
-  supportedPaymasterTypes: ['GasLimited', 'OneTimeUse'],
+  description:
+    'Base Sepolia testnet with GasLimited, OneTimeUse and CacheEnabledGasLimited paymasters - ideal for development and testing',
+  supportedPaymasterTypes: ['GasLimited', 'OneTimeUse', 'CacheEnabledGasLimitedPaymaster'],
   isProduction: false,
   deploymentStatus: 'active',
 };
