@@ -66,7 +66,6 @@ export function PaymasterSettings({ children }: PaymasterSettingsProps) {
   // Handle direct context input
   const handleDirectContextSubmit = async (contextConfig: {
     paymasterAddress: string;
-    poolId: string;
     identity: Identity;
     paymasterContext: string;
   }) => {
@@ -75,8 +74,8 @@ export function PaymasterSettings({ children }: PaymasterSettingsProps) {
       setStepError(null);
 
       const newPaymasterConfig: PaymasterConfig = {
-        poolId: contextConfig.poolId,
         identity: contextConfig.identity.export(),
+        address: contextConfig.paymasterAddress,
         paymasterContext: contextConfig.paymasterContext,
       };
 
@@ -91,7 +90,6 @@ export function PaymasterSettings({ children }: PaymasterSettingsProps) {
       setPaymasterConfig(newPaymasterConfig);
 
       console.log("✅ Direct context configuration saved:", {
-        poolId: contextConfig.poolId,
         paymasterAddress: contextConfig.paymasterAddress,
         identityCommitment: contextConfig.identity.commitment.toString(),
       });
@@ -116,7 +114,7 @@ export function PaymasterSettings({ children }: PaymasterSettingsProps) {
   };
 
   // Handle manual pool selection
-  const handleSelectPool = async (poolId: string) => {
+  const handleSelectPool = async (poolAddress: string) => {
     if (!semaphoreIdentity) {
       setStepError("No identity available");
       return;
@@ -128,11 +126,11 @@ export function PaymasterSettings({ children }: PaymasterSettingsProps) {
 
       // TODO: Generate actual paymasterContext based on poolId and identity
       // For now, using a placeholder - this needs the same encoding as web app
-      const paymasterContext = `0x${poolId.padStart(64, "0")}`; // Temporary placeholder
+      const paymasterContext = `0x${poolAddress.padStart(64, "0")}`; // Temporary placeholder
 
       const newPaymasterConfig: PaymasterConfig = {
-        poolId: poolId,
         identity: semaphoreIdentity.export(),
+        address: poolAddress,
         paymasterContext: paymasterContext,
       };
 

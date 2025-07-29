@@ -1,23 +1,21 @@
 /**
- * Data transformers for the prepaid gas paymaster system
- * Updated for the new network-aware schema structure
+ * Data transformers for the paymaster system (Updated)
+ * For the new single-pool-per-contract architecture
  *
- * Handles BigInt serialization/deserialization and provides utility functions
- * for formatting blockchain data for API responses and client consumption.
+ * Handles BigInt serialization/deserialization for:
+ * - PaymasterContract (each contract IS a pool)
+ * - Activity (unified timeline)
+ * - UserOperation (detailed tracking)
  */
 
 import type {
   PaymasterContract,
-  Pool,
-  PoolMember,
-  Transaction,
-  NetworkInfo,
   SerializedPaymasterContract,
-  SerializedPool,
-  SerializedPoolMember,
-  SerializedTransaction,
-  SerializedNetworkInfo,
-} from "../types/subgraph.js";
+  Activity,
+  SerializedActivity,
+  UserOperation,
+  SerializedUserOperation,
+} from '../types/subgraph.js';
 
 /**
  * ========================================
@@ -32,11 +30,11 @@ import type {
  * @returns BigInt value or 0n if invalid
  */
 export function safeBigIntParse(value: string | number | bigint): bigint {
-  if (typeof value === "bigint") {
+  if (typeof value === 'bigint') {
     return value;
   }
 
-  if (typeof value === "number") {
+  if (typeof value === 'number') {
     return BigInt(Math.floor(value));
   }
 
@@ -61,7 +59,7 @@ export function safeBigIntParse(value: string | number | bigint): bigint {
  * @returns Serialized entity with BigInt values as strings
  */
 export function convertBigIntsToStrings<T>(obj: T): any {
-  if (typeof obj === "bigint") {
+  if (typeof obj === 'bigint') {
     return obj.toString();
   }
 
@@ -73,7 +71,7 @@ export function convertBigIntsToStrings<T>(obj: T): any {
     return obj.map((item) => convertBigIntsToStrings(item));
   }
 
-  if (typeof obj === "object") {
+  if (typeof obj === 'object') {
     const result: any = {};
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
@@ -93,10 +91,7 @@ export function convertBigIntsToStrings<T>(obj: T): any {
  * @param bigIntFields - Array of field names that should be converted to BigInt
  * @returns Entity with BigInt values restored
  */
-export function convertStringsToBigInts<T>(
-  obj: T,
-  bigIntFields: string[],
-): any {
+export function convertStringsToBigInts<T>(obj: T, bigIntFields: string[]): any {
   if (obj === null || obj === undefined) {
     return obj;
   }
@@ -105,13 +100,13 @@ export function convertStringsToBigInts<T>(
     return obj.map((item) => convertStringsToBigInts(item, bigIntFields));
   }
 
-  if (typeof obj === "object") {
+  if (typeof obj === 'object') {
     const result: any = {};
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {
-        if (bigIntFields.includes(key) && typeof obj[key] === "string") {
+        if (bigIntFields.includes(key) && typeof obj[key] === 'string') {
           result[key] = safeBigIntParse(obj[key]);
-        } else if (typeof obj[key] === "object") {
+        } else if (typeof obj[key] === 'object') {
           result[key] = convertStringsToBigInts(obj[key], bigIntFields);
         } else {
           result[key] = obj[key];
@@ -126,151 +121,81 @@ export function convertStringsToBigInts<T>(
 
 /**
  * ========================================
- * BIGINT FIELD DEFINITIONS
+ * BIGINT FIELD DEFINITIONS (Updated for new schema)
  * ========================================
  */
 
 // Define which fields are BigInt for each entity type
 const BIGINT_FIELDS = {
   paymasterContract: [
-    "chainId",
-    "totalUsersDeposit",
-    "currentDeposit",
-    "revenue",
-    "deployedAtBlock",
-    "deployedAtTimestamp",
-    "lastUpdatedBlock",
-    "lastUpdatedTimestamp",
+    'chainId',
+    'joiningAmount',
+    'scope',
+    'totalDeposit',
+    'currentDeposit',
+    'revenue',
+    'root',
+    'rootIndex',
+    'treeDepth',
+    'treeSize',
+    'deployedBlock',
+    'deployedTimestamp',
+    'lastBlock',
+    'lastTimestamp',
   ],
-  pool: [
-    "poolId",
-    "chainId",
-    "joiningFee",
-    "totalDeposits",
-    "memberCount",
-    "currentMerkleRoot",
-    "createdAtBlock",
-    "createdAtTimestamp",
-    "lastUpdatedBlock",
-    "lastUpdatedTimestamp",
+  activity: [
+    'chainId',
+    'block',
+    'timestamp',
+    // Optional BigInt fields (based on activity type)
+    'commitment',
+    'memberIndex',
+    'newRoot',
+    'actualGasCost',
+    'amount',
   ],
-  poolMember: [
-    "chainId",
-    "memberIndex",
-    "identityCommitment",
-    "merkleRootWhenAdded",
-    "addedAtBlock",
-    "addedAtTimestamp",
-    "gasUsed",
-    "nullifier",
-  ],
-  merkleRoot: ["chainId", "root", "createdAtBlock", "createdAtTimestamp"],
-  transaction: [
-    "chainId",
-    "actualGasCost",
-    "nullifier",
-    "executedAtBlock",
-    "executedAtTimestamp",
-    "gasPrice",
-    "totalGasUsed",
-  ],
-  revenueWithdrawal: [
-    "chainId",
-    "amount",
-    "withdrawnAtBlock",
-    "withdrawnAtTimestamp",
-  ],
-  nullifierUsage: [
-    "nullifier",
-    "chainId",
-    "gasUsed",
-    "firstUsedAtBlock",
-    "firstUsedAtTimestamp",
-  ],
-  networkInfo: [
-    "chainId",
-    "totalPaymasters",
-    "totalPools",
-    "totalMembers",
-    "totalSponsoredTransactions",
-    "totalGasSpent",
-    "totalRevenue",
-    "firstDeploymentBlock",
-    "firstDeploymentTimestamp",
-    "lastActivityBlock",
-    "lastActivityTimestamp",
-  ],
+  userOperation: ['chainId', 'actualGasCost', 'nullifier', 'block', 'timestamp'],
 };
 
 /**
  * ========================================
- * SERIALIZATION FUNCTIONS
+ * SERIALIZATION FUNCTIONS (Updated)
  * ========================================
  */
 
-export function serializePaymasterContract(
-  entity: PaymasterContract,
-): SerializedPaymasterContract {
+export function serializePaymasterContract(entity: PaymasterContract): SerializedPaymasterContract {
   return convertBigIntsToStrings(entity);
 }
 
-export function serializePool(entity: Pool): SerializedPool {
+export function serializeActivity(entity: Activity): SerializedActivity {
   return convertBigIntsToStrings(entity);
 }
 
-export function serializePoolMember(entity: PoolMember): SerializedPoolMember {
-  return convertBigIntsToStrings(entity);
-}
-
-export function serializeTransaction(
-  entity: Transaction,
-): SerializedTransaction {
-  return convertBigIntsToStrings(entity);
-}
-
-export function serializeNetworkInfo(
-  entity: NetworkInfo,
-): SerializedNetworkInfo {
+export function serializeUserOperation(entity: UserOperation): SerializedUserOperation {
   return convertBigIntsToStrings(entity);
 }
 
 /**
  * ========================================
- * DESERIALIZATION FUNCTIONS
+ * DESERIALIZATION FUNCTIONS (Updated)
  * ========================================
  */
 
-export function deserializePaymasterContract(
-  entity: SerializedPaymasterContract,
-): PaymasterContract {
+export function deserializePaymasterContract(entity: SerializedPaymasterContract): PaymasterContract {
   return convertStringsToBigInts(entity, BIGINT_FIELDS.paymasterContract);
 }
 
-export function deserializePool(entity: SerializedPool): Pool {
-  return convertStringsToBigInts(entity, BIGINT_FIELDS.pool);
+export function deserializeActivity(entity: SerializedActivity): Activity {
+  return convertStringsToBigInts(entity, BIGINT_FIELDS.activity);
 }
 
-export function deserializePoolMember(
-  entity: SerializedPoolMember,
-): PoolMember {
-  return convertStringsToBigInts(entity, BIGINT_FIELDS.poolMember);
-}
-
-export function deserializeTransaction(
-  entity: SerializedTransaction,
-): Transaction {
-  return convertStringsToBigInts(entity, BIGINT_FIELDS.transaction);
-}
-
-export function deserializeNetworkInfo(
-  entity: SerializedNetworkInfo,
-): NetworkInfo {
-  return convertStringsToBigInts(entity, BIGINT_FIELDS.networkInfo);
+export function deserializeUserOperation(entity: SerializedUserOperation): UserOperation {
+  return convertStringsToBigInts(entity, BIGINT_FIELDS.userOperation);
 }
 
 /**
  * ========================================
- * EXPORT CONVENIENCE FUNCTIONS
+ * CONVENIENCE EXPORTS (Updated)
  * ========================================
  */
 
@@ -279,10 +204,8 @@ export function deserializeNetworkInfo(
  */
 export const serializers = {
   paymasterContract: serializePaymasterContract,
-  pool: serializePool,
-  poolMember: serializePoolMember,
-  transaction: serializeTransaction,
-  networkInfo: serializeNetworkInfo,
+  activity: serializeActivity,
+  userOperation: serializeUserOperation,
 };
 
 /**
@@ -290,8 +213,86 @@ export const serializers = {
  */
 export const deserializers = {
   paymasterContract: deserializePaymasterContract,
-  pool: deserializePool,
-  poolMember: deserializePoolMember,
-  transaction: deserializeTransaction,
-  networkInfo: deserializeNetworkInfo,
+  activity: deserializeActivity,
+  userOperation: deserializeUserOperation,
 };
+
+/**
+ * ========================================
+ * ACTIVITY-SPECIFIC HELPERS
+ * ========================================
+ */
+
+/**
+ * Serialize activities with type-specific field handling
+ *
+ * @param activities - Array of activities to serialize
+ * @returns Serialized activities with proper BigInt conversion
+ */
+export function serializeActivities(activities: Activity[]): SerializedActivity[] {
+  return activities.map(serializeActivity);
+}
+
+/**
+ * Deserialize activities with type-specific field handling
+ *
+ * @param activities - Array of serialized activities
+ * @returns Activities with BigInt fields restored
+ */
+export function deserializeActivities(activities: SerializedActivity[]): Activity[] {
+  return activities.map(deserializeActivity);
+}
+
+/**
+ * ========================================
+ * ANALYTICS HELPERS
+ * ========================================
+ */
+
+/**
+ * Calculate analytics from activity data (no BigInt conversion needed)
+ *
+ * @param activities - Activities to analyze
+ * @returns Analytics summary with proper BigInt types
+ */
+export function calculatePaymasterAnalytics(activities: Activity[]): {
+  totalDeposits: bigint;
+  totalUserOperations: bigint;
+  totalGasSponsored: bigint;
+  totalRevenueWithdrawn: bigint;
+  averageGasPerOperation: bigint;
+} {
+  let totalDeposits = 0n;
+  let totalUserOperations = 0n;
+  let totalGasSponsored = 0n;
+  let totalRevenueWithdrawn = 0n;
+
+  for (const activity of activities) {
+    switch (activity.type) {
+      case 'DEPOSIT':
+        totalDeposits++;
+        break;
+      case 'USER_OP_SPONSORED':
+        totalUserOperations++;
+        if (activity.actualGasCost) {
+          totalGasSponsored += activity.actualGasCost;
+        }
+        break;
+      case 'REVENUE_WITHDRAWN':
+        if (activity.amount) {
+          totalRevenueWithdrawn += activity.amount;
+        }
+        break;
+    }
+  }
+
+  const averageGasPerOperation = totalUserOperations > 0n ? totalGasSponsored / totalUserOperations : 0n;
+
+  return {
+    totalDeposits,
+    totalUserOperations,
+    totalGasSponsored,
+    totalRevenueWithdrawn,
+    averageGasPerOperation,
+  };
+}

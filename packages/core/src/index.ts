@@ -16,13 +16,7 @@ export { PrepaidGasPaymaster } from './client/PrepaidGasPaymaster';
 export type { PaymasterOptions, GetPaymasterStubDataV7Parameters } from './client';
 
 // Utility exports
-export {
-  encodePaymasterContext,
-  parsePaymasterContext,
-  PrepaidGasPaymasterMode,
-  validatePoolId,
-  validateMerkleRootIndex,
-} from './utils';
+export { encodePaymasterContext, parsePaymasterContext, PrepaidGasPaymasterMode } from './utils';
 export type { ParsedPaymasterContext } from './utils';
 
 // Version

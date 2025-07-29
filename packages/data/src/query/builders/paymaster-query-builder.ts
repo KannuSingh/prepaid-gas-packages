@@ -1,23 +1,20 @@
 /**
- * Query builder for PaymasterContract entities
- * Updated for the new network-aware schema structure
+ * Query builder for PaymasterContract entities (Updated)
+ * For the new single-pool-per-contract architecture
  */
 
 import type { SubgraphClient } from '../../client/subgraph-client.js';
-import type { PaymasterContract, PaymasterType, SerializedPaymasterContract } from '../../types/subgraph.js';
-import { GET_PAYMASTER_WITH_RELATED } from '../../client/queries.js';
+import type { PaymasterContract, SerializedPaymasterContract } from '../../types/subgraph.js';
 import { BaseQueryBuilder } from './base-query-builder.js';
-import { PaymasterContractFields, PaymasterContractWhereInput } from '../types.js';
+import { PaymasterContractFields, PaymasterContractWhereInput, PaymasterContractOrderBy } from '../types.js';
 import { serializePaymasterContract } from '../../transformers/index.js';
-import { NetworkName } from '@prepaid-gas/constants';
-
-export type PaymasterContractOrderBy = 'deployedAtTimestamp' | 'revenue' | 'currentDeposit' | 'lastUpdatedTimestamp';
+import { PaymasterType } from '@prepaid-gas/constants';
 
 /**
  * Query builder for PaymasterContract entities
  *
  * Provides a fluent interface for building complex paymaster queries
- * with full support for the new network-aware schema.
+ * Updated for the new single-pool-per-contract schema.
  */
 export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
   PaymasterContract,
@@ -27,7 +24,7 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
   PaymasterContractOrderBy
 > {
   constructor(private subgraphClient: SubgraphClient) {
-    super(subgraphClient, 'paymasterContracts', 'deployedAtTimestamp', 'desc');
+    super(subgraphClient, 'paymasterContracts', 'deployedTimestamp', 'desc');
   }
 
   protected buildDynamicQuery(): string {
@@ -112,17 +109,35 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
         case 'revenue_gt':
           declarations.push('$revenue_gt: String');
           break;
+        case 'totalDeposit_gte':
+          declarations.push('$totalDeposit_gte: String');
+          break;
+        case 'totalDeposit_lte':
+          declarations.push('$totalDeposit_lte: String');
+          break;
         case 'currentDeposit_gte':
           declarations.push('$currentDeposit_gte: String');
           break;
         case 'currentDeposit_lte':
           declarations.push('$currentDeposit_lte: String');
           break;
-        case 'deployedAtTimestamp_gte':
-          declarations.push('$deployedAtTimestamp_gte: String');
+        case 'treeSize_gte':
+          declarations.push('$treeSize_gte: String');
           break;
-        case 'deployedAtTimestamp_lte':
-          declarations.push('$deployedAtTimestamp_lte: String');
+        case 'treeSize_lte':
+          declarations.push('$treeSize_lte: String');
+          break;
+        case 'treeSize_gt':
+          declarations.push('$treeSize_gt: String');
+          break;
+        case 'deployedTimestamp_gte':
+          declarations.push('$deployedTimestamp_gte: String');
+          break;
+        case 'deployedTimestamp_lte':
+          declarations.push('$deployedTimestamp_lte: String');
+          break;
+        case 'isDead':
+          declarations.push('$isDead: Boolean');
           break;
       }
     }
@@ -132,28 +147,22 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
     for (const [key, value] of Object.entries(where)) {
       switch (key) {
         case 'network':
-          variables.network = value;
-          break;
         case 'contractType':
-          variables.contractType = value;
-          break;
         case 'address':
-          variables.address = value;
-          break;
         case 'id':
-          variables.id = value;
-          break;
         case 'revenue_gte':
         case 'revenue_lte':
         case 'revenue_gt':
-          variables[key] = value;
-          break;
+        case 'totalDeposit_gte':
+        case 'totalDeposit_lte':
         case 'currentDeposit_gte':
         case 'currentDeposit_lte':
-          variables[key] = value;
-          break;
-        case 'deployedAtTimestamp_gte':
-        case 'deployedAtTimestamp_lte':
+        case 'treeSize_gte':
+        case 'treeSize_lte':
+        case 'treeSize_gt':
+        case 'deployedTimestamp_gte':
+        case 'deployedTimestamp_lte':
+        case 'isDead':
           variables[key] = value;
           break;
       }
@@ -164,41 +173,7 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
     const conditions: string[] = [];
 
     for (const [key] of Object.entries(where)) {
-      switch (key) {
-        case 'network':
-          conditions.push('network: $network');
-          break;
-        case 'contractType':
-          conditions.push('contractType: $contractType');
-          break;
-        case 'address':
-          conditions.push('address: $address');
-          break;
-        case 'id':
-          conditions.push('id: $id');
-          break;
-        case 'revenue_gte':
-          conditions.push('revenue_gte: $revenue_gte');
-          break;
-        case 'revenue_lte':
-          conditions.push('revenue_lte: $revenue_lte');
-          break;
-        case 'revenue_gt':
-          conditions.push('revenue_gt: $revenue_gt');
-          break;
-        case 'currentDeposit_gte':
-          conditions.push('currentDeposit_gte: $currentDeposit_gte');
-          break;
-        case 'currentDeposit_lte':
-          conditions.push('currentDeposit_lte: $currentDeposit_lte');
-          break;
-        case 'deployedAtTimestamp_gte':
-          conditions.push('deployedAtTimestamp_gte: $deployedAtTimestamp_gte');
-          break;
-        case 'deployedAtTimestamp_lte':
-          conditions.push('deployedAtTimestamp_lte: $deployedAtTimestamp_lte');
-          break;
-      }
+      conditions.push(`${key}: $${key}`);
     }
 
     return conditions;
@@ -214,14 +189,55 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
     address
     network
     chainId
-    totalUsersDeposit
+    joiningAmount
+    scope
+    verifier
+    totalDeposit
     currentDeposit
     revenue
-    deployedAtBlock
-    deployedAtTransaction
-    deployedAtTimestamp
-    lastUpdatedBlock
-    lastUpdatedTimestamp
+    root
+    rootIndex
+    treeDepth
+    treeSize
+    isDead
+    deployedBlock
+    deployedTransaction
+    deployedTimestamp
+    lastBlock
+    lastTimestamp
+  `;
+  }
+
+  /**
+   * Get fields with activities included
+   */
+  private getFieldsWithActivities(): string {
+    return `
+    ${this.getDefaultFields()}
+    activities(orderBy:timestamp, orderDirection:desc) {
+      id
+      type
+      network
+      chainId
+      block
+      transaction
+      timestamp
+      
+      # Deposit-specific fields
+      depositor
+      commitment
+      memberIndex
+      newRoot
+      
+      # UserOp-specific fields
+      sender
+      userOpHash
+      actualGasCost
+      
+      # Revenue-specific fields
+      withdrawAddress
+      amount
+    }
   `;
   }
 
@@ -233,54 +249,22 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
 
   /**
    * Filter by network
-   *
-   * @param network - Network identifier
-   * @returns PaymasterContractQueryBuilder for method chaining
-   *
-   * @example
-   * ```typescript
-   * const paymasters = await client.query().paymasters()
-   *   .byNetwork("base-sepolia")
-   *   .execute();
-   * ```
    */
-  byNetwork(network: NetworkName): this {
+  byNetwork(network: string): this {
     this.where({ network: network });
     return this;
   }
 
   /**
    * Filter by contract type
-   *
-   * @param type - Paymaster contract type
-   * @returns PaymasterContractQueryBuilder for method chaining
-   *
-   * @example
-   * ```typescript
-   * const gasLimitedPaymasters = await client.query().paymasters()
-   *   .byNetwork("base-sepolia")
-   *   .byType("GasLimited")
-   *   .execute();
-   * ```
    */
-  byType(type: PaymasterType): this {
+  byContractType(type: PaymasterType): this {
     this.where({ contractType: type });
     return this;
   }
 
   /**
    * Filter by contract address
-   *
-   * @param address - Contract address
-   * @returns PaymasterContractQueryBuilder for method chaining
-   *
-   * @example
-   * ```typescript
-   * const paymaster = await client.query().paymasters()
-   *   .byNetwork("base-sepolia")
-   *   .byAddress("0x3BEeC075aC5A77fFE0F9ee4bbb3DCBd07fA93fbf")
-   *   .first();
-   * ```
    */
   byAddress(address: string): this {
     this.where({ address: address });
@@ -289,131 +273,56 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
 
   /**
    * Filter by composite ID (network-address)
-   * This is for direct lookup of a single paymaster.
-   *
-   * @param network - Network identifier
-   * @param address - Paymaster contract address
-   * @returns PaymasterContractQueryBuilder for method chaining
-   *
-   * @example
-   * ```typescript
-   * const paymaster = await client.query().paymasters()
-   *   .byId("base-sepolia", "0x3BEeC075aC5A77fFE0F9ee4bbb3DCBd07fA93fbf")
-   *   .first();
-   * ```
    */
-  byId(network: NetworkName, address: string): this {
+  byId(network: string, address: string): this {
     this.where({ id: `${network}-${address}` });
-    this.byNetwork(network);
-    this.byAddress(address);
-    return this;
-  }
-
-  /**
-   * Filter by minimum revenue
-   *
-   * @param minRevenue - Minimum revenue in wei (as string)
-   * @returns PaymasterContractQueryBuilder for method chaining
-   *
-   * @example
-   * ```typescript
-   * const profitablePaymasters = await client.query().paymasters()
-   *   .byNetwork("base-sepolia")
-   *   .withMinRevenue("1000000000000000000") // 1 ETH
-   *   .execute();
-   * ```
-   */
-  withMinRevenue(minRevenue: string): this {
-    this.where({ revenue_gte: minRevenue });
-    return this;
-  }
-
-  /**
-   * Filter by maximum revenue
-   *
-   * @param maxRevenue - Maximum revenue in wei (as string)
-   * @returns PaymasterContractQueryBuilder for method chaining
-   */
-  withMaxRevenue(maxRevenue: string): this {
-    this.where({ revenue_lte: maxRevenue });
-    return this;
-  }
-
-  /**
-   * Filter by minimum deposit
-   *
-   * @param minDeposit - Minimum current deposit in wei (as string)
-   * @returns PaymasterContractQueryBuilder for method chaining
-   *
-   * @example
-   * ```typescript
-   * const wellFundedPaymasters = await client.query().paymasters()
-   *   .byNetwork("base-sepolia")
-   *   .withMinDeposit("5000000000000000000") // 5 ETH
-   *   .execute();
-   * ```
-   */
-  withMinDeposit(minDeposit: string): this {
-    this.where({ currentDeposit_gte: minDeposit });
-    return this;
-  }
-
-  /**
-   * Filter by maximum deposit
-   *
-   * @param maxDeposit - Maximum current deposit in wei (as string)
-   * @returns PaymasterContractQueryBuilder for method chaining
-   */
-  withMaxDeposit(maxDeposit: string): this {
-    this.where({ currentDeposit_lte: maxDeposit });
     return this;
   }
 
   /**
    * Filter by deployment date (after)
-   *
-   * @param timestamp - Timestamp string or number
-   * @returns PaymasterContractQueryBuilder for method chaining
-   *
-   * @example
-   * ```typescript
-   * const recentPaymasters = await client.query().paymasters()
-   *   .byNetwork("base-sepolia")
-   *   .deployedAfter("1704067200") // 2024-01-01
-   *   .execute();
-   * ```
    */
   deployedAfter(timestamp: string | number): this {
-    this.where({ deployedAtTimestamp_gte: timestamp.toString() });
+    this.where({ deployedTimestamp_gte: timestamp.toString() });
     return this;
   }
 
   /**
    * Filter by deployment date (before)
-   *
-   * @param timestamp - Timestamp string or number
-   * @returns PaymasterContractQueryBuilder for method chaining
    */
   deployedBefore(timestamp: string | number): this {
-    this.where({ deployedAtTimestamp_lte: timestamp.toString() });
+    this.where({ deployedTimestamp_lte: timestamp.toString() });
     return this;
   }
 
   /**
    * Filter only active paymasters (positive revenue)
-   *
-   * @returns PaymasterContractQueryBuilder for method chaining
-   *
-   * @example
-   * ```typescript
-   * const activePaymasters = await client.query().paymasters()
-   *   .byNetwork("base-sepolia")
-   *   .onlyActive()
-   *   .execute();
-   * ```
    */
   onlyActive(): this {
     this.where({ revenue_gt: '0' });
+    return this;
+  }
+
+  /**
+   * Filter only alive paymasters (not dead)
+   */
+  onlyAlive(): this {
+    this.where({ isDead: false });
+    return this;
+  }
+
+  /**
+   * Include activities in the query results
+   * This replaces the need to manually select activities fields
+   */
+  withActivities(): this {
+    // Set the fields to include activities
+    const fieldsArray = this.getFieldsWithActivities()
+      .split('\n')
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    this.select(fieldsArray as PaymasterContractFields[]);
     return this;
   }
 
@@ -425,17 +334,6 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
 
   /**
    * Order by revenue (highest first)
-   *
-   * @returns PaymasterContractQueryBuilder for method chaining
-   *
-   * @example
-   * ```typescript
-   * const topPaymasters = await client.query().paymasters()
-   *   .byNetwork("base-sepolia")
-   *   .orderByRevenue()
-   *   .limit(10)
-   *   .execute();
-   * ```
    */
   orderByRevenue(direction: 'asc' | 'desc' = 'desc'): this {
     this.orderBy('revenue', direction);
@@ -443,9 +341,15 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
   }
 
   /**
+   * Order by total deposit
+   */
+  orderByTotalDeposit(direction: 'asc' | 'desc' = 'desc'): this {
+    this.orderBy('totalDeposit', direction);
+    return this;
+  }
+
+  /**
    * Order by current deposit
-   *
-   * @returns PaymasterContractQueryBuilder for method chaining
    */
   orderByDeposit(direction: 'asc' | 'desc' = 'desc'): this {
     this.orderBy('currentDeposit', direction);
@@ -453,72 +357,26 @@ export class PaymasterContractQueryBuilder extends BaseQueryBuilder<
   }
 
   /**
+   * Order by number of members (tree size)
+   */
+  orderByMembers(direction: 'asc' | 'desc' = 'desc'): this {
+    this.orderBy('treeSize', direction);
+    return this;
+  }
+
+  /**
    * Order by deployment date
-   *
-   * @returns PaymasterContractQueryBuilder for method chaining
    */
   orderByDeployment(direction: 'asc' | 'desc' = 'desc'): this {
-    this.orderBy('deployedAtTimestamp', direction);
+    this.orderBy('deployedTimestamp', direction);
     return this;
   }
 
   /**
    * Order by last activity
-   *
-   * @returns PaymasterContractQueryBuilder for method chaining
    */
   orderByActivity(direction: 'asc' | 'desc' = 'desc'): this {
-    this.orderBy('lastUpdatedTimestamp', direction);
+    this.orderBy('lastTimestamp', direction);
     return this;
-  }
-
-  /**
-   * ========================================
-   * SPECIAL QUERIES
-   * ========================================
-   */
-
-  /**
-   * Get paymaster with related data (pools, transactions, withdrawals)
-   *
-   * @param poolsLimit - Maximum number of pools to fetch
-   * @param transactionsLimit - Maximum number of transactions to fetch
-   * @param withdrawalsLimit - Maximum number of withdrawals to fetch
-   * @returns Promise resolving to paymaster with related data
-   */
-  async withRelated(
-    poolsLimit: number = 10,
-    transactionsLimit: number = 10,
-    withdrawalsLimit: number = 10
-  ): Promise<
-    | (PaymasterContract & {
-        pools: any[];
-        transactions: any[];
-        revenueWithdrawals: any[];
-      })
-    | null
-  > {
-    if (!this.config.where?.address || !this.config.where?.network) {
-      throw new Error('Address and network are required for withRelated query');
-    }
-
-    const network = this.config.where.network;
-    const address = this.config.where.address;
-    const id = `${network}-${address}`;
-
-    const result = await this.client.executeQuery<{
-      paymasterContract: PaymasterContract & {
-        pools: any[];
-        transactions: any[];
-        revenueWithdrawals: any[];
-      };
-    }>(GET_PAYMASTER_WITH_RELATED, {
-      id,
-      poolsFirst: poolsLimit,
-      transactionsFirst: transactionsLimit,
-      withdrawalsFirst: withdrawalsLimit,
-    });
-
-    return result.paymasterContract || null;
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@prepaid-gas/data",
-  "version": "0.0.1",
+  "version": "0.0.5",
   "description": "Data layer for Prepaid Gas with fluent query builders",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -34,6 +34,11 @@
     "ethereum",
     "query-builder"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KannuSingh/prepaid-gas-packages.git",
+    "directory": "packages/data"
+  },
   "license": "MIT",
   "dependencies": {
     "@prepaid-gas/constants": "workspace:*",

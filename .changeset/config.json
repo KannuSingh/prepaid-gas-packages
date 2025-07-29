@@ -7,8 +7,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": [
-    "@prepaid-gas/eslint-config",
-    "@prepaid-gas/typescript-config"
-  ]
+  "ignore": []
 }

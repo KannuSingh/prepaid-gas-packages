@@ -1,13 +1,25 @@
 /**
- * TypeScript type definitions for the prepaid gas paymaster subgraph
- * Updated to match the new network-aware schema structure
+ * TypeScript type definitions for the paymaster subgraph (Updated)
+ * Based on the new single-pool-per-contract architecture
  *
- * These types exactly match the GraphQL schema entities and support:
- * - Multi-network/multi-chain deployments
- * - Enhanced nullifier usage tracking
- * - Comprehensive analytics and revenue tracking
- * - Network-aware entity relationships
+ * These types exactly match the new GraphQL schema entities:
+ * - PaymasterContract (each contract IS a pool)
+ * - Activity (unified timeline of all events)
+ * - UserOperation (detailed operation tracking)
  */
+
+import { PaymasterType } from '@prepaid-gas/constants';
+
+/**
+ * ========================================
+ * ENUMS
+ * ========================================
+ */
+
+/**
+ * Activity types for the unified timeline
+ */
+export type ActivityType = 'DEPOSIT' | 'USER_OP_SPONSORED' | 'REVENUE_WITHDRAWN';
 
 /**
  * ========================================
@@ -16,191 +28,115 @@
  */
 
 /**
- * Paymaster contract types
- */
-export type PaymasterType = 'GasLimited' | 'OneTimeUse';
-
-/**
  * PaymasterContract entity
- * Represents a deployed paymaster contract on a specific network
+ * Each contract IS a pool (no separate Pool entity)
  */
 export interface PaymasterContract {
-  /** Contract address as ID (network-prefixed) */
+  /** Unique identifier: network-contractAddress */
   id: string;
-  /** Contract type: "GasLimited" or "OneTimeUse" */
+  /** Contract type: "OneTimeUse", "GasLimited", "CacheEnabledGasLimited" */
   contractType: PaymasterType;
   /** Contract address */
   address: string;
-  /** Network/Chain identifier (e.g., "base-sepolia") */
+  /** Network identifier (e.g., "base-sepolia") */
   network: string;
   /** Chain ID (e.g., 84532 for Base Sepolia) */
   chainId: bigint;
-  /** Total user deposits tracked by this paymaster */
-  totalUsersDeposit: bigint;
-  /** Current deposit in EntryPoint */
-  currentDeposit: bigint;
-  /** Calculated revenue (currentDeposit - totalUsersDeposit) */
-  revenue: bigint;
-  /** Block when contract was deployed */
-  deployedAtBlock: bigint;
-  /** Transaction hash of deployment */
-  deployedAtTransaction: string;
-  /** Timestamp of deployment */
-  deployedAtTimestamp: bigint;
-  /** Pools managed by this paymaster */
-  pools: Pool[];
-  /** Transactions  by this paymaster */
-  Transactions: Transaction[];
-  /** Last updated block */
-  lastUpdatedBlock: bigint;
-  /** Last updated timestamp */
-  lastUpdatedTimestamp: bigint;
+
+  /** Pool configuration (since each contract IS a pool) */
+  joiningAmount: bigint; // JOINING_AMOUNT from contract
+  scope: bigint; // SCOPE constant from contract
+  verifier: string; // MEMBERSHIP_VERIFIER address
+
+  /** Financial tracking */
+  totalDeposit: bigint; // Total deposits from users
+  currentDeposit: bigint; // Current deposit in EntryPoint
+  revenue: bigint; // Calculated revenue
+
+  /** Merkle tree state */
+  root: bigint; // Current merkle tree root
+  rootIndex: bigint; // Current root index in history
+  treeDepth: bigint; // Current tree depth
+  treeSize: bigint; // Number of members (tree size)
+
+  /** Pool status */
+  isDead: boolean; // Whether the pool is dead
+
+  /** Deployment info */
+  deployedBlock: bigint;
+  deployedTransaction: string;
+  deployedTimestamp: bigint;
+
+  /** Activity tracking */
+  lastBlock: bigint;
+  lastTimestamp: bigint;
+
+  /** Relationships */
+  activities: Activity[]; // Complete timeline of all events
 }
 
 /**
- * Pool entity
- * Represents a gas payment pool managed by a paymaster
+ * Activity entity
+ * Unified timeline of all significant events
  */
-export interface Pool {
-  /** Pool ID as string (network-prefixed) */
+export interface Activity {
+  /** Unique identifier: network-contractAddress-txHash-logIndex */
   id: string;
-  /** Numeric pool ID */
-  poolId: bigint;
-  /** Paymaster contract that manages this pool */
+  /** Activity type */
+  type: ActivityType;
+  /** Paymaster contract this activity belongs to */
   paymaster: PaymasterContract;
-  /** Network/Chain identifier */
+  /** Network identifier */
   network: string;
   /** Chain ID */
   chainId: bigint;
-  /** Fee required to join this pool */
-  joiningFee: bigint;
-  /** Total deposits in this pool */
-  totalDeposits: bigint;
-  /** Current number of members */
-  memberCount: bigint;
-  /** Current Merkle tree root */
-  currentMerkleRoot: bigint;
-  /** Current root index in history */
-  currentRootIndex: number;
-  /** Total number of roots in history */
-  rootHistoryCount: number;
-  /** Block when pool was created */
-  createdAtBlock: bigint;
-  /** Transaction hash of creation */
-  createdAtTransaction: string;
-  /** Timestamp of creation */
-  createdAtTimestamp: bigint;
-  /** Pool members */
-  members: PoolMember[];
-  /**  transactions from this pool */
-  transactions: Transaction[];
-  /** Last updated block */
-  lastUpdatedBlock: bigint;
-  /** Last updated timestamp */
-  lastUpdatedTimestamp: bigint;
+
+  /** Common event data */
+  block: bigint;
+  transaction: string;
+  timestamp: bigint;
+
+  /** Deposit-specific fields (when type = DEPOSIT) */
+  depositor?: string; // from Deposited._depositor
+  commitment?: bigint; // from Deposited._commitment
+  memberIndex?: bigint; // from LeafInserted._index
+  newRoot?: bigint; // from LeafInserted._root
+
+  /** UserOperation-specific fields (when type = USER_OP_SPONSORED) */
+  sender?: string; // from UserOpSponsored.sender
+  userOpHash?: string; // from UserOpSponsored.userOpHash
+  actualGasCost?: bigint; // from UserOpSponsored.actualGasCost
+
+  /** RevenueWithdrawal-specific fields (when type = REVENUE_WITHDRAWN) */
+  withdrawAddress?: string; // from RevenueWithdrawn.withdrawAddress
+  amount?: bigint; // from RevenueWithdrawn.amount
 }
 
 /**
- * PoolMember entity
- * Represents a member of a gas payment pool
+ * UserOperation entity
+ * Detailed user operation tracking for specialized analytics
  */
-export interface PoolMember {
-  /** Pool ID + Member Index as ID (network-prefixed) */
-  id: string;
-  /** Pool this member belongs to */
-  pool: Pool;
-  /** Network/Chain identifier */
-  network: string;
-  /** Chain ID */
-  chainId: bigint;
-  /** Member index in the pool */
-  memberIndex: bigint;
-  /** Identity commitment */
-  identityCommitment: bigint;
-  /** Merkle root when member was added */
-  merkleRootWhenAdded: bigint;
-  /** Root index when member was added */
-  rootIndexWhenAdded: number;
-  /** Block when member was added */
-  addedAtBlock: bigint;
-  /** Transaction hash of addition */
-  addedAtTransaction: string;
-  /** Timestamp of addition */
-  addedAtTimestamp: bigint;
-  /** For GasLimited: track gas usage (if applicable) */
-  gasUsed?: bigint;
-  /** For OneTimeUse: track if nullifier was used */
-  nullifierUsed?: boolean;
-  /** Nullifier value (if known) */
-  nullifier?: bigint;
-}
-
-/**
- * Transaction entity
- * Represents a  user operation
- */
-export interface Transaction {
-  /** User operation hash as ID (network-prefixed) */
+export interface UserOperation {
+  /** Unique identifier: network-contractAddress-userOpHash */
   id: string;
   /** User operation hash */
-  userOpHash: string;
-  /** Paymaster that  this operation */
+  hash: string;
+  /** Paymaster that sponsored this operation */
   paymaster: PaymasterContract;
-  /** Pool used for this operation */
-  pool: Pool;
-  /** Network/Chain identifier */
+  /** Network identifier */
   network: string;
   /** Chain ID */
   chainId: bigint;
-  /** Sender of the user operation */
-  sender: string;
-  /** Actual gas cost for this operation */
-  actualGasCost: bigint;
-  /** Nullifier used (for tracking) */
-  nullifier: bigint;
-  /** Block when operation was executed */
-  executedAtBlock: bigint;
-  /** Transaction hash of execution */
-  executedAtTransaction: string;
-  /** Timestamp of execution */
-  executedAtTimestamp: bigint;
-  /** Gas price used */
-  gasPrice?: bigint;
-  /** Total gas used (including postOp) */
-  totalGasUsed?: bigint;
-}
 
-/**
- * NetworkInfo entity
- * Network/Chain information and statistics
- */
-export interface NetworkInfo {
-  /** Network identifier as ID */
-  id: string;
-  /** Network name (e.g., "Base Sepolia") */
-  name: string;
-  /** Chain ID */
-  chainId: bigint;
-  /** Total paymasters deployed on this network */
-  totalPaymasters: bigint;
-  /** Total pools across all paymasters */
-  totalPools: bigint;
-  /** Total members across all pools */
-  totalMembers: bigint;
-  /** Total  transactions */
-  totalTransactions: bigint;
-  /** Total gas spent */
-  totalGasSpent: bigint;
-  /** Total revenue generated */
-  totalRevenue: bigint;
-  /** First deployment block */
-  firstDeploymentBlock: bigint;
-  /** First deployment timestamp */
-  firstDeploymentTimestamp: bigint;
-  /** Last activity block */
-  lastActivityBlock: bigint;
-  /** Last activity timestamp */
-  lastActivityTimestamp: bigint;
+  /** Operation details */
+  sender: string; // Sender address
+  actualGasCost: bigint; // Gas cost
+  nullifier: bigint; // Nullifier used (for future analytics)
+
+  /** Execution info */
+  block: bigint;
+  transaction: string;
+  timestamp: bigint;
 }
 
 /**
@@ -218,107 +154,294 @@ export interface SerializedPaymasterContract {
   address: string;
   network: string;
   chainId: string;
-  totalUsersDeposit: string;
+  joiningAmount: string;
+  scope: string;
+  verifier: string;
+  totalDeposit: string;
   currentDeposit: string;
   revenue: string;
-  deployedAtBlock: string;
-  deployedAtTransaction: string;
-  deployedAtTimestamp: string;
-  pools: SerializedPool[];
-  transactions: SerializedTransaction[];
-  lastUpdatedBlock: string;
-  lastUpdatedTimestamp: string;
+  root: string;
+  rootIndex: string;
+  treeDepth: string;
+  treeSize: string;
+  isDead: boolean;
+  deployedBlock: string;
+  deployedTransaction: string;
+  deployedTimestamp: string;
+  lastBlock: string;
+  lastTimestamp: string;
+  activities: SerializedActivity[];
 }
 
 /**
- * Serialized Pool (BigInt -> string)
+ * Serialized Activity (BigInt -> string)
  */
-export interface SerializedPool {
+export interface SerializedActivity {
   id: string;
-  poolId: string;
+  type: ActivityType;
   paymaster: SerializedPaymasterContract;
   network: string;
   chainId: string;
-  joiningFee: string;
-  totalDeposits: string;
-  memberCount: string;
-  currentMerkleRoot: string;
-  currentRootIndex: number;
-  rootHistoryCount: number;
-  createdAtBlock: string;
-  createdAtTransaction: string;
-  createdAtTimestamp: string;
-  members: SerializedPoolMember[];
-  transactions: SerializedTransaction[];
-  lastUpdatedBlock: string;
-  lastUpdatedTimestamp: string;
+  block: string;
+  transaction: string;
+  timestamp: string;
+  // Optional fields based on activity type
+  depositor?: string;
+  commitment?: string;
+  memberIndex?: string;
+  newRoot?: string;
+  sender?: string;
+  userOpHash?: string;
+  actualGasCost?: string;
+  withdrawAddress?: string;
+  amount?: string;
 }
 
 /**
- * Serialized PoolMember (BigInt -> string)
+ * Serialized UserOperation (BigInt -> string)
  */
-export interface SerializedPoolMember {
+export interface SerializedUserOperation {
   id: string;
-  pool: SerializedPool;
-  network: string;
-  chainId: string;
-  memberIndex: string;
-  identityCommitment: string;
-  merkleRootWhenAdded: string;
-  rootIndexWhenAdded: number;
-  addedAtBlock: string;
-  addedAtTransaction: string;
-  addedAtTimestamp: string;
-  gasUsed?: string;
-  nullifierUsed?: boolean;
-  nullifier?: string;
-}
-
-/**
- * Serialized Transaction (BigInt -> string)
- */
-export interface SerializedTransaction {
-  id: string;
-  userOpHash: string;
+  hash: string;
   paymaster: SerializedPaymasterContract;
-  pool: SerializedPool;
   network: string;
   chainId: string;
   sender: string;
   actualGasCost: string;
   nullifier: string;
-  executedAtBlock: string;
-  executedAtTransaction: string;
-  executedAtTimestamp: string;
-  gasPrice?: string;
-  totalGasUsed?: string;
+  block: string;
+  transaction: string;
+  timestamp: string;
 }
 
 /**
- * Serialized NetworkInfo (BigInt -> string)
+ * ========================================
+ * UTILITY TYPES
+ * ========================================
  */
-export interface SerializedNetworkInfo {
-  id: string;
-  name: string;
+
+/**
+ * Entity types for type guards
+ */
+export type EntityType = 'PaymasterContract' | 'Activity' | 'UserOperation';
+
+/**
+ * Query filter types for common use cases
+ */
+export interface PaymasterFilters {
+  network?: string;
+  contractType?: PaymasterType;
+  isDead?: boolean;
+  minTotalDeposit?: bigint;
+}
+
+export interface ActivityFilters {
+  network?: string;
+  type?: ActivityType;
+  paymaster?: string;
+  minTimestamp?: bigint;
+  maxTimestamp?: bigint;
+}
+
+export interface UserOperationFilters {
+  network?: string;
+  paymaster?: string;
+  sender?: string;
+  minGasCost?: bigint;
+  minTimestamp?: bigint;
+  maxTimestamp?: bigint;
+}
+
+/**
+ * ========================================
+ * HELPER TYPES FOR ANALYTICS
+ * ========================================
+ */
+
+/**
+ * Analytics summary for a paymaster contract
+ */
+export interface PaymasterAnalytics {
+  totalMembers: bigint; // Same as treeSize
+  totalUserOperations: bigint;
+  totalGasSponsored: bigint;
+  totalRevenueWithdrawn: bigint;
+  averageGasPerOperation: bigint;
+  membershipUtilization: number; // treeSize / total possible members
+}
+
+/**
+ * Network-wide statistics
+ */
+export interface NetworkStatistics {
+  network: string;
+  chainId: bigint;
+  totalContracts: bigint;
+  totalMembers: bigint;
+  totalUserOperations: bigint;
+  totalGasSponsored: bigint;
+  contractsByType: Record<PaymasterType, bigint>;
+}
+
+/**
+ * Type guards for runtime type checking
+ */
+export const isDepositActivity = (
+  activity: Activity
+): activity is Activity & {
+  depositor: string;
+  commitment: bigint;
+  memberIndex?: bigint;
+  newRoot?: bigint;
+} => activity.type === 'DEPOSIT';
+
+export const isUserOpActivity = (
+  activity: Activity
+): activity is Activity & {
+  sender: string;
+  userOpHash: string;
+  actualGasCost: bigint;
+} => activity.type === 'USER_OP_SPONSORED';
+
+export const isRevenueActivity = (
+  activity: Activity
+): activity is Activity & {
+  withdrawAddress: string;
+  amount: bigint;
+} => activity.type === 'REVENUE_WITHDRAWN';
+
+/**
+ * Base Activity interface (same as existing Activity)
+ */
+export type BaseActivity = Activity;
+
+/**
+ * Deposit Activity - has deposit-specific fields guaranteed to be present
+ */
+export interface DepositActivity extends Omit<Activity, 'type'> {
+  type: 'DEPOSIT';
+
+  // Guaranteed deposit fields
+  depositor: string;
+  commitment: bigint;
+
+  // Optional fields that may be set by LeafInserted event
+  memberIndex?: bigint;
+  newRoot?: bigint;
+
+  // User operation fields are undefined for deposits
+  sender?: undefined;
+  userOpHash?: undefined;
+  actualGasCost?: undefined;
+
+  // Revenue fields are undefined for deposits
+  withdrawAddress?: undefined;
+  amount?: undefined;
+}
+
+/**
+ * User Operation Activity - has user op-specific fields guaranteed to be present
+ */
+export interface UserOpActivity extends Omit<Activity, 'type'> {
+  type: 'USER_OP_SPONSORED';
+
+  // Guaranteed user operation fields
+  sender: string;
+  userOpHash: string;
+  actualGasCost: bigint;
+
+  // Deposit fields are undefined for user operations
+  depositor?: undefined;
+  commitment?: undefined;
+  memberIndex?: undefined;
+  newRoot?: undefined;
+
+  // Revenue fields are undefined for user operations
+  withdrawAddress?: undefined;
+  amount?: undefined;
+}
+
+/**
+ * Revenue Withdrawal Activity - has revenue-specific fields guaranteed to be present
+ */
+export interface RevenueActivity extends Omit<Activity, 'type'> {
+  type: 'REVENUE_WITHDRAWN';
+
+  // Guaranteed revenue fields
+  withdrawAddress: string;
+  amount: bigint;
+
+  // Deposit fields are undefined for revenue withdrawals
+  depositor?: undefined;
+  commitment?: undefined;
+  memberIndex?: undefined;
+  newRoot?: undefined;
+
+  // User operation fields are undefined for revenue withdrawals
+  sender?: undefined;
+  userOpHash?: undefined;
+  actualGasCost?: undefined;
+}
+
+/**
+ * Union type of all specific activity types
+ */
+export type TypedActivity = DepositActivity | UserOpActivity | RevenueActivity;
+
+/**
+ * Serialized versions for API responses
+ */
+export interface SerializedDepositActivity
+  extends Omit<
+    DepositActivity,
+    'commitment' | 'memberIndex' | 'newRoot' | 'block' | 'timestamp' | 'chainId' | 'paymaster'
+  > {
+  commitment: string;
+  memberIndex?: string;
+  newRoot?: string;
+  block: string;
+  timestamp: string;
   chainId: string;
-  totalPaymasters: string;
-  totalPools: string;
-  totalMembers: string;
-  totalTransactions: string;
-  totalGasSpent: string;
-  totalRevenue: string;
-  firstDeploymentBlock: string;
-  firstDeploymentTimestamp: string;
-  lastActivityBlock: string;
-  lastActivityTimestamp: string;
+  paymaster: SerializedPaymasterContract;
+}
+
+export interface SerializedUserOpActivity
+  extends Omit<UserOpActivity, 'actualGasCost' | 'block' | 'timestamp' | 'chainId' | 'paymaster'> {
+  actualGasCost: string;
+  block: string;
+  timestamp: string;
+  chainId: string;
+  paymaster: SerializedPaymasterContract;
+}
+
+export interface SerializedRevenueActivity
+  extends Omit<RevenueActivity, 'amount' | 'block' | 'timestamp' | 'chainId' | 'paymaster'> {
+  amount: string;
+  block: string;
+  timestamp: string;
+  chainId: string;
+  paymaster: SerializedPaymasterContract;
+}
+
+export type SerializedTypedActivity = SerializedDepositActivity | SerializedUserOpActivity | SerializedRevenueActivity;
+
+/**
+ * Type mapping for activity types to their interfaces
+ */
+export interface ActivityTypeMap {
+  DEPOSIT: DepositActivity;
+  USER_OP_SPONSORED: UserOpActivity;
+  REVENUE_WITHDRAWN: RevenueActivity;
 }
 
 /**
- * ========================================
- * RESPONSE WRAPPER TYPES
- * ========================================
+ * Type mapping for serialized activity types
  */
-
+export interface SerializedActivityTypeMap {
+  DEPOSIT: SerializedDepositActivity;
+  USER_OP_SPONSORED: SerializedUserOpActivity;
+  REVENUE_WITHDRAWN: SerializedRevenueActivity;
+}
 /**
  * Network metadata for client configuration
  */
@@ -337,13 +460,9 @@ export interface NetworkMetadata {
     paymasters: {
       gasLimited?: string;
       oneTimeUse?: string;
+      cacheEnabledGasLimited?: string;
     };
     /** Verifier contract (if applicable) */
     verifier?: string;
   };
 }
-
-/**
- * Entity types for type guards
- */
-export type EntityType = 'PaymasterContract' | 'Pool' | 'PoolMember' | 'Transaction' | 'NetworkInfo';

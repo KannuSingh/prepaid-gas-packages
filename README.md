@@ -1,103 +1,78 @@
 # Prepaid Gas Packages
 
-A monorepo of packages for building applications with the Prepaid Gas paymaster system. This system enables privacy-preserving gas payments using Account Abstraction (ERC-4337) and zero-knowledge proofs with the Semaphore protocol.
+NPM packages for privacy-preserving gas payments using Account Abstraction (ERC-4337) and zero-knowledge proofs.
 
-## 📦 Packages
-
-### Core Packages
+## Packages
 
 | Package | Description |
 |---------|-------------|
-| [`@prepaid-gas/constants`](./packages/constants) | Shared constants, ABIs, and network configurations |
 | [`@prepaid-gas/core`](./packages/core) | Main SDK for privacy-preserving paymaster integration |
 | [`@prepaid-gas/data`](./packages/data) | Subgraph client with fluent query builders |
+| [`@prepaid-gas/constants`](./packages/constants) | Shared constants, ABIs, and network configurations |
 
-## 🚀 Quick Start
-
-### Installation
+## Quick Start
 
 ```bash
 # Install the core SDK
 npm install @prepaid-gas/core
-
-# For subgraph integration
-npm install @prepaid-gas/data
-
-# For shared constants and ABIs
-npm install @prepaid-gas/constants
 ```
 
-## 🔧 Package Details
-
-### [@prepaid-gas/constants](./packages/constants)
-
-Shared constants, smart contract ABIs, and network configurations.
-
-**Key Features:**
-- Contract ABIs for GasLimitedPaymaster and OneTimeUsePaymaster
-- Gas limits, data sizes, and validation constants
-- Multi-network support with preset configurations
-- Type-safe network utility functions
+### Basic Usage
 
 ```typescript
-import { 
-  GAS_LIMITED_PAYMASTER_ABI, 
-  POST_OP_GAS_LIMIT,
-  getNetworkPreset,
-  getSupportedChainIds 
-} from '@prepaid-gas/constants';
+import { PrepaidGasPaymaster, encodePaymasterContext } from '@prepaid-gas/core';
+
+// Create client
+const paymaster = PrepaidGasPaymaster.createForNetwork(84532);
+
+// Create context  
+const context = encodePaymasterContext(paymasterAddress, identity);
+
+// Get paymaster data for transactions
+const paymasterData = await paymaster.getPaymasterData({
+  sender: '0x...',
+  callData: '0x...',
+  context,
+  // ... other UserOperation fields
+});
 ```
 
-### [@prepaid-gas/core](./packages/core)
-
-Main SDK with privacy-preserving paymaster client and zero-knowledge proof generation.
-
-**Key Features:**
-- Two-phase operation pattern (gas estimation + real ZK proofs)
-- Semaphore protocol integration for privacy
-- Network-aware configuration with automatic presets
-- Context encoding/decoding utilities
-- Comprehensive validation and error handling
+### Subgraph Integration
 
 ```typescript
-import { 
-  PrepaidGasPaymaster, 
-  encodePaymasterContext, 
-  validatePoolId 
-} from '@prepaid-gas/core';
+import { SubgraphClient } from '@prepaid-gas/data';
+
+const client = SubgraphClient.createForNetwork(84532);
+
+// Query deposit activities
+const activities = await client.query()
+  .depositActivities()
+  .byPaymasterAddress(paymasterAddress)
+  .execute();
 ```
 
-### [@prepaid-gas/data](./packages/data)
+## Development
 
-Subgraph client with fluent query builders and BigInt serialization.
+```bash
+# Install dependencies
+pnpm install
 
-**Key Features:**
-- Type-safe GraphQL query builders
-- Multi-network support with composite IDs
-- Automatic BigInt ↔ string serialization
-- Request deduplication and caching
-- Relationship loading and pagination
+# Build all packages
+pnpm build
 
-```typescript
-import { 
-  SubgraphClient, 
-  convertBigIntsToStrings 
-} from '@prepaid-gas/data';
+# Run tests
+pnpm test
+
+# Lint
+pnpm lint
 ```
 
-## 🌐 Supported Networks
+## Supported Networks
 
-Currently supported networks:
+| Network | Chain ID | Status |
+|---------|----------|--------|
+| Base Sepolia | 84532 | ✅ Active |
 
-| Network | Chain ID | Status | Paymaster Contracts |
-|---------|----------|--------|-------------------|
-| **Base Sepolia** | 84532 | ✅ Active (Testnet) | GasLimited: `0x3BEeC075aC5A77fFE0F9ee4bbb3DCBd07fA93fbf`<br>OneTimeUse: `0x243A735115F34BD5c0F23a33a444a8d26e31E2E7` |
+## License
 
-
-## 📄 License
-
-MIT License - see [LICENSE](./LICENSE) for details.
-
----
-
-**Built with ❤️ for the Account Abstraction ecosystem**
+MIT

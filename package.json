@@ -1,10 +1,28 @@
 {
   "name": "prepaid-gas-packages",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "private": true,
-  "description": "Prepaid Gas NPM packages monorepo",
+  "description": "Prepaid Gas packages monorepo",
+  "license": "MIT",
+  "author": "Karandeep Singh",
+  "homepage": "https://github.com/KannuSingh/prepaid-gas-packages#readme",
+  "bugs": {
+    "url": "https://github.com/KannuSingh/prepaid-gas-packages/issues"
+  },
+  "keywords": [
+    "account-abstraction",
+    "erc-4337",
+    "paymaster",
+    "zero-knowledge",
+    "semaphore",
+    "privacy",
+    "ethereum",
+    "gas-payments",
+    "zk-proofs"
+  ],
   "repository": {
-    "type": "git"
+    "type": "git",
+    "url": "https://github.com/yourusername/prepaid-gas-packages.git"
   },
   "scripts": {
     "build": "turbo build",

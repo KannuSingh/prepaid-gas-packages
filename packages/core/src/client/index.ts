@@ -60,7 +60,7 @@ export interface ProofGenerationParams {
   /** Message to sign (usually operation hash) */
   messageHash: bigint;
   /** Pool ID for proof scope */
-  poolId: bigint;
+  scope: bigint;
 }
 
 /**

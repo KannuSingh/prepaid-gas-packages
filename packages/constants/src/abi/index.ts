@@ -7,3 +7,4 @@
 
 export * from './GasLimitedPaymaster';
 export * from './OneTimeUsePaymaster';
+export * from './CacheEnabledGasLimitedPaymaster';

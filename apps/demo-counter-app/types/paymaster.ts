@@ -1,7 +1,7 @@
 // file :demo-counter-app/types/paymaster.ts
 export interface PaymasterConfig {
-  poolId: number | string;
   identity: string;
+  address: string;
   paymasterContext: string; // bytes data for smartAccountClient configuration
   amount?: string;
   network?: {
