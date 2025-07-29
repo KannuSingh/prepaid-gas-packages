@@ -1,0 +1,124 @@
+# Smart Contracts Overview
+
+PrepaidGas uses three different paymaster contracts, each with a different gas consumption model to suit various use cases.
+
+## Contract Types
+
+### OneTimeUsePaymaster
+**Single-use gas credits with maximum privacy**
+
+- Each transaction consumes the entire joining amount
+- Requires new deposit for each transaction
+- Nullifiers are tracked to prevent reuse
+- Best for: Maximum privacy, occasional transactions
+
+```solidity
+// State tracking
+mapping(uint256 => bool) public usedNullifiers;
+```
+
+### GasLimitedPaymaster  
+**Multi-use credits with spending limits**
+
+- Multiple transactions from one deposit
+- Tracks gas usage per nullifier
+- Reusable until joining amount is exhausted
+- Best for: Regular usage, gas efficiency
+
+```solidity
+// State tracking
+mapping(uint256 => uint256) public nullifierGasUsage;
+```
+
+### CacheEnabledGasLimitedPaymaster
+**Optimized multi-use with caching**
+
+- Advanced caching for frequent users
+- 2-nullifier system per user
+- Lower gas costs for cached operations
+- Best for: Power users, frequent transactions
+
+```solidity
+// Complex state management
+mapping(address => uint256) public userNullifiersStates;
+mapping(address => uint256[2]) public userNullifiers;
+```
+
+## Architecture
+
+### Contract Hierarchy
+```
+BasePaymaster (ERC-4337)
+└── PrepaidGasPool (Privacy & ZK proofs)
+    ├── OneTimeUsePaymaster
+    ├── GasLimitedPaymaster  
+    └── CacheEnabledGasLimitedPaymaster
+```
+
+### Key Components
+
+**BasePaymaster**: ERC-4337 interface implementation
+- Validation and post-operation handling
+- EntryPoint integration
+- Stake management
+
+**PrepaidGasPool**: Privacy and pool management
+- Semaphore ZK proof verification
+- Merkle tree state management
+- Member deposits and joining
+
+## Common Features
+
+### Zero-Knowledge Proofs
+All paymasters use Semaphore protocol for anonymous membership proofs:
+
+```solidity
+struct PoolMembershipProof {
+    uint256 merkleTreeDepth;
+    uint256 merkleTreeRoot;
+    uint256 nullifier;
+    uint256 message;
+    uint256 scope;
+    uint256[8] points;
+}
+```
+
+### Two-Phase Operations
+1. **Gas Estimation**: Uses dummy data for cost calculation
+2. **Validation**: Generates real ZK proof for execution
+
+### Paymaster Data Format
+480 bytes total:
+- Config (32 bytes): merkleRootIndex + mode + reserved
+- Encoded proof (416 bytes): Semaphore ZK proof
+
+### Joining Amount
+All paymasters use `0.0001 ETH` as the standard joining amount.
+
+## Network Deployments
+
+### Base Sepolia (Chain ID: 84532)
+- **OneTimeUse**: `0x4DACA5b0a5d10853F84bB400C5232E4605bc14A0`
+- **GasLimited**: `0xDEc68496A556CeE996894ac2FDc9E43F39938e62`
+- **CacheEnabled**: `0xfFE794611e59A987D8f13585248414d40a02Bb58`
+
+## Privacy Model
+
+### Pool-Based Anonymity
+- Users join by depositing and adding identity commitments
+- Transactions prove membership without revealing identity
+- Nullifiers prevent double-spending within the same paymaster
+
+### Scope-Based Security
+Each proof is bound to:
+- Specific paymaster contract
+- Network chain ID  
+- Joining amount
+
+This prevents cross-contract and cross-chain replay attacks.
+
+## Next Steps
+
+- **[OneTimeUse Details](/contracts/one-time-use)** - Single-use paymaster
+- **[GasLimited Details](/contracts/gas-limited)** - Multi-use paymaster
+- **[CacheEnabled Details](/contracts/cache-enabled)** - Optimized paymaster

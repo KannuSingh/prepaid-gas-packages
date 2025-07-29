@@ -1,0 +1,95 @@
+# Core Package
+
+The `@prepaid-gas/core` package provides the main SDK for integrating privacy-preserving gas payments into your dApp.
+
+## Installation
+
+```bash
+npm install @prepaid-gas/core
+```
+
+## Basic Usage
+
+```typescript
+import { PrepaidGasPaymaster, encodePaymasterContext } from '@prepaid-gas/core'
+import { Identity } from '@semaphore-protocol/identity'
+
+// Create client
+const paymaster = PrepaidGasPaymaster.createForNetwork(84532)
+
+// Setup identity
+const identity = new Identity()
+const context = encodePaymasterContext(
+  '0x4DACA5b0a5d10853F84bB400C5232E4605bc14A0', // paymaster address
+  identity.export() // identity string
+)
+
+// Use with your user operation
+const result = await paymaster.getPaymasterData({
+  // ... your userOperation fields
+  context
+})
+```
+
+## Two Operation Types
+
+### Gas Estimation (Fast)
+```typescript
+const stubData = await paymaster.getPaymasterStubData({
+  sender: '0x...',
+  callData: '0x...',
+  context,
+  chainId: 84532,
+  entryPointAddress: '0x...'
+})
+```
+
+### Real Transaction (Generates ZK Proof)
+```typescript
+const paymasterData = await paymaster.getPaymasterData({
+  // ... userOperation fields
+  context
+})
+```
+
+## Context Encoding
+
+The context contains your paymaster address and identity:
+
+```typescript
+import { encodePaymasterContext } from '@prepaid-gas/core'
+
+const context = encodePaymasterContext(
+  paymasterAddress, // which paymaster to use
+  identity.export() // your Semaphore identity
+)
+```
+
+## Integration with Account Abstraction
+
+```typescript
+import { createSmartAccountClient } from 'permissionless'
+
+const smartAccountClient = createSmartAccountClient({
+  // ... your config
+  paymaster: {
+    getPaymasterStubData: (params) => paymaster.getPaymasterStubData({ ...params, context }),
+    getPaymasterData: (params) => paymaster.getPaymasterData({ ...params, context })
+  }
+})
+```
+
+## Supported Networks
+
+- Base Sepolia (84532)
+- Base Mainnet (8453)
+
+```typescript
+// Check supported paymasters on your network
+const supported = paymaster.getSupportedPaymasters()
+```
+
+## Next Steps
+
+- **[Client API Reference](/core/client)** - Full API documentation
+- **[Data Package](/data/)** - Query paymaster data

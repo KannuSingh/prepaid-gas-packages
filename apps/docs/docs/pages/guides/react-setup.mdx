@@ -1,0 +1,657 @@
+# React Integration
+
+React-specific patterns and hooks for integrating PrepaidGas paymasters.
+
+## Project Setup
+
+### 1. Next.js 15 with App Router
+
+```bash
+npx create-next-app@latest my-prepaid-app --typescript --tailwind --app
+cd my-prepaid-app
+```
+
+### 2. Install Dependencies
+
+```bash
+npm install @prepaid-gas/core @prepaid-gas/data
+npm install @semaphore-protocol/identity @semaphore-protocol/group
+npm install permissionless viem
+npm install @radix-ui/react-dialog @radix-ui/react-select
+```
+
+## Context Architecture
+
+### 1. Identity Context
+
+```typescript
+// context/IdentityContext.tsx
+'use client'
+
+import React, { createContext, useContext, useState, useEffect } from 'react'
+import { Identity } from '@semaphore-protocol/identity'
+
+interface IdentityContextType {
+  identity: Identity | null
+  isLoaded: boolean
+  createIdentity: () => Identity
+  clearIdentity: () => void
+  exportIdentity: () => string | null
+}
+
+const IdentityContext = createContext<IdentityContextType | null>(null)
+
+export function IdentityProvider({ children }: { children: React.ReactNode }) {
+  const [identity, setIdentity] = useState<Identity | null>(null)
+  const [isLoaded, setIsLoaded] = useState(false)
+
+  useEffect(() => {
+    loadStoredIdentity()
+  }, [])
+
+  const loadStoredIdentity = () => {
+    try {
+      const stored = localStorage.getItem('semaphore-identity')
+      if (stored) {
+        const identity = Identity.import(stored)
+        setIdentity(identity)
+      }
+    } catch (error) {
+      console.error('Failed to load identity:', error)
+      localStorage.removeItem('semaphore-identity')
+    } finally {
+      setIsLoaded(true)
+    }
+  }
+
+  const createIdentity = () => {
+    const newIdentity = new Identity()
+    const exported = newIdentity.export()
+    
+    localStorage.setItem('semaphore-identity', exported)
+    setIdentity(newIdentity)
+    
+    return newIdentity
+  }
+
+  const clearIdentity = () => {
+    localStorage.removeItem('semaphore-identity')
+    setIdentity(null)
+  }
+
+  const exportIdentity = () => {
+    return identity?.export() || null
+  }
+
+  return (
+    <IdentityContext.Provider value={{
+      identity,
+      isLoaded,
+      createIdentity,
+      clearIdentity,
+      exportIdentity
+    }}>
+      {children}
+    </IdentityContext.Provider>
+  )
+}
+
+export const useIdentity = () => {
+  const context = useContext(IdentityContext)
+  if (!context) {
+    throw new Error('useIdentity must be used within IdentityProvider')
+  }
+  return context
+}
+```
+
+### 2. Paymaster Context
+
+```typescript
+// context/PaymasterContext.tsx
+'use client'
+
+import React, { createContext, useContext, useState, useEffect } from 'react'
+import { useIdentity } from './IdentityContext'
+import { encodePaymasterContext } from '@prepaid-gas/core'
+
+interface PaymasterConfig {
+  paymasterAddress: string
+  paymasterType: 'OneTimeUse' | 'GasLimited' | 'CacheEnabled'
+  context: string
+}
+
+interface PaymasterContextType {
+  config: PaymasterConfig | null
+  isConfigured: boolean
+  setConfig: (address: string, type: PaymasterConfig['paymasterType']) => void
+  clearConfig: () => void
+}
+
+const PaymasterContext = createContext<PaymasterContextType | null>(null)
+
+export function PaymasterProvider({ children }: { children: React.ReactNode }) {
+  const { identity, exportIdentity } = useIdentity()
+  const [config, setConfigState] = useState<PaymasterConfig | null>(null)
+
+  const setConfig = (paymasterAddress: string, paymasterType: PaymasterConfig['paymasterType']) => {
+    const identityString = exportIdentity()
+    if (!identityString) {
+      throw new Error('Identity required for paymaster configuration')
+    }
+
+    const context = encodePaymasterContext(paymasterAddress, identityString)
+    const newConfig = {
+      paymasterAddress,
+      paymasterType,
+      context
+    }
+
+    setConfigState(newConfig)
+    localStorage.setItem('paymaster-config', JSON.stringify(newConfig))
+  }
+
+  const clearConfig = () => {
+    setConfigState(null)
+    localStorage.removeItem('paymaster-config')
+  }
+
+  // Load stored config on mount
+  useEffect(() => {
+    if (identity) {
+      try {
+        const stored = localStorage.getItem('paymaster-config')
+        if (stored) {
+          const parsed = JSON.parse(stored)
+          setConfigState(parsed)
+        }
+      } catch (error) {
+        console.error('Failed to load paymaster config:', error)
+        localStorage.removeItem('paymaster-config')
+      }
+    }
+  }, [identity])
+
+  return (
+    <PaymasterContext.Provider value={{
+      config,
+      isConfigured: !!config,
+      setConfig,
+      clearConfig
+    }}>
+      {children}
+    </PaymasterContext.Provider>
+  )
+}
+
+export const usePaymaster = () => {
+  const context = useContext(PaymasterContext)
+  if (!context) {
+    throw new Error('usePaymaster must be used within PaymasterProvider')
+  }
+  return context
+}
+```
+
+## Custom Hooks
+
+### 1. Smart Account Hook
+
+```typescript
+// hooks/use-smart-account.ts
+import { useState, useEffect, useRef } from 'react'
+import { createSmartAccountClient } from 'permissionless'
+import { toSimpleSmartAccount } from 'permissionless/accounts'
+import { createPublicClient, http, generatePrivateKey, privateKeyToAccount } from 'viem'
+import { baseSepolia } from 'viem/chains'
+import { entryPoint07Address } from 'viem/account-abstraction'
+import { PrepaidGasPaymaster } from '@prepaid-gas/core'
+import { usePaymaster } from '@/context/PaymasterContext'
+
+export function useSmartAccount() {
+  const { config } = usePaymaster()
+  const [client, setClient] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [accountAddress, setAccountAddress] = useState<string | null>(null)
+  
+  const isInitializedRef = useRef(false)
+
+  useEffect(() => {
+    if (config && !isInitializedRef.current) {
+      initializeSmartAccount()
+    } else if (!config && client) {
+      // Clear client when config is removed
+      setClient(null)
+      setAccountAddress(null)
+      isInitializedRef.current = false
+    }
+  }, [config])
+
+  const initializeSmartAccount = async () => {
+    if (isInitializedRef.current) return
+    
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      // Generate or load burner key
+      let privateKey = localStorage.getItem('burner-private-key')
+      if (!privateKey) {
+        privateKey = generatePrivateKey()
+        localStorage.setItem('burner-private-key', privateKey)
+      }
+
+      const publicClient = createPublicClient({
+        chain: baseSepolia,
+        transport: http()
+      })
+
+      // Create smart account
+      const smartAccount = await toSimpleSmartAccount({
+        owner: privateKeyToAccount(privateKey),
+        client: publicClient,
+        entryPoint: {
+          address: entryPoint07Address,
+          version: '0.7'
+        }
+      })
+
+      // Create paymaster client
+      const paymasterClient = PrepaidGasPaymaster.createForNetwork(84532)
+
+      // Create smart account client with paymaster
+      const smartAccountClient = createSmartAccountClient({
+        client: publicClient,
+        account: smartAccount,
+        bundlerTransport: http(process.env.NEXT_PUBLIC_BUNDLER_URL || 'http://localhost:4337'),
+        paymaster: {
+          getPaymasterStubData: paymasterClient.getPaymasterStubData.bind(paymasterClient),
+          getPaymasterData: paymasterClient.getPaymasterData.bind(paymasterClient)
+        },
+        paymasterContext: config!.context
+      })
+
+      setClient(smartAccountClient)
+      setAccountAddress(smartAccount.address)
+      isInitializedRef.current = true
+
+    } catch (err) {
+      setError((err as Error).message)
+      console.error('Smart account initialization failed:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const resetAccount = () => {
+    localStorage.removeItem('burner-private-key')
+    setClient(null)
+    setAccountAddress(null)
+    isInitializedRef.current = false
+    
+    if (config) {
+      initializeSmartAccount()
+    }
+  }
+
+  return {
+    client,
+    accountAddress,
+    isLoading,
+    error,
+    resetAccount,
+    isReady: !!client && !!accountAddress
+  }
+}
+```
+
+### 2. Transaction Hook
+
+```typescript
+// hooks/use-transactions.ts
+import { useState, useCallback } from 'react'
+import { useSmartAccount } from './use-smart-account'
+
+interface TransactionState {
+  isLoading: boolean
+  error: string | null
+  txHash: string | null
+  userOpHash: string | null
+}
+
+export function useTransactions() {
+  const { client } = useSmartAccount()
+  const [state, setState] = useState<TransactionState>({
+    isLoading: false,
+    error: null,
+    txHash: null,
+    userOpHash: null
+  })
+
+  const executeTransaction = useCallback(async (
+    contractAddress: string,
+    abi: any[],
+    functionName: string,
+    args: any[] = []
+  ) => {
+    if (!client) {
+      throw new Error('Smart account not ready')
+    }
+
+    setState(prev => ({ ...prev, isLoading: true, error: null }))
+
+    try {
+      // Execute transaction
+      const userOpHash = await client.writeContract({
+        address: contractAddress,
+        abi,
+        functionName,
+        args
+      })
+
+      setState(prev => ({ ...prev, userOpHash }))
+
+      // Wait for receipt
+      const receipt = await client.waitForUserOperationReceipt({
+        hash: userOpHash
+      })
+
+      setState(prev => ({
+        ...prev,
+        txHash: receipt.receipt.transactionHash,
+        isLoading: false
+      }))
+
+      return {
+        userOpHash,
+        txHash: receipt.receipt.transactionHash,
+        receipt
+      }
+
+    } catch (error) {
+      const errorMessage = (error as Error).message
+      setState(prev => ({
+        ...prev,
+        error: errorMessage,
+        isLoading: false
+      }))
+      throw error
+    }
+  }, [client])
+
+  const resetState = useCallback(() => {
+    setState({
+      isLoading: false,
+      error: null,
+      txHash: null,
+      userOpHash: null
+    })
+  }, [])
+
+  return {
+    ...state,
+    executeTransaction,
+    resetState
+  }
+}
+```
+
+### 3. Pool Membership Hook
+
+```typescript
+// hooks/use-pool-membership.ts
+import { useState, useEffect } from 'react'
+import { SubgraphClient } from '@prepaid-gas/data'
+import { useIdentity } from '@/context/IdentityContext'
+
+export function usePoolMembership(paymasterAddress: string | null) {
+  const { identity } = useIdentity()
+  const [isMember, setIsMember] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [membershipData, setMembershipData] = useState<any>(null)
+
+  useEffect(() => {
+    if (identity && paymasterAddress) {
+      checkMembership()
+    } else {
+      setIsMember(false)
+      setMembershipData(null)
+    }
+  }, [identity, paymasterAddress])
+
+  const checkMembership = async () => {
+    if (!identity || !paymasterAddress) return
+
+    setIsLoading(true)
+
+    try {
+      const client = SubgraphClient.createForNetwork(84532)
+      
+      const activities = await client.query()
+        .activities()
+        .byType('DEPOSIT')
+        .byPaymaster(paymasterAddress)
+        .execute()
+
+      const commitment = identity.commitment.toString()
+      const memberActivity = activities.find(activity => 
+        activity.commitment?.toString() === commitment
+      )
+
+      setIsMember(!!memberActivity)
+      setMembershipData(memberActivity || null)
+
+    } catch (error) {
+      console.error('Failed to check membership:', error)
+      setIsMember(false)
+      setMembershipData(null)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  return {
+    isMember,
+    isLoading,
+    membershipData,
+    refetch: checkMembership
+  }
+}
+```
+
+## UI Components
+
+### 1. Paymaster Setup Modal
+
+```typescript
+// components/PaymasterSetupModal.tsx
+'use client'
+
+import { useState } from 'react'
+import { useIdentity } from '@/context/IdentityContext'
+import { usePaymaster } from '@/context/PaymasterContext'
+
+const PAYMASTERS = {
+  OneTimeUse: {
+    address: '0x4DACA5b0a5d10853F84bB400C5232E4605bc14A0',
+    name: 'OneTimeUse',
+    description: 'Maximum privacy, single-use credits'
+  },
+  GasLimited: {
+    address: '0xDEc68496A556CeE996894ac2FDc9E43F39938e62',
+    name: 'GasLimited', 
+    description: 'Multi-use credits with gas limits'
+  },
+  CacheEnabled: {
+    address: '0xfFE794611e59A987D8f13585248414d40a02Bb58',
+    name: 'CacheEnabled',
+    description: 'Optimized for frequent transactions'
+  }
+}
+
+export function PaymasterSetupModal({ isOpen, onClose }: {
+  isOpen: boolean
+  onClose: () => void
+}) {
+  const { identity, createIdentity } = useIdentity()
+  const { setConfig } = usePaymaster()
+  const [selectedType, setSelectedType] = useState<keyof typeof PAYMASTERS>('OneTimeUse')
+  const [isLoading, setIsLoading] = useState(false)
+
+  const handleSetup = async () => {
+    setIsLoading(true)
+
+    try {
+      // Ensure identity exists
+      const currentIdentity = identity || createIdentity()
+      
+      const paymaster = PAYMASTERS[selectedType]
+      setConfig(paymaster.address, selectedType)
+      
+      onClose()
+    } catch (error) {
+      console.error('Setup failed:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  if (!isOpen) return null
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+      <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <h2 className="text-xl font-bold mb-4">Setup Paymaster</h2>
+        
+        <div className="space-y-4">
+          {Object.entries(PAYMASTERS).map(([key, paymaster]) => (
+            <label key={key} className="flex items-start space-x-3">
+              <input
+                type="radio"
+                name="paymaster"
+                value={key}
+                checked={selectedType === key}
+                onChange={(e) => setSelectedType(e.target.value as keyof typeof PAYMASTERS)}
+                className="mt-1"
+              />
+              <div>
+                <div className="font-medium">{paymaster.name}</div>
+                <div className="text-sm text-gray-600">{paymaster.description}</div>
+              </div>
+            </label>
+          ))}
+        </div>
+
+        <div className="flex space-x-3 mt-6">
+          <button
+            onClick={onClose}
+            className="flex-1 px-4 py-2 border rounded"
+            disabled={isLoading}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSetup}
+            className="flex-1 px-4 py-2 bg-blue-500 text-white rounded"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Setting up...' : 'Setup'}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+}
+```
+
+## Main App Structure
+
+```typescript
+// app/layout.tsx
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode
+}) {
+  return (
+    <html lang="en">
+      <body>
+        <IdentityProvider>
+          <PaymasterProvider>
+            {children}
+          </PaymasterProvider>
+        </IdentityProvider>
+      </body>
+    </html>
+  )
+}
+```
+
+```typescript
+// app/page.tsx
+'use client'
+
+import { useState } from 'react'
+import { useIdentity } from '@/context/IdentityContext'
+import { usePaymaster } from '@/context/PaymasterContext'
+import { useSmartAccount } from '@/hooks/use-smart-account'
+import { useTransactions } from '@/hooks/use-transactions'
+import { PaymasterSetupModal } from '@/components/PaymasterSetupModal'
+
+export default function Home() {
+  const { identity, isLoaded } = useIdentity()
+  const { isConfigured } = usePaymaster()
+  const { client, accountAddress, isLoading: isAccountLoading } = useSmartAccount()
+  const { executeTransaction, isLoading: isTxLoading } = useTransactions()
+  const [showSetup, setShowSetup] = useState(false)
+
+  if (!isLoaded) {
+    return <div>Loading...</div>
+  }
+
+  if (!isConfigured) {
+    return (
+      <div className="container mx-auto p-4">
+        <h1>Welcome to PrepaidGas dApp</h1>
+        <button 
+          onClick={() => setShowSetup(true)}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          Setup Paymaster
+        </button>
+        
+        <PaymasterSetupModal 
+          isOpen={showSetup} 
+          onClose={() => setShowSetup(false)} 
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="container mx-auto p-4 space-y-4">
+      <h1>PrepaidGas dApp</h1>
+      
+      <div>
+        <strong>Account:</strong> {accountAddress || 'Loading...'}
+      </div>
+      
+      <button
+        onClick={() => executeTransaction(
+          '0xYourContractAddress',
+          YOUR_CONTRACT_ABI,
+          'yourFunction',
+          []
+        )}
+        disabled={!client || isTxLoading || isAccountLoading}
+        className="bg-green-500 text-white px-4 py-2 rounded disabled:opacity-50"
+      >
+        {isTxLoading ? 'Executing...' : 'Execute Transaction'}
+      </button>
+    </div>
+  )
+}
+```
+
+This React integration provides a complete foundation for building dApps with PrepaidGas paymasters, including proper state management, error handling, and user interface components.

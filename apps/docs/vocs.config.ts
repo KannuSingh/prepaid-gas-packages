@@ -16,33 +16,37 @@ export default defineConfig({
         { text: 'Quick Start', link: '/quick-start' },
       ],
     },
-    // {
-    //   text: 'Core Package',
-    //   items: [
-    //     { text: 'Overview', link: '/core/' },
-    //     { text: 'PrepaidGasPaymaster', link: '/core/client' },
-    //     { text: 'Utilities', link: '/core/utilities' },
-    //     { text: 'Types', link: '/core/types' },
-    //   ],
-    // },
-    // {
-    //   text: 'Data Package',
-    //   items: [
-    //     { text: 'Overview', link: '/data/' },
-    //     { text: 'SubgraphClient', link: '/data/client' },
-    //     { text: 'Query Builders', link: '/data/queries' },
-    //     { text: 'Types', link: '/data/types' },
-    //   ],
-    // },
-    // {
-    //   text: 'Guides',
-    //   items: [
-    //     { text: 'Integration Guide', link: '/guides/integration' },
-    //     { text: 'Privacy Best Practices', link: '/guides/privacy' },
-    //     { text: 'Network Configuration', link: '/guides/networks' },
-    //     { text: 'Troubleshooting', link: '/guides/troubleshooting' },
-    //   ],
-    // },
+    {
+      text: 'Core Package',
+      items: [
+        { text: 'Overview', link: '/core/' },
+        { text: 'PrepaidGasPaymaster', link: '/core/client' },
+      ],
+    },
+    {
+      text: 'Data Package',
+      items: [
+        { text: 'Overview', link: '/data/' },
+        { text: 'Query API', link: '/data/queries' },
+      ],
+    },
+    {
+      text: 'Smart Contracts',
+      items: [
+        { text: 'Overview', link: '/contracts/' },
+        { text: 'OneTimeUse', link: '/contracts/one-time-use' },
+        { text: 'GasLimited', link: '/contracts/gas-limited' },
+        { text: 'CacheEnabled', link: '/contracts/cache-enabled' },
+      ],
+    },
+    {
+      text: 'Guides',
+      items: [
+        { text: 'Integration Guide', link: '/guides/integration' },
+        { text: 'React Setup', link: '/guides/react-setup' },
+        { text: 'Privacy Best Practices', link: '/guides/privacy' },
+      ],
+    },
     // {
     //   text: 'Examples',
     //   items: [

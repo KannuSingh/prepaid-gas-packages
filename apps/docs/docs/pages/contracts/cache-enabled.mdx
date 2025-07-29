@@ -1,0 +1,224 @@
+# CacheEnabledGasLimitedPaymaster
+
+The most advanced paymaster with intelligent caching for frequent users, offering the lowest gas costs for repeated transactions.
+
+## How It Works
+
+### Two-Nullifier Caching System
+- Each user can have **2 active nullifiers** simultaneously
+- **Cached flow**: Fast operations using pre-activated nullifiers
+- **Activation flow**: Slower process to activate new nullifiers
+- Automatic **wraparound** consumption across nullifiers
+
+### Complex State Management
+```solidity
+mapping(address => uint256) public userNullifiersStates;  // Bit-packed state
+mapping(address => uint256[2]) public userNullifiers;     // Active nullifiers
+```
+
+## State Encoding
+
+### userNullifiersStates Bit Packing
+```
+Bits 0-7:   activatedNullifierCount (0-2)
+Bits 8-15:  exhaustedSlotIndex (0 or 1) 
+Bit 16:     hasAvailableExhaustedSlot (boolean)
+Bits 17-255: Reserved (unused)
+```
+
+### Example State Decoding
+```typescript
+const state = await contract.read.userNullifiersStates([userAddress])
+
+const activatedCount = state & 0xFF
+const exhaustedSlotIndex = (state >> 8n) & 0xFF  
+const hasExhaustedSlot = ((state >> 16n) & 1n) === 1n
+
+console.log(`User has ${activatedCount} active nullifiers`)
+```
+
+## Transaction Flows
+
+### Cached Flow (Fast)
+For users with pre-activated nullifiers:
+
+```solidity
+function _validatePaymasterUserOp(...) internal {
+    // Use existing activated nullifier
+    // No ZK proof verification needed
+    // Lower gas cost: 45,000 gas
+    
+    // Check remaining balance in cached nullifier
+    uint256 remaining = JOINING_AMOUNT - nullifierGasUsage[nullifier];
+    require(remaining >= estimatedGas, "Insufficient balance");
+}
+```
+
+### Activation Flow (Slower)
+For new nullifiers or when cache is full:
+
+```solidity  
+function _validatePaymasterUserOp(...) internal {
+    // Full ZK proof verification required
+    // Higher gas cost: 86,650 gas
+    // Updates user nullifier state
+    
+    // Activate new nullifier or replace exhausted one
+    updateUserNullifierState(sender, nullifier);
+}
+```
+
+## Gas Cost Optimization
+
+### Dynamic Gas Limits
+- **Cached operations**: 45,000 gas limit
+- **Activation operations**: 86,650 gas limit
+- **Automatic detection**: Based on user state and nullifier
+
+### Cost Comparison
+```
+OneTimeUse:     65,000 gas + 0.0001 ETH per transaction
+GasLimited:     65,000 gas + actual gas cost
+CacheEnabled:   45,000 gas + actual gas cost (cached)
+                86,650 gas + actual gas cost (activation)
+```
+
+## Advanced Features  
+
+### Intelligent Wraparound
+When one nullifier is exhausted, automatically uses the other:
+
+```solidity
+// Automatically selects best available nullifier
+if (nullifierGasUsage[nullifier0] < JOINING_AMOUNT) {
+    useNullifier = nullifier0;
+} else if (nullifierGasUsage[nullifier1] < JOINING_AMOUNT) {
+    useNullifier = nullifier1;  
+} else {
+    // Both exhausted, need activation flow
+}
+```
+
+### Exhausted Slot Reuse
+When both nullifiers are exhausted, reuses one slot:
+
+```solidity
+// Replace exhausted nullifier with new one
+if (hasAvailableExhaustedSlot) {
+    uint256 slotToReplace = exhaustedSlotIndex;
+    userNullifiers[sender][slotToReplace] = newNullifier;
+    delete nullifierGasUsage[oldNullifier]; // Clean up
+}
+```
+
+## Developer Integration
+
+### Checking User State
+```typescript
+import { CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI } from '@prepaid-gas/constants'
+
+const getUserState = async (userAddress: string) => {
+  const state = await contract.read.userNullifiersStates([userAddress])
+  const nullifiers = await contract.read.userNullifiers([userAddress])
+  
+  return {
+    activatedCount: Number(state & 0xFFn),
+    exhaustedSlotIndex: Number((state >> 8n) & 0xFFn),
+    hasExhaustedSlot: ((state >> 16n) & 1n) === 1n,
+    nullifier0: nullifiers[0],
+    nullifier1: nullifiers[1]
+  }
+}
+```
+
+### Optimal Flow Selection
+```typescript
+const selectOptimalFlow = async (userAddress: string, estimatedGas: bigint) => {
+  const userState = await getUserState(userAddress)
+  
+  if (userState.activatedCount === 0) {
+    return 'activation' // First time user
+  }
+  
+  // Check if cached nullifiers have enough balance
+  const nullifier0Usage = await contract.read.nullifierGasUsage([userState.nullifier0])
+  const nullifier1Usage = await contract.read.nullifierGasUsage([userState.nullifier1])
+  const joiningAmount = await contract.read.JOINING_AMOUNT()
+  
+  const remaining0 = joiningAmount - nullifier0Usage
+  const remaining1 = joiningAmount - nullifier1Usage
+  
+  if (remaining0 >= estimatedGas || remaining1 >= estimatedGas) {
+    return 'cached' // Can use existing nullifier
+  }
+  
+  return 'activation' // Need new nullifier
+}
+```
+
+## Use Cases
+
+### When to Use CacheEnabled
+- **Power users**: Frequent transactions (>10 per week)
+- **Gas optimization**: Want lowest possible gas costs
+- **Complex workflows**: Multiple related transactions
+- **Long-term usage**: Planning extended interaction
+
+### Example Scenarios
+- High-frequency trading
+- Gaming with many microtransactions  
+- DApp power users
+- Automated systems with predictable usage
+
+## Cost Analysis
+
+### Efficiency Comparison
+For a user making 10 transactions:
+
+**OneTimeUse**:
+- 10 deposits × 0.0001 ETH = 0.001 ETH
+- 10 × 65,000 gas = 650,000 gas
+
+**GasLimited**:  
+- 1 deposit × 0.0001 ETH = 0.0001 ETH
+- 10 × 65,000 gas = 650,000 gas
+
+**CacheEnabled**:
+- 1 deposit × 0.0001 ETH = 0.0001 ETH  
+- 1 × 86,650 gas (activation) + 9 × 45,000 gas (cached) = 491,650 gas
+
+### Break-Even Analysis
+CacheEnabled becomes more efficient after ~3-4 transactions due to lower cached gas costs.
+
+## Technical Considerations
+
+### State Complexity
+- More complex state management
+- Requires careful nullifier tracking
+- Higher integration complexity
+
+### Memory Usage
+- Bit-packed states for efficiency
+- Two nullifiers per user maximum
+- Automatic cleanup of exhausted nullifiers
+
+### Concurrency Handling
+- Atomic state updates
+- Race condition protection
+- Consistent wraparound logic
+
+## Migration Strategy
+
+### From GasLimited
+- Similar integration pattern
+- Add user state checking
+- Optimize for cached flows
+
+### Integration Tips
+- Start with activation flow for new users
+- Implement state checking for optimization
+- Monitor gas costs to verify efficiency gains
+
+## Contract Address
+
+**Base Sepolia**: `0xfFE794611e59A987D8f13585248414d40a02Bb58`
