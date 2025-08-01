@@ -1,11 +1,11 @@
 # OneTimeUsePaymaster
 
-The OneTimeUsePaymaster provides maximum privacy by consuming the entire joining amount with each transaction.
+The OneTimeUsePaymaster provides maximum unlinkability by consuming the entire joining amount with each transaction.
 
 ## How It Works
 
 ### Single-Use Model
-- Each transaction uses the **entire joining amount** (0.0001 ETH)
+- Each transaction uses the **entire joining amount** (e.g., 0.0001 ETH)
 - Nullifier is marked as used after one transaction
 - Requires new deposit for each subsequent transaction
 - Provides maximum unlinkability between transactions
@@ -23,18 +23,13 @@ Simple boolean tracking - once a nullifier is used, it cannot be used again.
 ```solidity
 // User calls deposit() with identity commitment
 function deposit(uint256 identityCommitment) external payable {
-    require(msg.value == JOINING_AMOUNT, "Incorrect joining amount");
+    require(msg.value == JOINING_AMOUNT, "Incorrect joining amount"); // e.g., 0.0001 ETH
     // Add to Merkle tree
     // Emit Deposited event
 }
 ```
 
-### 2. Gas Estimation (Mode 1)
-- Uses dummy proof data
-- Returns gas estimates without consuming nullifier
-- No state changes
-
-### 3. Transaction Execution (Mode 0)
+### 2. Transaction Execution
 ```solidity
 function _validatePaymasterUserOp(...) internal override returns (bytes memory context, uint256 validationData) {
     // Verify ZK proof
@@ -46,106 +41,49 @@ function _validatePaymasterUserOp(...) internal override returns (bytes memory c
 }
 ```
 
-### 4. Post-Operation
+### 3. Post-Operation
 ```solidity
-function _postOp(PostOpMode mode, bytes calldata context, uint256 actualGasCost, uint256) internal override {
-    if (mode == PostOpMode.opSucceeded) {
-        (bytes32 userOpHash, uint256 nullifier, address sender) = abi.decode(context, (bytes32, uint256, address));
-        
-        // Mark nullifier as used
-        usedNullifiers[nullifier] = true;
-        
-        // Deduct entire joining amount
-        totalUsersDeposit -= JOINING_AMOUNT;
-        
-        emit UserOpSponsoredWithNullifier(sender, userOpHash, actualGasCost, nullifier);
-    }
+function _postOp(
+    PostOpMode /*mode*/,
+    bytes calldata context,
+    uint256 actualGasCost,
+    uint256 actualUserOpFeePerGas
+) internal virtual override {
+    // Decode context:  userOpHash, nullifier, sender.
+    (bytes32 userOpHash, uint256 nullifier, address sender) = abi.decode(
+        context,
+        (bytes32, uint256, address)
+    );
+    //  Mark nullifier as used
+    usedNullifiers[nullifier] = true;
+    // Calculate total cost, including postOp overhead.
+    uint256 postOpGasCost = Constants.POSTOP_GAS_COST *
+        actualUserOpFeePerGas;
+    uint256 totalGasCost = actualGasCost + postOpGasCost;
+
+    // Deduct the JOINING_AMOUNT from the pool's total deposits.
+    totalDeposit -= JOINING_AMOUNT;
+
+    emit UserOpSponsoredWithNullifier(
+        sender,
+        userOpHash,
+        totalGasCost,
+        nullifier
+    );
 }
 ```
 
 ## Key Features
 
-### Maximum Privacy
-- Each transaction is completely unlinkable from previous ones
-- Fresh nullifier required for each transaction
-- No usage history tracking
-
-### Security Model
-- Nullifier reuse protection
-- Full joining amount consumed per transaction
-- ZK proof verification for each operation
-
-### Gas Costs
-- **Post-op gas**: 65,000 gas
-- No complex state updates
-- Simple boolean marking
-
-## Use Cases
-
-### When to Use OneTimeUse
-- **Maximum privacy needed**: Transactions must be completely unlinkable
-- **Occasional usage**: Infrequent transactions where gas efficiency isn't critical
-- **High-value transactions**: Where privacy is worth the higher per-transaction cost
-- **Sensitive operations**: Where transaction unlinkability is paramount
-
-### Example Scenarios
-- Anonymous donations
-- Privacy-sensitive payments
-- One-time purchases
-- Whistleblowing or sensitive reporting
-
-## Cost Analysis
-
-### Per-Transaction Cost
-- **Joining amount**: 0.0001 ETH consumed entirely
-- **Gas overhead**: ~65,000 gas for post-op
-- **ZK proof generation**: Client-side computational cost
-
-### Cost Comparison
-Assuming 0.0001 ETH = $0.20 (example):
-- **First transaction**: $0.20 + gas
-- **Each additional transaction**: $0.20 + gas (requires new deposit)
-
-## Developer Integration
-
-### Detecting OneTimeUse Paymaster
-```typescript
-import { PrepaidGasPaymaster } from '@prepaid-gas/core'
-
-const paymaster = PrepaidGasPaymaster.createForNetwork(84532)
-const supported = paymaster.getSupportedPaymasters()
-
-// Find OneTimeUse paymasters
-const oneTimeUse = supported.filter(p => p.type === 'OneTimeUse')
-```
-
-### Usage Pattern
-```typescript
-// User must deposit before each transaction
-// 1. User deposits 0.0001 ETH + identity commitment
-// 2. Transaction executes with ZK proof  
-// 3. Entire amount consumed
-// 4. For next transaction, repeat from step 1
-```
-
-## Technical Considerations
-
-### Nullifier Management
-- Nullifiers are permanently marked as used
-- No cleanup or garbage collection needed
-- Storage grows with each transaction
-
-### MEV Considerations
-- No front-running protection needed for nullifiers
-- Single-use nature prevents MEV extraction
-- Transaction atomicity ensures consistency
-
-### Upgrade Path
-Users can migrate to GasLimited or CacheEnabled paymasters by:
-1. Using remaining OneTimeUse credits
-2. Depositing to different paymaster type
-3. Using new paymaster for future transactions
+- **Maximum Unlinkability**: Each transaction is completely unlinkable from previous ones
+- **Single Use**: Fresh nullifier required for each transaction
+- **Simple State**: No complex usage tracking
+- **Full Consumption**: Entire joining amount used per transaction
 
 ## Contract Address
 
 **Base Sepolia**: `0x4DACA5b0a5d10853F84bB400C5232E4605bc14A0`
+
+## Source Code
+
+- **GitHub**: [OneTimeUsePaymaster.sol](https://github.com/KannuSingh/prepaid-gas-paymaster-contracts/blob/main/contracts/implementation/OneTimeUsePaymaster.sol)
