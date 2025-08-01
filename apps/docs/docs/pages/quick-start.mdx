@@ -1,192 +1,94 @@
 # Quick Start
 
-Get started with privacy-preserving gas payments in under 5 minutes.
+Enable users to pay for gas using their own zero-knowledge credits in your dApp.
 
-## Prerequisites
+## How PrepaidGas Works
 
-- **Node.js 18+** 
-- **TypeScript** (recommended)
-- **Account Abstraction setup** (e.g., with Permissionless)
-- **Ethereum wallet** for testing
+**For Users**: Buy prepaid gas credits (like a gas card) and use them across dApps without revealing your purchase identity
+**For Developers**: Let users configure paymaster credits in your dApp - no gas fees from you!
 
-## Step 1: Install Packages
+## Step 1: Install SDK
 
 ```bash
-npm install @prepaid-gas/core @prepaid-gas/data viem permissionless
+npm install @prepaid-gas/core viem permissionless
 ```
 
-## Step 2: Create Paymaster Client
+## Step 2: Add Paymaster Support
 
 ```typescript
 import { PrepaidGasPaymaster } from '@prepaid-gas/core'
+import { createSmartAccountClient } from 'permissionless'
 
-// Create client for Base Sepolia testnet
+// Create paymaster client for Base Sepolia
 const paymaster = PrepaidGasPaymaster.createForNetwork(84532)
-```
 
-## Step 3: Set Up Identity
+// Get user's paymaster context (from their gas card purchase)
+const userPaymasterContext = getUserPaymasterContext() // User provides this
 
-```typescript
-import { Identity } from '@semaphore-protocol/identity'
-
-// Create a new identity (store securely in production)
-const identity = new Identity()
-const identityCommitment = identity.commitment.toString()
-
-// Or import existing identity
-const existingIdentity = Identity.import('your-stored-identity-base64')
-```
-
-## Step 4: Join a Pool
-
-To use the paymaster, you need to join a privacy pool. This requires adding your identity commitment to a pool's Merkle tree (typically done through a frontend interface).
-
-```typescript
-import { SubgraphClient } from '@prepaid-gas/data'
-
-// Query available pools
-const subgraph = SubgraphClient.createForNetwork(84532)
-const pools = await subgraph.query()
-  .pools()
-  .byNetwork('base-sepolia')
-  .withMembers(50)
-  .execute()
-
-console.log('Available pools:', pools)
-```
-
-## Step 5: Create User Operation
-
-Set up your Account Abstraction user operation:
-
-```typescript
-import { createSmartAccountClient } from 'permissionless'
-import { http } from 'viem'
-import { baseSepolia } from 'viem/chains'
-
-// Your AA setup (example with Permissionless)
+// Configure smart account with user's paymaster
 const smartAccount = createSmartAccountClient({
-  // ... your smart account configuration
-})
-
-// Create user operation for your transaction
-const userOp = await smartAccount.prepareUserOperation({
-  calls: [{
-    to: '0x...',
-    data: '0x...',
-    value: 0n,
-  }]
+  // ... your smart account config
+  paymaster: {
+    getPaymasterStubData: (params) => paymaster.getPaymasterStubData(params),
+    getPaymasterData: (params) => paymaster.getPaymasterData(params)
+  },
+  paymasterContext: userPaymasterContext
 })
 ```
 
-## Step 6: Generate Paymaster Data
+## Step 3: Build User Settings
 
-### For Gas Estimation (Fast)
-
-```typescript
-// Get stub data for gas estimation (no ZK proof required)
-const stubResult = await paymaster.getPaymasterStubData({
-  userOp,
-  poolId: '1',
-  identity: identity.export(),
-})
-
-console.log('Gas estimate:', stubResult.callGasLimit)
-```
-
-### For Real Transaction (Generates ZK Proof)
+Allow users to configure their gas credits:
 
 ```typescript
-// Generate real paymaster data with ZK proof
-const paymasterResult = await paymaster.getPaymasterData({
-  userOp,
-  poolId: '1', 
-  identity: identity.export(),
-})
-
-// Update user operation with paymaster data
-userOp.paymaster = paymasterResult.paymaster
-userOp.paymasterData = paymasterResult.paymasterData
-userOp.paymasterPostOpGasLimit = paymasterResult.paymasterPostOpGasLimit
-userOp.paymasterVerificationGasLimit = paymasterResult.paymasterVerificationGasLimit
-```
-
-## Step 7: Submit Transaction
-
-```typescript
-// Submit the user operation
-const userOpHash = await smartAccount.sendUserOperation(userOp)
-
-console.log('Transaction submitted:', userOpHash)
-
-// Wait for confirmation
-const receipt = await smartAccount.waitForUserOperationReceipt({
-  hash: userOpHash
-})
-
-console.log('Transaction confirmed:', receipt.receipt.transactionHash)
-```
-
-## Complete Example
-
-Here's a complete working example:
-
-```typescript
-import { PrepaidGasPaymaster } from '@prepaid-gas/core'
-import { SubgraphClient } from '@prepaid-gas/data'
-import { Identity } from '@semaphore-protocol/identity'
-import { createSmartAccountClient } from 'permissionless'
-
-async function sendPrivateTransaction() {
-  // 1. Set up clients
-  const paymaster = PrepaidGasPaymaster.createForNetwork(84532)
-  const subgraph = SubgraphClient.createForNetwork(84532)
+export function PaymasterSettings() {
+  const [paymasterContext, setPaymasterContext] = useState('')
   
-  // 2. Create or import identity
-  const identity = new Identity()
-  
-  // 3. Check pool membership (assume already joined pool 1)
-  const poolData = await subgraph.query()
-    .pools()
-    .byId('1') 
-    .withMembers()
-    .execute()
-    
-  // 4. Create smart account and user operation
-  const smartAccount = createSmartAccountClient({
-    // ... your configuration
-  })
-  
-  const userOp = await smartAccount.prepareUserOperation({
-    calls: [{
-      to: '0x1234567890123456789012345678901234567890',
-      data: '0x',
-      value: 1000000000000000n, // 0.001 ETH
-    }]
-  })
-  
-  // 5. Get paymaster data
-  const paymasterData = await paymaster.getPaymasterData({
-    userOp,
-    poolId: '1',
-    identity: identity.export(),
-  })
-  
-  // 6. Update and submit user operation
-  Object.assign(userOp, paymasterData)
-  
-  const hash = await smartAccount.sendUserOperation(userOp)
-  const receipt = await smartAccount.waitForUserOperationReceipt({ hash })
-  
-  console.log('Private transaction completed:', receipt.receipt.transactionHash)
+  return (
+    <div>
+      <h3>Configure Your Gas Credits</h3>
+      <p>Buy prepaid gas at <a href="https://testnet.prepaidgas.xyz">testnet.prepaidgas.xyz</a></p>
+      <textarea 
+        placeholder="Paste your paymaster context here..."
+        value={paymasterContext}
+        onChange={(e) => setPaymasterContext(e.target.value)}
+      />
+      <button onClick={() => handleSave(paymasterContext)}>
+        Save Gas Credits
+      </button>
+    </div>
+  )
 }
+```
+
+## Step 4: Users Get Credits
+
+Your users visit **[testnet.prepaidgas.xyz](https://testnet.prepaidgas.xyz)** to:
+
+1. **Create Identity** - Zero-knowledge identity for unlinkable payments
+2. **Buy Gas Credits** - Deposit ETH into paymaster pools
+3. **Get Context** - Copy encoded context string
+4. **Configure in Your dApp** - Paste context into your dApp's settings
+
+## Step 5: Transactions Work Automatically
+
+```typescript
+// Regular dApp transaction - gas paid by user's credits
+const txHash = await smartAccount.writeContract({
+  address: contractAddress,
+  abi: contractAbi,
+  functionName: 'yourFunction',
+  args: [param1, param2]
+})
+
+// User's prepaid gas credits pay for this transaction automatically!
 ```
 
 ## What's Next?
 
-- **[Core Package Reference](/core/)** - Deep dive into paymaster client
-- **[Data Package Reference](/data/)** - Learn about pool queries  
-- **[Privacy Best Practices](/guides/privacy)** - Optimize your privacy
-- **[Integration Guide](/guides/integration)** - Production deployment tips
+- **[Live Demo App](https://demo.prepaidgas.xyz)** - Try it yourself
+- **[Demo Video](https://www.loom.com/share/393f02e7cc62416eb695e51f0dbf72dd)** - See how it works
+- **[Gas Credit Store](https://testnet.prepaidgas.xyz)** - Where users buy credits
+- **[Core SDK Reference](/core/)** - SDK documentation
 
-The SDK handles all the complex ZK proof generation and paymaster integration - you just need to provide the user operation and pool information!
+> **Privacy Note**: Transactions using the same gas credits are linkable to each other via nullifiers, but your original purchase remains unlinkable to your transactions.
