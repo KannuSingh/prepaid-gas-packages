@@ -20,14 +20,9 @@ Tracks cumulative gas usage per nullifier instead of simple boolean.
 ## Transaction Flow
 
 ### 1. User Joins Pool
-Same as OneTimeUse - deposit 0.0001 ETH with identity commitment.
+Same as OneTimeUse - deposit joining amount (e.g., 0.0001 ETH) with identity commitment.
 
-### 2. Gas Estimation (Mode 1)
-- Uses dummy proof data
-- Estimates gas without affecting usage tracking
-- No state changes
-
-### 3. Transaction Execution (Mode 0)
+### 2. Transaction Execution
 ```solidity
 function _validatePaymasterUserOp(...) internal override returns (bytes memory context, uint256 validationData) {
     // Verify ZK proof
@@ -40,72 +35,49 @@ function _validatePaymasterUserOp(...) internal override returns (bytes memory c
 }
 ```
 
-### 4. Post-Operation
+### 3. Post-Operation
 ```solidity
-function _postOp(PostOpMode mode, bytes calldata context, uint256 actualGasCost, uint256) internal override {
-    if (mode == PostOpMode.opSucceeded) {
-        (bytes32 userOpHash, uint256 nullifier, address sender) = abi.decode(context, (bytes32, uint256, address));
-        
-        // Increment gas usage
-        nullifierGasUsage[nullifier] += actualGasCost;
-        
-        // Deduct only actual gas cost
-        totalUsersDeposit -= actualGasCost;
-        
-        emit UserOpSponsoredWithNullifier(sender, userOpHash, actualGasCost, nullifier);
-    }
+function _postOp(
+    PostOpMode /*mode*/,
+    bytes calldata context,
+    uint256 actualGasCost,
+    uint256 actualUserOpFeePerGas
+) internal virtual override {
+    // Decode the nullifier, userOpHash, sender from the context passed during validation.
+    (bytes32 userOpHash, uint256 nullifier, address sender) = abi.decode(
+        context,
+        (bytes32, uint256, address)
+    );
+
+    // Calculate the total gas cost, including the EntryPoint's postOp overhead.
+    uint256 postOpGasCost = Constants.POSTOP_GAS_COST *
+        actualUserOpFeePerGas;
+    uint256 totalGasCost = actualGasCost + postOpGasCost;
+
+    // Deduct the gas cost from the user's allowance tracked by their nullifier.
+    nullifierGasUsage[nullifier] += totalGasCost;
+
+    // Deduct from the global tracker of user deposits for revenue calculation.
+    totalDeposit -= totalGasCost;
+
+    emit UserOpSponsoredWithNullifier(
+        sender,
+        userOpHash,
+        totalGasCost,
+        nullifier
+    );
 }
 ```
 
 ## Key Features
 
-### Gas Efficiency
-- Only pays for **actual gas used**
-- Single deposit covers multiple transactions
-- No waste of unused joining amount
+- **Multi-Use**: Single deposit covers multiple transactions
+- **Gas Tracking**: Only pays for actual gas used per transaction
+- **Reusable**: Same nullifier until joining amount depleted
+- **Efficient**: No waste of unused joining amount
 
-### Usage Tracking
-- Precise gas accounting per nullifier
-- Can query remaining balance
-- Automatic exhaustion handling
+## Balance Checking
 
-### Reusability
-- Same nullifier used across multiple transactions
-- Continues until joining amount depleted
-- Predictable cost model
-
-## Use Cases
-
-### When to Use GasLimited
-- **Regular usage**: Multiple transactions expected from one deposit
-- **Gas efficiency**: Want to minimize per-transaction costs
-- **Predictable usage**: Can estimate total gas needs
-- **Budget control**: Want to limit spending per identity
-
-### Example Scenarios
-- Regular DeFi interactions
-- Gaming microtransactions
-- Subscription-style payments
-- Automated trading bots
-
-## Cost Analysis
-
-### Per-Transaction Cost
-- **First transaction**: Actual gas cost only
-- **Subsequent transactions**: Actual gas cost only
-- **No wasted funds**: Only pay for what you use
-
-### Example Usage Pattern
-Assuming 0.0001 ETH = $0.20 and gas costs $0.05 per transaction:
-- **Deposit**: $0.20 (0.0001 ETH)
-- **Transaction 1**: $0.05 gas (remaining: $0.15)
-- **Transaction 2**: $0.05 gas (remaining: $0.10)
-- **Transaction 3**: $0.05 gas (remaining: $0.05)
-- **Transaction 4**: $0.05 gas (remaining: $0.00, exhausted)
-
-## Remaining Balance Query
-
-### Check Available Gas
 ```typescript
 import { GAS_LIMITED_PAYMASTER_ABI } from '@prepaid-gas/constants'
 
@@ -117,73 +89,10 @@ const remaining = joiningAmount - currentUsage
 console.log(`Remaining gas allowance: ${remaining} wei`)
 ```
 
-### Smart Account Integration
-```typescript
-// Check if nullifier has remaining balance before transaction
-const hasBalance = remaining > estimatedGasCost
-if (!hasBalance) {
-  // Need to deposit again or use different identity
-  console.log('Nullifier exhausted, need new deposit')
-}
-```
-
-## Developer Integration
-
-### Usage Pattern
-```typescript
-// 1. User deposits once
-// 2. Multiple transactions possible
-// 3. Track usage to know when exhausted
-// 4. When exhausted, deposit again for more transactions
-
-const checkBalance = async (nullifier: bigint) => {
-  const usage = await contract.read.nullifierGasUsage([nullifier])
-  const limit = await contract.read.JOINING_AMOUNT()
-  return limit - usage
-}
-```
-
-### Nullifier Management
-```typescript
-// Reuse same nullifier until exhausted
-let currentNullifier = generateNullifier(identity, ...)
-let remainingBalance = await checkBalance(currentNullifier)
-
-if (remainingBalance < estimatedGas) {
-  // Need new deposit or different identity
-  currentNullifier = await depositAndGetNewNullifier()
-}
-```
-
-## Technical Considerations
-
-### Gas Accounting
-- Tracks actual post-op gas costs
-- Includes gas used in contract execution
-- Does not include user operation gas (paid by user)
-
-### Storage Growth
-- One storage slot per unique nullifier
-- Storage persists indefinitely
-- Consider nullifier rotation for long-term usage
-
-### MEV Protection
-- Gas usage updates are atomic
-- No front-running opportunity for exhaustion
-- Consistent state across concurrent transactions
-
-## Migration Patterns
-
-### From OneTimeUse
-- More cost-effective for multiple transactions
-- Same privacy model with usage tracking
-- Can reuse nullifiers efficiently
-
-### To CacheEnabled
-- Upgrade for even better gas efficiency
-- Requires more complex integration
-- Suitable for power users
-
 ## Contract Address
 
 **Base Sepolia**: `0xDEc68496A556CeE996894ac2FDc9E43F39938e62`
+
+## Source Code
+
+- **GitHub**: [GasLimitedPaymaster.sol](https://github.com/KannuSingh/prepaid-gas-paymaster-contracts/blob/main/contracts/implementation/GasLimitedPaymaster.sol)
