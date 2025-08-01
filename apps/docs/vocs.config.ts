@@ -1,7 +1,7 @@
 import { defineConfig } from 'vocs';
 
 export default defineConfig({
-  title: 'Prepaid Gas SDK',
+  title: 'PrepaidGas',
   description: 'Privacy-preserving gas payments using Account Abstraction and zero-knowledge proofs',
   // logoUrl: '/logo.svg',
   // iconUrl: '/icon.png',
@@ -12,24 +12,29 @@ export default defineConfig({
       text: 'Getting Started',
       items: [
         { text: 'Introduction', link: '/' },
-        { text: 'Installation', link: '/installation' },
         { text: 'Quick Start', link: '/quick-start' },
       ],
     },
     {
-      text: 'Core Package',
+      text: 'Demo',
       items: [
-        { text: 'Overview', link: '/core/' },
-        { text: 'PrepaidGasPaymaster', link: '/core/client' },
+        { text: 'Live Demo App', link: 'https://demo.prepaidgas.xyz' },
+        { text: 'Demo Video', link: 'https://www.loom.com/share/393f02e7cc62416eb695e51f0dbf72dd' },
       ],
     },
     {
-      text: 'Data Package',
+      text: 'Core',
       items: [
-        { text: 'Overview', link: '/data/' },
-        { text: 'Query API', link: '/data/queries' },
+        { text: 'SDK Integration', link: '/core/' },
       ],
     },
+    // {
+    //   text: 'Data Package',
+    //   items: [
+    //     { text: 'Overview', link: '/data/' },
+    //     { text: 'Query API', link: '/data/queries' },
+    //   ],
+    // },
     {
       text: 'Smart Contracts',
       items: [
@@ -39,14 +44,14 @@ export default defineConfig({
         { text: 'CacheEnabled', link: '/contracts/cache-enabled' },
       ],
     },
-    {
-      text: 'Guides',
-      items: [
-        { text: 'Integration Guide', link: '/guides/integration' },
-        { text: 'React Setup', link: '/guides/react-setup' },
-        { text: 'Privacy Best Practices', link: '/guides/privacy' },
-      ],
-    },
+    // {
+    //   text: 'Guides',
+    //   items: [
+    //     { text: 'Integration Guide', link: '/guides/integration' },
+    //     { text: 'React Setup', link: '/guides/react-setup' },
+    //     { text: 'Privacy Best Practices', link: '/guides/privacy' },
+    //   ],
+    // },
     // {
     //   text: 'Examples',
     //   items: [
@@ -58,26 +63,26 @@ export default defineConfig({
   ],
 
   // Top navigation
-  // topNav: [
-  //   { text: 'Guide', link: '/' },
-  //   { text: 'API Reference', link: '/core/' },
-  //   { text: 'Examples', link: '/examples/basic' },
-  //   {
-  //     text: 'Links',
-  //     items: [
-  //       { text: 'GitHub', link: 'https://github.com/your-org/prepaid-gas-packages' },
-  //       { text: 'NPM', link: 'https://www.npmjs.com/package/@prepaid-gas/core' },
-  //     ],
-  //   },
-  // ],
+  topNav: [
+    { text: 'Guide', link: '/' },
+    { text: 'Demo', link: 'https://demo.prepaidgas.xyz' },
+    {
+      text: 'GitHub',
+      items: [
+        { text: 'SDK Packages', link: 'https://github.com/KannuSingh/prepaid-gas-packages' },
+        { text: 'Smart Contracts', link: 'https://github.com/KannuSingh/prepaid-gas-paymaster-contracts' },
+        { text: 'Subgraph', link: 'https://github.com/KannuSingh/prepaid-gas-paymasters-subgraph' },
+      ],
+    },
+  ],
 
   // Social links
-  // socials: [
-  //   {
-  //     icon: 'github',
-  //     link: 'https://github.com/your-org/prepaid-gas-packages',
-  //   },
-  // ],
+  socials: [
+    {
+      icon: 'github',
+      link: 'https://github.com/KannuSingh/prepaid-gas-packages',
+    },
+  ],
 
   // Theme customization
   theme: {
