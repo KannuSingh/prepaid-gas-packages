@@ -1,76 +1,38 @@
-# Prepaid Gas SDK
+# PrepaidGas
 
-Privacy-preserving gas payments using Account Abstraction (ERC-4337) and zero-knowledge proofs via the Semaphore protocol.
+Enable users to pay for their own gas using zero-knowledge proofs across dApps.
 
-## What is Prepaid Gas?
+## What is PrepaidGas?
 
-The Prepaid Gas SDK enables users to pay for gas fees anonymously by joining privacy pools. Using zero-knowledge proofs, users can prove membership in a pool without revealing their identity, enabling truly private transactions on Ethereum and compatible networks.
+PrepaidGas is a **privacy-first gas payment system** that lets users buy their own gas credits and use them across any supporting dApp. Think of it like buying a prepaid phone card, but for blockchain gas fees.
 
-## Key Features
+**For Users:** Buy gas credits once, use them across all supporting dApps without revealing your identity to the paymaster
+**For Developers:** Users pay for their own transactions - zero gas costs for you
 
-- **Privacy-First**: Zero-knowledge proofs ensure transaction privacy
-- **Account Abstraction**: Built on ERC-4337 standard for seamless UX  
-- **Pool-Based System**: Join pools to share gas costs anonymously
-- **Multi-Network**: Support for Base, Optimism, and other EVM chains
-- **Type-Safe**: Full TypeScript support with comprehensive types
+## How It Works
 
-## Architecture Overview
+### The User Journey
+1. **Buy Gas Credits** - Visit [testnet.prepaidgas.xyz](https://testnet.prepaidgas.xyz) to purchase prepaid gas
+2. **Get Payment Context** - Receive an encoded string after purchase  
+3. **Configure in Any dApp** - Paste the context into any supporting dApp's settings
+4. **Use ZK Proofs** - Transactions prove you have credits without revealing which specific credits you purchased
 
-The SDK consists of two main packages:
+### The Developer Experience  
+1. **Add Paymaster Settings** - Let users configure their own gas credits
+2. **Integrate SDK** - Handle user paymaster contexts with `@prepaid-gas/core`
+3. **Zero Gas Costs** - Users pay for their own transactions automatically
+4. **Enhanced Privacy** - Attract users who value unlinkable gas payments
 
-### [@prepaid-gas/core](/core/)
-The primary SDK for paymaster integration:
-- `PrepaidGasPaymaster` client for ZK proof generation
-- Two-phase operations (estimation + validation)
-- Context encoding and paymaster data formatting
+## Why PrepaidGas?
 
-### [@prepaid-gas/data](/data/)  
-Data layer with fluent query builders:
-- `SubgraphClient` for pool and transaction data
-- Network-aware multi-chain querying
-- Type-safe GraphQL query construction
+### **For Developers**
+- **Zero Gas Costs** - Users pay for their own transactions
+- **Better User Experience** - Users pre-fund gas without needing ETH per transaction  
+- **Privacy Features** - Attract users who value unlinkable gas payments
+- **Easy Integration** - Simple SDK integration
 
-## Privacy Model
+### **For Users**
+- **Unlinkable Payments** - Your gas purchases can't be linked to your transactions
+- **Universal Gas Card** - One purchase works everywhere
 
-**Pool-Based Anonymity**: Users join pools by adding identity commitments to Merkle trees. Gas payments prove pool membership without revealing which specific member is transacting.
-
-**Cross-Pool Privacy**: Transactions within the same pool are linkable via nullifiers, but using different identities across pools provides unlinkability.
-
-**Zero-Knowledge Proofs**: Built on Semaphore protocol for computational soundness and privacy guarantees.
-
-## Quick Start
-
-Get started with the Prepaid Gas SDK in minutes:
-
-```bash
-npm install @prepaid-gas/core @prepaid-gas/data
-```
-
-```typescript
-import { PrepaidGasPaymaster } from '@prepaid-gas/core'
-
-// Create paymaster client for Base Sepolia
-const paymaster = PrepaidGasPaymaster.createForNetwork(84532)
-
-// Generate paymaster data for transaction
-const result = await paymaster.getPaymasterData({
-  userOp,
-  poolId: '1',
-  identity: 'your-identity-base64'
-})
-```
-
-[Learn more in our installation guide →](/installation)
-
-## Examples
-
-Comprehensive examples are available in our integration guide:
-- Simple paymaster integration patterns
-- Frontend integration with React  
-- Pool management and privacy optimization
-
-## Community & Support
-
-- **GitHub**: [Report issues and contribute](https://github.com/your-org/prepaid-gas-packages)
-- **NPM**: [@prepaid-gas packages](https://www.npmjs.com/package/@prepaid-gas/core)
-- **Documentation**: You're reading it!
+> **Privacy Note**: Transactions using the same gas credits are linkable to each other via nullifiers, but not to your original purchase or identity.
