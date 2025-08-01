@@ -1,95 +1,86 @@
-# Core Package
+# Core SDK Integration
 
-The `@prepaid-gas/core` package provides the main SDK for integrating privacy-preserving gas payments into your dApp.
+The `@prepaid-gas/core` package provides the SDK for integrating user-owned gas credits into your dApp.
 
 ## Installation
 
 ```bash
-npm install @prepaid-gas/core
+npm install @prepaid-gas/core viem permissionless
 ```
 
-## Basic Usage
+## Basic Integration
 
 ```typescript
-import { PrepaidGasPaymaster, encodePaymasterContext } from '@prepaid-gas/core'
-import { Identity } from '@semaphore-protocol/identity'
-
-// Create client
-const paymaster = PrepaidGasPaymaster.createForNetwork(84532)
-
-// Setup identity
-const identity = new Identity()
-const context = encodePaymasterContext(
-  '0x4DACA5b0a5d10853F84bB400C5232E4605bc14A0', // paymaster address
-  identity.export() // identity string
-)
-
-// Use with your user operation
-const result = await paymaster.getPaymasterData({
-  // ... your userOperation fields
-  context
-})
-```
-
-## Two Operation Types
-
-### Gas Estimation (Fast)
-```typescript
-const stubData = await paymaster.getPaymasterStubData({
-  sender: '0x...',
-  callData: '0x...',
-  context,
-  chainId: 84532,
-  entryPointAddress: '0x...'
-})
-```
-
-### Real Transaction (Generates ZK Proof)
-```typescript
-const paymasterData = await paymaster.getPaymasterData({
-  // ... userOperation fields
-  context
-})
-```
-
-## Context Encoding
-
-The context contains your paymaster address and identity:
-
-```typescript
-import { encodePaymasterContext } from '@prepaid-gas/core'
-
-const context = encodePaymasterContext(
-  paymasterAddress, // which paymaster to use
-  identity.export() // your Semaphore identity
-)
-```
-
-## Integration with Account Abstraction
-
-```typescript
+import { PrepaidGasPaymaster } from '@prepaid-gas/core'
 import { createSmartAccountClient } from 'permissionless'
 
+// 1. Create paymaster client for Base Sepolia
+const paymaster = PrepaidGasPaymaster.createForNetwork(84532)
+
+// 2. Get user's paymaster context (from their gas card purchase)
+const userPaymasterContext = getUserPaymasterContext() // User provides this
+
+// 3. Configure smart account client
 const smartAccountClient = createSmartAccountClient({
-  // ... your config
+  // ... your smart account configuration
   paymaster: {
-    getPaymasterStubData: (params) => paymaster.getPaymasterStubData({ ...params, context }),
-    getPaymasterData: (params) => paymaster.getPaymasterData({ ...params, context })
-  }
+    getPaymasterStubData: (params) => paymaster.getPaymasterStubData(params),
+    getPaymasterData: (params) => paymaster.getPaymasterData(params)
+  },
+  paymasterContext: userPaymasterContext
+})
+
+// 4. Regular transactions now use user's gas credits
+const txHash = await smartAccountClient.writeContract({
+  address: contractAddress,
+  abi: contractAbi,
+  functionName: 'yourFunction',
+  args: [param1, param2]
 })
 ```
 
-## Supported Networks
+## How Users Get Gas Credits
 
-- Base Sepolia (84532)
-- Base Mainnet (8453)
+Your users visit **[testnet.prepaidgas.xyz](https://testnet.prepaidgas.xyz)** to:
+1. Buy gas credits by depositing ETH
+2. Get an encoded paymaster context string
+3. Paste this context into your dApp's settings
+
+## User Configuration UI
+
+Allow users to configure their gas credits:
 
 ```typescript
-// Check supported paymasters on your network
-const supported = paymaster.getSupportedPaymasters()
+export function PaymasterSettings() {
+  const [paymasterContext, setPaymasterContext] = useState('')
+  
+  return (
+    <div>
+      <h3>Configure Gas Credits</h3>
+      <p>Get credits at <a href="https://testnet.prepaidgas.xyz">testnet.prepaidgas.xyz</a></p>
+      <textarea 
+        placeholder="Paste your paymaster context here..."
+        value={paymasterContext}
+        onChange={(e) => setPaymasterContext(e.target.value)}
+      />
+      <button onClick={() => handleSave(paymasterContext)}>
+        Save Gas Credits
+      </button>
+    </div>
+  )
+}
 ```
+
+## Supported Network
+
+- **Base Sepolia** (Chain ID: 84532)
+
+## Source Code
+
+- **GitHub**: [prepaid-gas-packages](https://github.com/KannuSingh/prepaid-gas-packages)
+- **Package**: Located in `/packages/core/`
 
 ## Next Steps
 
-- **[Client API Reference](/core/client)** - Full API documentation
-- **[Data Package](/data/)** - Query paymaster data
+- **[Smart Contracts](/contracts/)** - Understand the paymaster implementations
+- **[Live Demo](https://demo.prepaidgas.xyz)** - See it in action
