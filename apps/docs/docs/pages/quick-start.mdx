@@ -1,0 +1,94 @@
+# Quick Start
+
+Enable users to pay for gas using their own zero-knowledge credits in your dApp.
+
+## How PrepaidGas Works
+
+**For Users**: Buy prepaid gas credits (like a gas card) and use them across dApps without revealing your purchase identity
+**For Developers**: Let users configure paymaster credits in your dApp - no gas fees from you!
+
+## Step 1: Install SDK
+
+```bash
+npm install @prepaid-gas/core viem permissionless
+```
+
+## Step 2: Add Paymaster Support
+
+```typescript
+import { PrepaidGasPaymaster } from '@prepaid-gas/core'
+import { createSmartAccountClient } from 'permissionless'
+
+// Create paymaster client for Base Sepolia
+const paymaster = PrepaidGasPaymaster.createForNetwork(84532)
+
+// Get user's paymaster context (from their gas card purchase)
+const userPaymasterContext = getUserPaymasterContext() // User provides this
+
+// Configure smart account with user's paymaster
+const smartAccount = createSmartAccountClient({
+  // ... your smart account config
+  paymaster: {
+    getPaymasterStubData: (params) => paymaster.getPaymasterStubData(params),
+    getPaymasterData: (params) => paymaster.getPaymasterData(params)
+  },
+  paymasterContext: userPaymasterContext
+})
+```
+
+## Step 3: Build User Settings
+
+Allow users to configure their gas credits:
+
+```typescript
+export function PaymasterSettings() {
+  const [paymasterContext, setPaymasterContext] = useState('')
+  
+  return (
+    <div>
+      <h3>Configure Your Gas Credits</h3>
+      <p>Buy prepaid gas at <a href="https://testnet.prepaidgas.xyz">testnet.prepaidgas.xyz</a></p>
+      <textarea 
+        placeholder="Paste your paymaster context here..."
+        value={paymasterContext}
+        onChange={(e) => setPaymasterContext(e.target.value)}
+      />
+      <button onClick={() => handleSave(paymasterContext)}>
+        Save Gas Credits
+      </button>
+    </div>
+  )
+}
+```
+
+## Step 4: Users Get Credits
+
+Your users visit **[testnet.prepaidgas.xyz](https://testnet.prepaidgas.xyz)** to:
+
+1. **Create Identity** - Zero-knowledge identity for unlinkable payments
+2. **Buy Gas Credits** - Deposit ETH into paymaster pools
+3. **Get Context** - Copy encoded context string
+4. **Configure in Your dApp** - Paste context into your dApp's settings
+
+## Step 5: Transactions Work Automatically
+
+```typescript
+// Regular dApp transaction - gas paid by user's credits
+const txHash = await smartAccount.writeContract({
+  address: contractAddress,
+  abi: contractAbi,
+  functionName: 'yourFunction',
+  args: [param1, param2]
+})
+
+// User's prepaid gas credits pay for this transaction automatically!
+```
+
+## What's Next?
+
+- **[Live Demo App](https://demo.prepaidgas.xyz)** - Try it yourself
+- **[Demo Video](https://www.loom.com/share/393f02e7cc62416eb695e51f0dbf72dd)** - See how it works
+- **[Gas Credit Store](https://testnet.prepaidgas.xyz)** - Where users buy credits
+- **[Core SDK Reference](/core/)** - SDK documentation
+
+> **Privacy Note**: Transactions using the same gas credits are linkable to each other via nullifiers, but your original purchase remains unlinkable to your transactions.

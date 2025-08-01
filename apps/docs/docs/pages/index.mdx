@@ -1,0 +1,38 @@
+# PrepaidGas
+
+Enable users to pay for their own gas using zero-knowledge proofs across dApps.
+
+## What is PrepaidGas?
+
+PrepaidGas is a **privacy-first gas payment system** that lets users buy their own gas credits and use them across any supporting dApp. Think of it like buying a prepaid phone card, but for blockchain gas fees.
+
+**For Users:** Buy gas credits once, use them across all supporting dApps without revealing your identity to the paymaster
+**For Developers:** Users pay for their own transactions - zero gas costs for you
+
+## How It Works
+
+### The User Journey
+1. **Buy Gas Credits** - Visit [testnet.prepaidgas.xyz](https://testnet.prepaidgas.xyz) to purchase prepaid gas
+2. **Get Payment Context** - Receive an encoded string after purchase  
+3. **Configure in Any dApp** - Paste the context into any supporting dApp's settings
+4. **Use ZK Proofs** - Transactions prove you have credits without revealing which specific credits you purchased
+
+### The Developer Experience  
+1. **Add Paymaster Settings** - Let users configure their own gas credits
+2. **Integrate SDK** - Handle user paymaster contexts with `@prepaid-gas/core`
+3. **Zero Gas Costs** - Users pay for their own transactions automatically
+4. **Enhanced Privacy** - Attract users who value unlinkable gas payments
+
+## Why PrepaidGas?
+
+### **For Developers**
+- **Zero Gas Costs** - Users pay for their own transactions
+- **Better User Experience** - Users pre-fund gas without needing ETH per transaction  
+- **Privacy Features** - Attract users who value unlinkable gas payments
+- **Easy Integration** - Simple SDK integration
+
+### **For Users**
+- **Unlinkable Payments** - Your gas purchases can't be linked to your transactions
+- **Universal Gas Card** - One purchase works everywhere
+
+> **Privacy Note**: Transactions using the same gas credits are linkable to each other via nullifiers, but not to your original purchase or identity.

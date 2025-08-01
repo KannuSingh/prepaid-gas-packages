@@ -1,0 +1,64 @@
+# Smart Contracts
+
+PrepaidGas uses three paymaster contracts with different gas consumption models. All share the same core foundation.
+
+## Available Paymasters
+
+- **[OneTimeUse](/contracts/one-time-use)** - Single-use gas credits 
+- **[GasLimited](/contracts/gas-limited)** - Multi-use credits with spending limits
+- **[CacheEnabled](/contracts/cache-enabled)** - Optimized multi-use with caching
+
+## Shared Foundation
+
+All paymasters inherit from the same base contracts that provide common functionality:
+
+### BasePaymaster
+ERC-4337 paymaster interface implementation:
+- Validation and post-operation handling
+- EntryPoint integration and stake management
+
+### PrepaidGasPool  
+Zero-knowledge pool management:
+- Semaphore ZK proof verification
+- Merkle tree state management for privacy pools
+- Member deposits and joining logic
+
+## Common ZK Proof Structure
+
+All paymasters use the same Semaphore proof format:
+
+```solidity
+struct PoolMembershipProof {
+    uint256 merkleTreeDepth;
+    uint256 merkleTreeRoot;
+    uint256 nullifier;
+    uint256 message;
+    uint256 scope;
+    uint256[8] points;
+}
+```
+
+## Shared Configuration
+
+- **Joining Amount**: Configurable deposit amount (e.g., 0.0001 ETH)
+- **Scope Binding**: Proofs bound to specific paymaster + chain + amount
+
+## Network Deployments
+
+**Base Sepolia (Chain ID: 84532)**
+- OneTimeUse: `0x4DACA5b0a5d10853F84bB400C5232E4605bc14A0`
+- GasLimited: `0xDEc68496A556CeE996894ac2FDc9E43F39938e62`
+- CacheEnabled: `0xfFE794611e59A987D8f13585248414d40a02Bb58`
+
+## Privacy Model
+
+**Pool-Based System**: Users join by depositing and adding identity commitments
+
+**Unlinkable Purchases**: Transactions prove membership without revealing which user made the original purchase
+
+**Nullifier Linkability**: For GasLimited and CacheEnabled, transactions using the same gas credits are linkable to each other via nullifiers
+
+## Source Code
+
+- **Repository**: [prepaid-gas-paymaster-contracts](https://github.com/KannuSingh/prepaid-gas-paymaster-contracts)
+- **Contracts**: Located in `/contracts/implementation/`

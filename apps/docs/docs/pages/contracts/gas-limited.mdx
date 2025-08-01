@@ -1,0 +1,98 @@
+# GasLimitedPaymaster
+
+The GasLimitedPaymaster allows multiple transactions from a single deposit by tracking gas usage per nullifier.
+
+## How It Works
+
+### Multi-Use Model
+- Single deposit enables **multiple transactions**
+- Tracks **actual gas cost** per nullifier
+- Reusable until joining amount is fully consumed
+- More gas-efficient than OneTimeUse
+
+### State Tracking
+```solidity
+mapping(uint256 => uint256) public nullifierGasUsage;
+```
+
+Tracks cumulative gas usage per nullifier instead of simple boolean.
+
+## Transaction Flow
+
+### 1. User Joins Pool
+Same as OneTimeUse - deposit joining amount (e.g., 0.0001 ETH) with identity commitment.
+
+### 2. Transaction Execution
+```solidity
+function _validatePaymasterUserOp(...) internal override returns (bytes memory context, uint256 validationData) {
+    // Verify ZK proof
+    // Check remaining gas allowance
+    uint256 currentUsage = nullifierGasUsage[proof.nullifier];
+    require(currentUsage < JOINING_AMOUNT, "Nullifier exhausted");
+    
+    // Return context for post-op
+    return (abi.encode(userOpHash, proof.nullifier, sender), _packValidationData(false, 0, 0));
+}
+```
+
+### 3. Post-Operation
+```solidity
+function _postOp(
+    PostOpMode /*mode*/,
+    bytes calldata context,
+    uint256 actualGasCost,
+    uint256 actualUserOpFeePerGas
+) internal virtual override {
+    // Decode the nullifier, userOpHash, sender from the context passed during validation.
+    (bytes32 userOpHash, uint256 nullifier, address sender) = abi.decode(
+        context,
+        (bytes32, uint256, address)
+    );
+
+    // Calculate the total gas cost, including the EntryPoint's postOp overhead.
+    uint256 postOpGasCost = Constants.POSTOP_GAS_COST *
+        actualUserOpFeePerGas;
+    uint256 totalGasCost = actualGasCost + postOpGasCost;
+
+    // Deduct the gas cost from the user's allowance tracked by their nullifier.
+    nullifierGasUsage[nullifier] += totalGasCost;
+
+    // Deduct from the global tracker of user deposits for revenue calculation.
+    totalDeposit -= totalGasCost;
+
+    emit UserOpSponsoredWithNullifier(
+        sender,
+        userOpHash,
+        totalGasCost,
+        nullifier
+    );
+}
+```
+
+## Key Features
+
+- **Multi-Use**: Single deposit covers multiple transactions
+- **Gas Tracking**: Only pays for actual gas used per transaction
+- **Reusable**: Same nullifier until joining amount depleted
+- **Efficient**: No waste of unused joining amount
+
+## Balance Checking
+
+```typescript
+import { GAS_LIMITED_PAYMASTER_ABI } from '@prepaid-gas/constants'
+
+// Query current usage
+const currentUsage = await contract.read.nullifierGasUsage([nullifier])
+const joiningAmount = await contract.read.JOINING_AMOUNT()
+const remaining = joiningAmount - currentUsage
+
+console.log(`Remaining gas allowance: ${remaining} wei`)
+```
+
+## Contract Address
+
+**Base Sepolia**: `0xDEc68496A556CeE996894ac2FDc9E43F39938e62`
+
+## Source Code
+
+- **GitHub**: [GasLimitedPaymaster.sol](https://github.com/KannuSingh/prepaid-gas-paymaster-contracts/blob/main/contracts/implementation/GasLimitedPaymaster.sol)

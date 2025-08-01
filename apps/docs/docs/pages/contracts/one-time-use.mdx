@@ -1,0 +1,89 @@
+# OneTimeUsePaymaster
+
+The OneTimeUsePaymaster provides maximum unlinkability by consuming the entire joining amount with each transaction.
+
+## How It Works
+
+### Single-Use Model
+- Each transaction uses the **entire joining amount** (e.g., 0.0001 ETH)
+- Nullifier is marked as used after one transaction
+- Requires new deposit for each subsequent transaction
+- Provides maximum unlinkability between transactions
+
+### State Tracking
+```solidity
+mapping(uint256 => bool) public usedNullifiers;
+```
+
+Simple boolean tracking - once a nullifier is used, it cannot be used again.
+
+## Transaction Flow
+
+### 1. User Joins Pool
+```solidity
+// User calls deposit() with identity commitment
+function deposit(uint256 identityCommitment) external payable {
+    require(msg.value == JOINING_AMOUNT, "Incorrect joining amount"); // e.g., 0.0001 ETH
+    // Add to Merkle tree
+    // Emit Deposited event
+}
+```
+
+### 2. Transaction Execution
+```solidity
+function _validatePaymasterUserOp(...) internal override returns (bytes memory context, uint256 validationData) {
+    // Verify ZK proof
+    // Check nullifier not already used
+    require(!usedNullifiers[proof.nullifier], "NullifierAlreadyUsed");
+    
+    // Return context for post-op
+    return (abi.encode(userOpHash, proof.nullifier, sender), _packValidationData(false, 0, 0));
+}
+```
+
+### 3. Post-Operation
+```solidity
+function _postOp(
+    PostOpMode /*mode*/,
+    bytes calldata context,
+    uint256 actualGasCost,
+    uint256 actualUserOpFeePerGas
+) internal virtual override {
+    // Decode context:  userOpHash, nullifier, sender.
+    (bytes32 userOpHash, uint256 nullifier, address sender) = abi.decode(
+        context,
+        (bytes32, uint256, address)
+    );
+    //  Mark nullifier as used
+    usedNullifiers[nullifier] = true;
+    // Calculate total cost, including postOp overhead.
+    uint256 postOpGasCost = Constants.POSTOP_GAS_COST *
+        actualUserOpFeePerGas;
+    uint256 totalGasCost = actualGasCost + postOpGasCost;
+
+    // Deduct the JOINING_AMOUNT from the pool's total deposits.
+    totalDeposit -= JOINING_AMOUNT;
+
+    emit UserOpSponsoredWithNullifier(
+        sender,
+        userOpHash,
+        totalGasCost,
+        nullifier
+    );
+}
+```
+
+## Key Features
+
+- **Maximum Unlinkability**: Each transaction is completely unlinkable from previous ones
+- **Single Use**: Fresh nullifier required for each transaction
+- **Simple State**: No complex usage tracking
+- **Full Consumption**: Entire joining amount used per transaction
+
+## Contract Address
+
+**Base Sepolia**: `0x4DACA5b0a5d10853F84bB400C5232E4605bc14A0`
+
+## Source Code
+
+- **GitHub**: [OneTimeUsePaymaster.sol](https://github.com/KannuSingh/prepaid-gas-paymaster-contracts/blob/main/contracts/implementation/OneTimeUsePaymaster.sol)

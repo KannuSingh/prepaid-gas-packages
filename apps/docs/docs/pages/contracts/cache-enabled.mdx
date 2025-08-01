@@ -1,0 +1,107 @@
+# CacheEnabledGasLimitedPaymaster
+
+The CacheEnabledGasLimitedPaymaster allows each sender to cache up to 2 nullifiers, preventing dust amounts from being wasted when nullifiers are exhausted.
+
+## How It Works
+
+### Two-Nullifier System Per Sender
+- Each **sender address** can have up to **2 active nullifiers** simultaneously
+- **Cached flow**: Uses pre-activated nullifiers without ZK proof verification
+- **Activation flow**: Adds new nullifiers with full ZK proof verification
+- **Wraparound consumption**: Uses available gas across both nullifiers
+
+### State Management
+```solidity
+/// @notice Cache mapping: sender => packed state flags
+mapping(address => uint256) public userNullifiersStates;
+/// @notice Cache mapping: keccak(abi.encode(sender,index)) => nullifier)
+mapping(bytes32 => uint256) public userNullifiers;
+/// @notice nullifier gas usage tracking : nullifier => gasUsed
+mapping(uint256 => uint256) public nullifierGasUsage;
+```
+
+The caching is linked to the **sender address**, not individual nullifiers.
+
+## Transaction Flows
+
+### Cached Flow
+For senders with pre-activated nullifiers:
+
+```solidity
+function _validateCachedPaymasterUserOp(...) internal returns (bytes memory context, uint256 validationData) {
+    address sender = userOp.getSender();
+    
+    // Get cached nullifier state for this sender
+    uint256 userNullifiersState = userNullifiersStates[sender];
+    if (userNullifiersState.getActivatedNullifierCount() == 0 && isValidationMode) {
+        revert SenderNotCached();
+    }
+    
+    // Calculate total available gas using activeNullifierIndex
+    uint256 totalAvailable = _calculateAvailableGasWithActiveIndex(sender, userNullifiersState);
+    
+    if (totalAvailable < maxCost && isValidationMode) {
+        revert UserOpExceedsGasAmount();
+    }
+}
+```
+
+### Activation Flow
+For adding new nullifiers or when cache needs updating:
+
+```solidity  
+function _validateActivationPaymasterUserOp(...) internal returns (bytes memory context, uint256 validationData) {
+    // Full ZK proof verification required
+    // Check if we can add new nullifier
+    if (userNullifiersState.getActivatedNullifierCount() >= Constants.MAX_NULLIFIERS_PER_ADDRESS &&
+        !userNullifiersState.getHasAvailableExhaustedSlot() && isValidationMode) {
+        revert AllNullifierSlotsActive();
+    }
+    
+    // Verify ZK proof and pool membership
+    if (!_validateProof(data.proof) && isValidationMode) {
+        revert ProofVerificationFailed();
+    }
+}
+```
+
+## Key Features
+
+- **Sender-Based Caching**: Each sender address maintains its own nullifier cache
+- **Dust Prevention**: Prevents small remaining amounts from being wasted
+- **Smart Wraparound**: Automatically uses available gas across both cached nullifiers
+- **Exhausted Slot Reuse**: Reuses slots when nullifiers are fully consumed
+
+## State Checking
+
+```typescript
+import { CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI } from '@prepaid-gas/constants'
+
+const getUserState = async (userAddress: string) => {
+  const state = await contract.read.userNullifiersStates([userAddress])
+  
+  // Get nullifiers for this sender (index 0 and 1)
+  const nullifier0Key = keccak256(solidityPacked(['address', 'uint8'], [userAddress, 0]))
+  const nullifier1Key = keccak256(solidityPacked(['address', 'uint8'], [userAddress, 1]))
+  
+  const nullifier0 = await contract.read.userNullifiers([nullifier0Key])
+  const nullifier1 = await contract.read.userNullifiers([nullifier1Key])
+  
+  return {
+    activatedCount: Number(state & 0xFFn),
+    activeNullifierIndex: Number((state >> 8n) & 0xFFn),
+    exhaustedSlotIndex: Number((state >> 16n) & 0xFFn),
+    hasAvailableExhaustedSlot: ((state >> 24n) & 1n) === 1n,
+    nullifier0,
+    nullifier1
+  }
+}
+```
+
+## Contract Address
+
+**Base Sepolia**: `0xfFE794611e59A987D8f13585248414d40a02Bb58`
+
+## Source Code
+
+- **GitHub**: [CacheEnabledGasLimitedPaymaster.sol](https://github.com/KannuSingh/prepaid-gas-paymaster-contracts/blob/main/contracts/implementation/CacheEnabledGasLimitedPaymaster.sol)
