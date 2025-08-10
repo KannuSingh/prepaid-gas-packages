@@ -20,7 +20,7 @@ import { ApiClient } from "@/lib/api-client";
 import { useGasData } from "@/hooks/use-gas-data";
 
 interface CouponOption {
-  poolId: string;
+  paymasterAddress: string;
   joiningFee: string;
 }
 
@@ -35,7 +35,7 @@ interface GasData {
 interface PoolSelectorProps {
   identity: Identity;
   onBack: () => void;
-  onSelectPool: (poolId: string) => void;
+  onSelectPool: (paymasterAddress: string) => void;
   isLoading?: boolean;
 }
 
@@ -166,9 +166,9 @@ export function PoolSelector({
         // Use API route instead of direct subgraph call
         const pools = await ApiClient.getPoolsByIdentity(identityCommitment);
 
-        // Extract pool IDs (data is now serialized strings)
+        // Extract paymaster addresses (each paymaster is now a pool)
         const coupons: CouponOption[] = pools.map((poolMembership) => ({
-          poolId: poolMembership.pool.poolId, // Already a string now
+          paymasterAddress: poolMembership.pool.poolId, // Pool ID is now the paymaster address
           joiningFee: poolMembership.pool.joiningFee,
         }));
 
@@ -178,7 +178,7 @@ export function PoolSelector({
 
           // Auto-select first coupon if only one available
           if (coupons.length === 1 && coupons[0]) {
-            setSelectedCouponId(coupons[0].poolId);
+            setSelectedCouponId(coupons[0].paymasterAddress);
           }
 
           // Fetch gas data for all pools
@@ -253,23 +253,23 @@ export function PoolSelector({
           </Label>
           <div className="space-y-2 max-h-80 overflow-y-auto">
             {availableCoupons.map((coupon) => {
-              const gasData = gasDataMap[coupon.poolId];
+              const gasData = gasDataMap[coupon.paymasterAddress];
               const hasLowBalance =
                 gasData &&
                 gasData.remainingGas <= BigInt(gasData.joiningFee) / BigInt(10);
 
               return (
                 <Card
-                  key={coupon.poolId}
+                  key={coupon.paymasterAddress}
                   className={`cursor-pointer transition-colors ${
-                    selectedCouponId === coupon.poolId
+                    selectedCouponId === coupon.paymasterAddress
                       ? "border-primary bg-primary/5"
                       : hasLowBalance
                         ? "border-destructive/30 hover:border-destructive/50"
                         : "hover:border-muted-foreground/50"
                   }`}
                   onClick={() => {
-                    setSelectedCouponId(coupon.poolId);
+                    setSelectedCouponId(coupon.paymasterAddress);
                   }}
                 >
                   <CardContent className="p-4">
@@ -277,9 +277,9 @@ export function PoolSelector({
                       <div className="space-y-3 flex-1">
                         <div className="flex items-center justify-between">
                           <div className="font-medium">
-                            Pool #{coupon.poolId}
+                            Pool #{coupon.paymasterAddress}
                           </div>
-                          {selectedCouponId === coupon.poolId && (
+                          {selectedCouponId === coupon.paymasterAddress && (
                             <CheckCircle className="h-5 w-5 text-primary" />
                           )}
                         </div>

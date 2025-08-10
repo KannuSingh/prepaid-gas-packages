@@ -74,8 +74,8 @@ export function PaymasterSettings({ children }: PaymasterSettingsProps) {
       setStepError(null);
 
       const newPaymasterConfig: PaymasterConfig = {
+        paymasterAddress: contextConfig.paymasterAddress,
         identity: contextConfig.identity.export(),
-        address: contextConfig.paymasterAddress,
         paymasterContext: contextConfig.paymasterContext,
       };
 
@@ -129,8 +129,8 @@ export function PaymasterSettings({ children }: PaymasterSettingsProps) {
       const paymasterContext = `0x${poolAddress.padStart(64, "0")}`; // Temporary placeholder
 
       const newPaymasterConfig: PaymasterConfig = {
+        paymasterAddress: poolAddress,
         identity: semaphoreIdentity.export(),
-        address: poolAddress,
         paymasterContext: paymasterContext,
       };
 
