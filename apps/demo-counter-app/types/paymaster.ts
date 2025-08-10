@@ -1,7 +1,7 @@
 // file :demo-counter-app/types/paymaster.ts
 export interface PaymasterConfig {
+  paymasterAddress: string; // Paymaster contract address
   identity: string;
-  address: string;
   paymasterContext: string; // bytes data for smartAccountClient configuration
   amount?: string;
   network?: {
@@ -14,13 +14,13 @@ export interface PaymasterConfig {
 
 // Form input data (keep existing structure)
 export interface PaymasterFormData {
-  poolId: string; // was couponId
+  paymasterAddress: string; // was poolId
   identity: string;
 }
 
 // Validation errors
 export interface ValidationErrors {
-  poolId?: string; // was couponId
+  paymasterAddress?: string; // was poolId
   identity?: string;
   general?: string;
 }
