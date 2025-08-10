@@ -34,7 +34,7 @@ export function CounterSetup() {
 
             {paymasterConfigured && (
               <div className="text-xs text-green-600 bg-green-50 dark:bg-green-900/20 p-2 rounded">
-                Pool ID: #{paymasterConfig?.poolId}
+                Paymaster Address: {paymasterConfig?.paymasterAddress}
               </div>
             )}
 

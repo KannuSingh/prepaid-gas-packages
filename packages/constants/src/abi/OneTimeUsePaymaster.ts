@@ -5,7 +5,6 @@
 
 import type { Abi } from 'viem';
 import { BASE_PAYMASTER_ABI } from './shared';
-import { combineAbis } from './utils';
 
 /**
  * ABI items specific to OneTimeUsePaymaster
@@ -72,8 +71,9 @@ export const ONE_TIME_USE_PAYMASTER_SPECIFIC_ABI = [
 /**
  * Complete ABI for OneTimeUsePaymaster
  * Combines base paymaster functionality with specific functions
+ * Uses spread operator to preserve types for viem inference
  */
-export const ONE_TIME_USE_PAYMASTER_ABI = combineAbis([
-  BASE_PAYMASTER_ABI,
-  ONE_TIME_USE_PAYMASTER_SPECIFIC_ABI,
-]);
+export const ONE_TIME_USE_PAYMASTER_ABI = [
+  ...BASE_PAYMASTER_ABI,
+  ...ONE_TIME_USE_PAYMASTER_SPECIFIC_ABI,
+] as const satisfies Abi;

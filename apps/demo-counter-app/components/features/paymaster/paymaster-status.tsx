@@ -53,15 +53,15 @@ export function PaymasterStatus({ onClear }: PaymasterStatusProps) {
 
   // Memoize paymaster type calculation to avoid re-creating client on every render
   const paymasterInfo = useMemo(() => {
-    if (!paymasterConfig?.address) {
+    if (!paymasterConfig?.paymasterAddress) {
       return { type: "Unknown", truncatedAddress: "" };
     }
 
     return {
-      type: getPaymasterType(paymasterConfig.address),
-      truncatedAddress: truncateAddress(paymasterConfig.address),
+      type: getPaymasterType(paymasterConfig.paymasterAddress),
+      truncatedAddress: truncateAddress(paymasterConfig.paymasterAddress),
     };
-  }, [paymasterConfig?.address]);
+  }, [paymasterConfig?.paymasterAddress]);
 
   if (!isConfigured || !paymasterConfig) {
     return null;

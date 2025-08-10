@@ -51,7 +51,7 @@
     "@semaphore-protocol/proof": "^4.11.1"
   },
   "peerDependencies": {
-    "viem": "^2.31.3"
+    "viem": "^2.28.1"
   },
   "devDependencies": {
     "@prepaid-gas/eslint-config": "workspace:*",
@@ -64,7 +64,7 @@
     "rollup-plugin-visualizer": "^6.0.3",
     "tsup": "^8.3.5",
     "typescript": "^5.7.3",
-    "viem": "^2.31.3",
+    "viem": "^2.28.1",
     "vitest": "^2.1.8"
   }
 }

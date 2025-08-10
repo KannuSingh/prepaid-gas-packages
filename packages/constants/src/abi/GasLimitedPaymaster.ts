@@ -5,7 +5,6 @@
 
 import type { Abi } from 'viem';
 import { BASE_PAYMASTER_ABI } from './shared';
-import { combineAbis } from './utils';
 
 /**
  * ABI items specific to GasLimitedPaymaster
@@ -67,8 +66,9 @@ export const GAS_LIMITED_PAYMASTER_SPECIFIC_ABI = [
 /**
  * Complete ABI for GasLimitedPaymaster
  * Combines base paymaster functionality with specific functions
+ * Uses spread operator to preserve types for viem inference
  */
-export const GAS_LIMITED_PAYMASTER_ABI = combineAbis([
-  BASE_PAYMASTER_ABI,
-  GAS_LIMITED_PAYMASTER_SPECIFIC_ABI,
-]);
+export const GAS_LIMITED_PAYMASTER_ABI = [
+  ...BASE_PAYMASTER_ABI,
+  ...GAS_LIMITED_PAYMASTER_SPECIFIC_ABI,
+] as const satisfies Abi;
