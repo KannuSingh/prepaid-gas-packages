@@ -12,571 +12,195 @@ import { combineAbis } from './utils';
  * Excludes common BasePaymaster functionality
  */
 export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_SPECIFIC_ABI = [
-  // Constructor
   {
-    inputs: [
+    "inputs": [
       {
-        internalType: 'uint256',
-        name: '_joiningAmount',
-        type: 'uint256',
-      },
-      {
-        internalType: 'contract IEntryPoint',
-        name: '_entryPoint',
-        type: 'address',
-      },
-      {
-        internalType: 'address',
-        name: '_membershipVerifier',
-        type: 'address',
-      },
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
     ],
-    stateMutability: 'nonpayable',
-    type: 'constructor',
-  },
-  
-  // Cache Enabled specific errors
-  {
-    inputs: [],
-    name: 'AllNullifierSlotsActive',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'ContextMismatch',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'InsufficientPaymasterFund',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'InsufficientValue',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'InvalidCommitment',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'InvalidDataLength',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'InvalidJoiningAmount',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'InvalidProof',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'InvalidTreeDepth',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'LeafAlreadyExists',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'LeafCannotBeZero',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'LeafGreaterThanSnarkScalarField',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'MaxTreeDepthReached',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'MessageMismatch',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'NullifierAlreadySpent',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'NullifierSlotNotActive',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'PoolDead',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'ProofLengthMismatch',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'RootNotFound',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'ScopeNotSupported',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'TreeDepthTooSmall',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'TreeIsFull',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'UserNullifierAlreadyExists',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'WithdrawAmountExceedsRevenue',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'ZeroValueProhibited',
-    type: 'error',
-  },
-  
-  // Constants
-  {
-    inputs: [],
-    name: 'JOINING_AMOUNT',
-    outputs: [
+    "name": "nullifierGasUsage",
+    "outputs": [
       {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
     ],
-    stateMutability: 'view',
-    type: 'function',
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    inputs: [],
-    name: 'MAX_TREE_DEPTH',
-    outputs: [
-      {
-        internalType: 'uint32',
-        name: '',
-        type: 'uint32',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
+    "inputs": [],
+    "name": "AllNullifierSlotsActive",
+    "type": "error"
   },
   {
-    inputs: [],
-    name: 'MEMBERSHIP_VERIFIER',
-    outputs: [
-      {
-        internalType: 'address',
-        name: '',
-        type: 'address',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
+    "inputs": [],
+    "name": "SenderNotCached",
+    "type": "error"
   },
   {
-    inputs: [],
-    name: 'MIN_TREE_DEPTH',
-    outputs: [
+    "anonymous": false,
+    "inputs": [
       {
-        internalType: 'uint32',
-        name: '',
-        type: 'uint32',
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "userOpHash",
+        "type": "bytes32"
       },
+      {
+        "indexed": true,
+        "internalType": "uint256",
+        "name": "nullifier",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "gasUsed",
+        "type": "uint256"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "index",
+        "type": "uint8"
+      }
     ],
-    stateMutability: 'view',
-    type: 'function',
+    "name": "NullifierConsumed",
+    "type": "event"
   },
   {
-    inputs: [],
-    name: 'ROOT_HISTORY_SIZE',
-    outputs: [
+    "anonymous": false,
+    "inputs": [
       {
-        internalType: 'uint32',
-        name: '',
-        type: 'uint32',
+        "indexed": true,
+        "internalType": "address",
+        "name": "sender",
+        "type": "address"
       },
+      {
+        "indexed": true,
+        "internalType": "bytes32",
+        "name": "userOpHash",
+        "type": "bytes32"
+      },
+      {
+        "indexed": false,
+        "internalType": "uint256",
+        "name": "actualGasCost",
+        "type": "uint256"
+      }
     ],
-    stateMutability: 'view',
-    type: 'function',
+    "name": "UserOpSponsored",
+    "type": "event"
   },
   {
-    inputs: [],
-    name: 'SCOPE',
-    outputs: [
+    "inputs": [
       {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
+        "components": [
+          {
+            "internalType": "address",
+            "name": "sender",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "nonce",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes",
+            "name": "initCode",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes",
+            "name": "callData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "accountGasLimits",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "uint256",
+            "name": "preVerificationGas",
+            "type": "uint256"
+          },
+          {
+            "internalType": "bytes32",
+            "name": "gasFees",
+            "type": "bytes32"
+          },
+          {
+            "internalType": "bytes",
+            "name": "paymasterAndData",
+            "type": "bytes"
+          },
+          {
+            "internalType": "bytes",
+            "name": "signature",
+            "type": "bytes"
+          }
+        ],
+        "internalType": "struct PackedUserOperation",
+        "name": "userOp",
+        "type": "tuple"
+      }
     ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  
-  // State variables and functions
-  {
-    inputs: [],
-    name: 'currentRoot',
-    outputs: [
+    "name": "getMessageHash",
+    "outputs": [
       {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
     ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'currentRootIndex',
-    outputs: [
-      {
-        internalType: 'uint32',
-        name: '',
-        type: 'uint32',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'currentTreeDepth',
-    outputs: [
-      {
-        internalType: 'uint32',
-        name: '',
-        type: 'uint32',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'currentTreeSize',
-    outputs: [
-      {
-        internalType: 'uint32',
-        name: '',
-        type: 'uint32',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'dead',
-    outputs: [
-      {
-        internalType: 'bool',
-        name: '',
-        type: 'bool',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    inputs: [
+    "inputs": [
       {
-        internalType: 'uint256',
-        name: 'userCommitment',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'nullifier',
-        type: 'uint256',
-      },
+        "internalType": "bytes32",
+        "name": "",
+        "type": "bytes32"
+      }
     ],
-    name: 'getMessageHash',
-    outputs: [
+    "name": "userNullifiers",
+    "outputs": [
       {
-        internalType: 'bytes32',
-        name: '',
-        type: 'bytes32',
-      },
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
     ],
-    stateMutability: 'pure',
-    type: 'function',
+    "stateMutability": "view",
+    "type": "function"
   },
   {
-    inputs: [
+    "inputs": [
       {
-        internalType: 'address',
-        name: 'recipient',
-        type: 'address',
-      },
-      {
-        internalType: 'uint256',
-        name: 'amount',
-        type: 'uint256',
-      },
+        "internalType": "address",
+        "name": "",
+        "type": "address"
+      }
     ],
-    name: 'getRevenue',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
+    "name": "userNullifiersStates",
+    "outputs": [
       {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
     ],
-    name: 'nullifierGasUsage',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    name: 'roots',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'totalDeposit',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    name: 'userNullifiers',
-    outputs: [
-      {
-        internalType: 'uint256',
-        name: 'nullifier',
-        type: 'uint256',
-      },
-      {
-        internalType: 'bool',
-        name: 'isActive',
-        type: 'bool',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: '',
-        type: 'uint256',
-      },
-    ],
-    name: 'userNullifiersStates',
-    outputs: [
-      {
-        internalType: 'bool',
-        name: '',
-        type: 'bool',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  
-  // Events specific to CacheEnabled
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: 'address',
-        name: 'user',
-        type: 'address',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'amount',
-        type: 'uint256',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'commitment',
-        type: 'uint256',
-      },
-      {
-        indexed: false,
-        internalType: 'uint32',
-        name: 'leafIndex',
-        type: 'uint32',
-      },
-    ],
-    name: 'Deposited',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'leaf',
-        type: 'uint256',
-      },
-      {
-        indexed: false,
-        internalType: 'uint32',
-        name: 'leafIndex',
-        type: 'uint32',
-      },
-    ],
-    name: 'LeafInserted',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: 'uint256',
-        name: 'userCommitment',
-        type: 'uint256',
-      },
-      {
-        indexed: true,
-        internalType: 'uint256',
-        name: 'nullifier',
-        type: 'uint256',
-      },
-    ],
-    name: 'NullifierConsumed',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [],
-    name: 'PoolDied',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: 'address',
-        name: 'recipient',
-        type: 'address',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'amount',
-        type: 'uint256',
-      },
-    ],
-    name: 'RevenueWithdrawn',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: 'bytes32',
-        name: 'userOpHash',
-        type: 'bytes32',
-      },
-      {
-        indexed: true,
-        internalType: 'address',
-        name: 'sender',
-        type: 'address',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'nullifier',
-        type: 'uint256',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'gasUsed',
-        type: 'uint256',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'scope',
-        type: 'uint256',
-      },
-    ],
-    name: 'UserOpSponsored',
-    type: 'event',
-  },
+    "stateMutability": "view",
+    "type": "function"
+  }
 ] as const satisfies Abi;
 
 /**
