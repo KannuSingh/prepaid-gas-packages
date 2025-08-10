@@ -118,18 +118,23 @@ export function useSmartAccountCreation(
     setError(null); // Clear previous errors on new attempt
 
     try {
-      const publicClient = createPublicClient({
+      // Create account from private key
+      const owner = privateKeyToAccount(signerKey);
+
+      // Create a basic client for smart account
+      const basicClient = createPublicClient({
         chain: baseSepolia,
         transport: http(),
       });
 
-      const newSmartAccount = await toSimpleSmartAccount({
-        owner: privateKeyToAccount(signerKey),
-        client: publicClient,
+      // Use the simple approach with minimal client setup  
+      const newSmartAccount = await (toSimpleSmartAccount as any)({
+        owner,
+        client: basicClient,
         entryPoint: {
           address: entryPoint07Address,
           version: "0.7",
-        },
+        } as const,
         index: BigInt(0),
       });
 
@@ -164,21 +169,21 @@ export function useSmartAccountCreation(
       }
 
       // Create smart account client
-      const clientConfig: any = {
-        client: publicClient,
+      const smartAccountConfig: any = {
+        client: basicClient,
         account: newSmartAccount,
         bundlerTransport: http(CLIENT_CONFIG.bundler),
       };
 
       // Only add paymaster if it was successfully created
       if (paymasterClient) {
-        clientConfig.paymaster = {
+        smartAccountConfig.paymaster = {
           getPaymasterStubData:
             paymasterClient.getPaymasterStubData.bind(paymasterClient),
           getPaymasterData:
             paymasterClient.getPaymasterData.bind(paymasterClient),
         };
-        clientConfig.paymasterContext = paymasterConfig.paymasterContext;
+        smartAccountConfig.paymasterContext = paymasterConfig.paymasterContext;
         console.log("✅ Smart account configured with paymaster support");
       } else {
         console.log(
@@ -186,14 +191,14 @@ export function useSmartAccountCreation(
         );
       }
 
-      const newSmartAccountClient = createSmartAccountClient(clientConfig);
+      const newSmartAccountClient = createSmartAccountClient(smartAccountConfig);
 
       // Final check before setting state
       if (isMountedRef.current) {
         setSmartAccountClient(newSmartAccountClient);
         // Update current config ref to prevent recreation
         currentConfigRef.current = JSON.stringify({
-          poolId: paymasterConfig.poolId,
+          paymasterAddress: paymasterConfig.paymasterAddress,
           paymasterContext: paymasterConfig.paymasterContext,
         });
       }
@@ -223,7 +228,7 @@ export function useSmartAccountCreation(
     }
   }, [
     signerKey,
-    paymasterConfig?.poolId, // Only depend on specific fields to avoid object reference issues
+    paymasterConfig?.paymasterAddress, // Only depend on specific fields to avoid object reference issues
     paymasterConfig?.paymasterContext,
     smartAccountClient,
     isLoading,
@@ -243,7 +248,7 @@ export function useSmartAccountCreation(
     }
 
     const newConfigKey = JSON.stringify({
-      poolId: paymasterConfig.poolId,
+      paymasterAddress: paymasterConfig.paymasterAddress,
       paymasterContext: paymasterConfig.paymasterContext,
     });
 
@@ -255,7 +260,7 @@ export function useSmartAccountCreation(
       currentConfigRef.current = null;
     }
   }, [
-    paymasterConfig?.poolId,
+    paymasterConfig?.paymasterAddress,
     paymasterConfig?.paymasterContext,
     smartAccountClient,
   ]);
