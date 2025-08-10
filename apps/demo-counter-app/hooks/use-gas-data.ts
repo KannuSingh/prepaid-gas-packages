@@ -87,7 +87,7 @@ export function useGasData() {
 
       try {
         // Fetch gas data for all paymasters in parallel
-        const gasDataPromises = paymasters.map((paymaster) => 
+        const gasDataPromises = paymasters.map((paymaster) =>
           fetchGasDataForPaymaster(identity, paymaster.paymasterAddress, paymaster.joiningFee)
         );
 

@@ -1,9 +1,9 @@
 // file :demo-counter-app/components/features/counter/counter-status.tsx
-"use client";
+'use client';
 
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useSmartAccount } from "@/context/SmartAccountContext";
-import { useCounterActions } from "@/hooks/use-counter-actions";
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useSmartAccount } from '@/context/SmartAccountContext';
+import { useCounterActions } from '@/hooks/use-counter-actions';
 
 export function CounterStatus() {
   const { error: smartAccountError } = useSmartAccount();
@@ -22,7 +22,7 @@ export function CounterStatus() {
       {showSuccess && lastTxHash && (
         <Alert>
           <AlertDescription>
-            ✅ Transaction confirmed!{" "}
+            ✅ Transaction confirmed!{' '}
             <a
               href={`https://sepolia.basescan.org/tx/${lastTxHash}`}
               target="_blank"

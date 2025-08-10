@@ -1,10 +1,10 @@
 // file :demo-counter-app/context/PaymasterContext.tsx
-"use client";
+'use client';
 
-import React, { createContext, useContext, ReactNode } from "react";
-import { Identity } from "@semaphore-protocol/core";
-import type { PaymasterConfig } from "@/types/paymaster";
-import { usePaymasterStorage } from "@/hooks/use-paymaster-storage";
+import React, { createContext, useContext, ReactNode } from 'react';
+import { Identity } from '@semaphore-protocol/core';
+import type { PaymasterConfig } from '@/types/paymaster';
+import { usePaymasterStorage } from '@/hooks/use-paymaster-storage';
 
 interface PaymasterContextType {
   // State
@@ -20,21 +20,11 @@ interface PaymasterContextType {
   clearError: () => void;
 }
 
-const PaymasterContext = createContext<PaymasterContextType | undefined>(
-  undefined,
-);
+const PaymasterContext = createContext<PaymasterContextType | undefined>(undefined);
 
 export function PaymasterProvider({ children }: { children: ReactNode }) {
-  const {
-    config,
-    identity,
-    isConfigured,
-    error,
-    isInitialized,
-    setConfig,
-    clearConfig,
-    clearError,
-  } = usePaymasterStorage();
+  const { config, identity, isConfigured, error, isInitialized, setConfig, clearConfig, clearError } =
+    usePaymasterStorage();
 
   const value: PaymasterContextType = {
     // State
@@ -50,17 +40,13 @@ export function PaymasterProvider({ children }: { children: ReactNode }) {
     clearError,
   };
 
-  return (
-    <PaymasterContext.Provider value={value}>
-      {children}
-    </PaymasterContext.Provider>
-  );
+  return <PaymasterContext.Provider value={value}>{children}</PaymasterContext.Provider>;
 }
 
 export function usePaymaster() {
   const context = useContext(PaymasterContext);
   if (context === undefined) {
-    throw new Error("usePaymaster must be used within a PaymasterProvider");
+    throw new Error('usePaymaster must be used within a PaymasterProvider');
   }
   return context;
 }

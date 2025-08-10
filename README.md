@@ -4,11 +4,11 @@ NPM packages for privacy-preserving gas payments using Account Abstraction (ERC-
 
 ## Packages
 
-| Package | Description |
-|---------|-------------|
-| [`@prepaid-gas/core`](./packages/core) | Main SDK for privacy-preserving paymaster integration |
-| [`@prepaid-gas/data`](./packages/data) | Subgraph client with fluent query builders |
-| [`@prepaid-gas/constants`](./packages/constants) | Shared constants, ABIs, and network configurations |
+| Package                                          | Description                                           |
+| ------------------------------------------------ | ----------------------------------------------------- |
+| [`@prepaid-gas/core`](./packages/core)           | Main SDK for privacy-preserving paymaster integration |
+| [`@prepaid-gas/data`](./packages/data)           | Subgraph client with fluent query builders            |
+| [`@prepaid-gas/constants`](./packages/constants) | Shared constants, ABIs, and network configurations    |
 
 ## Quick Start
 
@@ -25,7 +25,7 @@ import { PrepaidGasPaymaster, encodePaymasterContext } from '@prepaid-gas/core';
 // Create client
 const paymaster = PrepaidGasPaymaster.createForNetwork(84532);
 
-// Create context  
+// Create context
 const context = encodePaymasterContext(paymasterAddress, identity);
 
 // Get paymaster data for transactions
@@ -45,10 +45,7 @@ import { SubgraphClient } from '@prepaid-gas/data';
 const client = SubgraphClient.createForNetwork(84532);
 
 // Query deposit activities
-const activities = await client.query()
-  .depositActivities()
-  .byPaymasterAddress(paymasterAddress)
-  .execute();
+const activities = await client.query().depositActivities().byPaymasterAddress(paymasterAddress).execute();
 ```
 
 ## Development
@@ -69,9 +66,9 @@ pnpm lint
 
 ## Supported Networks
 
-| Network | Chain ID | Status |
-|---------|----------|--------|
-| Base Sepolia | 84532 | ✅ Active |
+| Network      | Chain ID | Status    |
+| ------------ | -------- | --------- |
+| Base Sepolia | 84532    | ✅ Active |
 
 ## License
 

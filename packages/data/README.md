@@ -19,9 +19,10 @@ import { SubgraphClient } from '@prepaid-gas/data';
 const client = SubgraphClient.createForNetwork(84532);
 
 // Query deposit activities
-const activities = await client.query()
+const activities = await client
+  .query()
   .depositActivities()
-  .byPaymasterAddress("0x3BEeC075aC5A77fFE0F9ee4bbb3DCBd07fA93fbf")
+  .byPaymasterAddress('0x3BEeC075aC5A77fFE0F9ee4bbb3DCBd07fA93fbf')
   .orderBy('timestamp', 'desc')
   .limit(50)
   .execute();
@@ -33,9 +34,10 @@ console.log('Found activities:', activities.length);
 
 ```typescript
 // Query user operations with filtering
-const userOps = await client.query()
+const userOps = await client
+  .query()
   .userOperations()
-  .byPaymasterAddress("0x3BEeC075aC5A77fFE0F9ee4bbb3DCBd07fA93fbf")
+  .byPaymasterAddress('0x3BEeC075aC5A77fFE0F9ee4bbb3DCBd07fA93fbf')
   .successful()
   .orderBy('timestamp', 'desc')
   .limit(25)
@@ -60,34 +62,35 @@ new SubgraphClient(chainId: number, options?: {
 ### Query Builders
 
 #### Deposit Activities
+
 ```typescript
-const activities = await client.query()
+const activities = await client
+  .query()
   .depositActivities()
-  .byPaymasterAddress("0x...")
-  .byCommitment("123...")
+  .byPaymasterAddress('0x...')
+  .byCommitment('123...')
   .orderBy('timestamp', 'desc')
   .limit(100)
   .execute();
 ```
 
 #### User Operations
+
 ```typescript
-const userOps = await client.query()
+const userOps = await client
+  .query()
   .userOperations()
-  .byPaymasterAddress("0x...")
-  .bySender("0x...")
-  .successful()  // or .failed()
+  .byPaymasterAddress('0x...')
+  .bySender('0x...')
+  .successful() // or .failed()
   .orderBy('timestamp', 'desc')
   .execute();
 ```
 
 #### Paymaster Contracts
+
 ```typescript
-const paymasters = await client.query()
-  .paymasterContracts()
-  .byAddress("0x...")
-  .isActive()
-  .execute();
+const paymasters = await client.query().paymasterContracts().byAddress('0x...').isActive().execute();
 ```
 
 ### Execution Methods
@@ -102,6 +105,7 @@ const paymasters = await client.query()
 ## Data Types
 
 ### DepositActivity
+
 ```typescript
 interface DepositActivity {
   id: string;
@@ -114,6 +118,7 @@ interface DepositActivity {
 ```
 
 ### UserOperation
+
 ```typescript
 interface UserOperation {
   id: string;
@@ -139,9 +144,9 @@ const deserialized = convertStringsToBigInts(serialized);
 
 ## Supported Networks
 
-| Network | Chain ID | Status |
-|---------|----------|--------|
-| Base Sepolia | 84532 | ✅ Active |
+| Network      | Chain ID | Status    |
+| ------------ | -------- | --------- |
+| Base Sepolia | 84532    | ✅ Active |
 
 ## License
 

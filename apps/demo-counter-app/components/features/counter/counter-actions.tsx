@@ -1,10 +1,10 @@
 // file :demo-counter-app/components/features/counter/counter-actions.tsx
-"use client";
+'use client';
 
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Plus, Loader2, RefreshCw } from "lucide-react";
-import { useCounterActions } from "@/hooks/use-counter-actions";
+import { useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Plus, Loader2, RefreshCw } from 'lucide-react';
+import { useCounterActions } from '@/hooks/use-counter-actions';
 
 interface CounterActionsProps {
   counterHook: {
@@ -30,12 +30,7 @@ export function CounterActions({ counterHook }: CounterActionsProps) {
     <div className="space-y-4">
       {/* Increment Button */}
       <div className="flex justify-center">
-        <Button
-          onClick={increment}
-          disabled={isLoading}
-          size="lg"
-          className="px-8"
-        >
+        <Button onClick={increment} disabled={isLoading} size="lg" className="px-8">
           {isLoading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -52,17 +47,8 @@ export function CounterActions({ counterHook }: CounterActionsProps) {
 
       {/* Refresh Button */}
       <div className="flex justify-center">
-        <Button
-          onClick={readCount}
-          disabled={isReading}
-          variant="ghost"
-          size="sm"
-        >
-          {isReading ? (
-            <Loader2 className="h-4 w-4 animate-spin mr-2" />
-          ) : (
-            <RefreshCw className="h-4 w-4 mr-2" />
-          )}
+        <Button onClick={readCount} disabled={isReading} variant="ghost" size="sm">
+          {isReading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <RefreshCw className="h-4 w-4 mr-2" />}
           Refresh Count
         </Button>
       </div>

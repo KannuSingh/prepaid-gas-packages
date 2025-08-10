@@ -1,11 +1,11 @@
 // file :demo-counter-app/components/features/paymaster/paymaster-status.tsx
-"use client";
+'use client';
 
-import { useMemo } from "react";
-import { CheckCircle } from "lucide-react";
-import { usePaymaster } from "@/context/PaymasterContext";
-import { Button } from "@/components/ui/button";
-import { PrepaidGasPaymaster } from "@prepaid-gas/core";
+import { useMemo } from 'react';
+import { CheckCircle } from 'lucide-react';
+import { usePaymaster } from '@/context/PaymasterContext';
+import { Button } from '@/components/ui/button';
+import { PrepaidGasPaymaster } from '@prepaid-gas/core';
 
 interface PaymasterStatusProps {
   onClear: () => void;
@@ -18,11 +18,9 @@ function getPaymasterType(address: string): string {
     const chainId = 84532;
     const paymaster = PrepaidGasPaymaster.createForNetwork(chainId);
     const supportedPaymasters = paymaster.getSupportedPaymasters();
-    
-    const match = supportedPaymasters.find(
-      (p) => p.address.toLowerCase() === address.toLowerCase()
-    );
-    
+
+    const match = supportedPaymasters.find((p) => p.address.toLowerCase() === address.toLowerCase());
+
     if (match) {
       // Convert from technical names to user-friendly names
       switch (match.type) {
@@ -39,8 +37,8 @@ function getPaymasterType(address: string): string {
   } catch (error) {
     console.warn('Failed to determine paymaster type:', error);
   }
-  
-  return "Unknown";
+
+  return 'Unknown';
 }
 
 // Helper function to truncate address for display
@@ -54,7 +52,7 @@ export function PaymasterStatus({ onClear }: PaymasterStatusProps) {
   // Memoize paymaster type calculation to avoid re-creating client on every render
   const paymasterInfo = useMemo(() => {
     if (!paymasterConfig?.paymasterAddress) {
-      return { type: "Unknown", truncatedAddress: "" };
+      return { type: 'Unknown', truncatedAddress: '' };
     }
 
     return {

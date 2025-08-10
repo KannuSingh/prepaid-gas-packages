@@ -1,28 +1,22 @@
 // file: apps/demo/hooks/use-smart-account-creation.ts
-import { useState, useEffect, useRef, useCallback } from "react";
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { toSimpleSmartAccount } from "permissionless/accounts";
-import { createSmartAccountClient } from "permissionless";
-import { entryPoint07Address } from "viem/account-abstraction";
-import { CLIENT_CONFIG, STORAGE_KEYS } from "@/constants/config";
-import { createPublicClient, http } from "viem";
-import { PrepaidGasPaymaster } from "@prepaid-gas/core";
-import type { PaymasterConfig } from "@/types/paymaster";
-import { baseSepolia } from "viem/chains";
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { generatePrivateKey, privateKeyToAccount } from 'viem/accounts';
+import { toSimpleSmartAccount } from 'permissionless/accounts';
+import { createSmartAccountClient } from 'permissionless';
+import { entryPoint07Address } from 'viem/account-abstraction';
+import { CLIENT_CONFIG, STORAGE_KEYS } from '@/constants/config';
+import { createPublicClient, http } from 'viem';
+import { PrepaidGasPaymaster } from '@prepaid-gas/core';
+import type { PaymasterConfig } from '@/types/paymaster';
+import { baseSepolia } from 'viem/chains';
 
 type BurnerSignerKey = `0x${string}`;
 type SmartAccountClient = any;
 const BURNER_SIGNER_KEY = STORAGE_KEYS.burnerSignerKey;
 
-export function useSmartAccountCreation(
-  paymasterConfig: PaymasterConfig | null,
-) {
-  const [smartAccountClient, setSmartAccountClient] = useState<
-    SmartAccountClient | undefined
-  >(undefined);
-  const [signerKey, setSignerKey] = useState<BurnerSignerKey | undefined>(
-    undefined,
-  );
+export function useSmartAccountCreation(paymasterConfig: PaymasterConfig | null) {
+  const [smartAccountClient, setSmartAccountClient] = useState<SmartAccountClient | undefined>(undefined);
+  const [signerKey, setSignerKey] = useState<BurnerSignerKey | undefined>(undefined);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -47,9 +41,7 @@ export function useSmartAccountCreation(
 
     const loadStoredSignerKey = () => {
       try {
-        let storedSignerKey = localStorage.getItem(
-          BURNER_SIGNER_KEY,
-        ) as BurnerSignerKey | null;
+        let storedSignerKey = localStorage.getItem(BURNER_SIGNER_KEY) as BurnerSignerKey | null;
 
         if (!storedSignerKey) {
           const privateKey = generatePrivateKey();
@@ -61,12 +53,10 @@ export function useSmartAccountCreation(
           setSignerKey(storedSignerKey);
         }
       } catch (err) {
-        console.error("Failed to load or generate burner EOA:", err);
+        console.error('Failed to load or generate burner EOA:', err);
 
         if (isMountedRef.current) {
-          setError(
-            "Failed to securely load or generate account. Please clear site data.",
-          );
+          setError('Failed to securely load or generate account. Please clear site data.');
         }
 
         // If localStorage is corrupted or inaccessible, try to generate a new one
@@ -78,11 +68,9 @@ export function useSmartAccountCreation(
             localStorage.setItem(BURNER_SIGNER_KEY, privateKey);
           }
         } catch (retryErr) {
-          console.error("Failed to generate new key after error:", retryErr);
+          console.error('Failed to generate new key after error:', retryErr);
           if (isMountedRef.current) {
-            setError(
-              "Persistent error: Cannot create or access local storage for account.",
-            );
+            setError('Persistent error: Cannot create or access local storage for account.');
           }
         }
       } finally {
@@ -95,11 +83,11 @@ export function useSmartAccountCreation(
 
   const createSmartAccount = useCallback(async () => {
     if (!signerKey) {
-      setError("Signer Key not available to create Smart Account.");
+      setError('Signer Key not available to create Smart Account.');
       return;
     }
     if (!paymasterConfig) {
-      setError("Paymaster configuration is required to create Smart Account.");
+      setError('Paymaster configuration is required to create Smart Account.');
       return;
     }
     if (smartAccountClient) {
@@ -127,13 +115,13 @@ export function useSmartAccountCreation(
         transport: http(),
       });
 
-      // Use the simple approach with minimal client setup  
+      // Use the simple approach with minimal client setup
       const newSmartAccount = await (toSimpleSmartAccount as any)({
         owner,
         client: basicClient,
         entryPoint: {
           address: entryPoint07Address,
-          version: "0.7",
+          version: '0.7',
         } as const,
         index: BigInt(0),
       });
@@ -152,19 +140,12 @@ export function useSmartAccountCreation(
           paymasterClient = PrepaidGasPaymaster.createForNetwork(84532, {
             subgraphUrl: CLIENT_CONFIG.subgraph,
           });
-          console.log(
-            "✅ Paymaster client initialized with new factory method",
-          );
+          console.log('✅ Paymaster client initialized with new factory method');
         } else {
-          console.warn(
-            "🚧 No subgraph URL configured, creating smart account without paymaster",
-          );
+          console.warn('🚧 No subgraph URL configured, creating smart account without paymaster');
         }
       } catch (paymasterError) {
-        console.warn(
-          "🚧 Failed to initialize paymaster, creating smart account without it:",
-          paymasterError,
-        );
+        console.warn('🚧 Failed to initialize paymaster, creating smart account without it:', paymasterError);
         // Continue without paymaster
       }
 
@@ -178,17 +159,13 @@ export function useSmartAccountCreation(
       // Only add paymaster if it was successfully created
       if (paymasterClient) {
         smartAccountConfig.paymaster = {
-          getPaymasterStubData:
-            paymasterClient.getPaymasterStubData.bind(paymasterClient),
-          getPaymasterData:
-            paymasterClient.getPaymasterData.bind(paymasterClient),
+          getPaymasterStubData: paymasterClient.getPaymasterStubData.bind(paymasterClient),
+          getPaymasterData: paymasterClient.getPaymasterData.bind(paymasterClient),
         };
         smartAccountConfig.paymasterContext = paymasterConfig.paymasterContext;
-        console.log("✅ Smart account configured with paymaster support");
+        console.log('✅ Smart account configured with paymaster support');
       } else {
-        console.log(
-          "ℹ️ Smart account created without paymaster (will use regular ETH for gas)",
-        );
+        console.log('ℹ️ Smart account created without paymaster (will use regular ETH for gas)');
       }
 
       const newSmartAccountClient = createSmartAccountClient(smartAccountConfig);
@@ -203,9 +180,9 @@ export function useSmartAccountCreation(
         });
       }
     } catch (err) {
-      console.error("Failed to create Smart Account:", err);
+      console.error('Failed to create Smart Account:', err);
       if (isMountedRef.current) {
-        setError((err as Error).message || "Failed to create Smart Account.");
+        setError((err as Error).message || 'Failed to create Smart Account.');
       }
     } finally {
       if (isMountedRef.current) {
@@ -217,13 +194,7 @@ export function useSmartAccountCreation(
   // Auto-create Smart Account when both signerKey and paymasterConfig are available
   useEffect(() => {
     // Only attempt to auto-create if signerKey has been loaded, paymasterConfig is available, and no smartAccountClient exists yet
-    if (
-      isSignerKeyLoadedRef.current &&
-      signerKey &&
-      paymasterConfig &&
-      !smartAccountClient &&
-      !isLoading
-    ) {
+    if (isSignerKeyLoadedRef.current && signerKey && paymasterConfig && !smartAccountClient && !isLoading) {
       createSmartAccount();
     }
   }, [
@@ -254,16 +225,12 @@ export function useSmartAccountCreation(
 
     // Only clear if the config actually changed
     if (currentConfigRef.current && currentConfigRef.current !== newConfigKey) {
-      console.log("Paymaster config changed, clearing smart account client");
+      console.log('Paymaster config changed, clearing smart account client');
       setSmartAccountClient(undefined);
       setError(null);
       currentConfigRef.current = null;
     }
-  }, [
-    paymasterConfig?.paymasterAddress,
-    paymasterConfig?.paymasterContext,
-    smartAccountClient,
-  ]);
+  }, [paymasterConfig?.paymasterAddress, paymasterConfig?.paymasterContext, smartAccountClient]);
 
   const clearError = useCallback(() => {
     setError(null);

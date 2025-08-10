@@ -1,8 +1,8 @@
 // file :demo-counter-app/components/features/counter/counter-display.tsx
-"use client";
+'use client';
 
-import { Loader2 } from "lucide-react";
-import { formatNumber } from "@/lib/utils";
+import { Loader2 } from 'lucide-react';
+import { formatNumber } from '@/lib/utils';
 
 interface CounterDisplayProps {
   counterHook: {

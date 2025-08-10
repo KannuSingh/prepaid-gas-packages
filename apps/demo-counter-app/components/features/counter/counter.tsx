@@ -1,22 +1,17 @@
 // file :demo-counter-app/components/features/counter/counter.tsx
-"use client";
+'use client';
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { usePaymaster } from "@/context/PaymasterContext";
-import { useSmartAccount } from "@/context/SmartAccountContext";
-import { useCounterValue } from "@/hooks/use-counter-value";
-import { PaymasterSettings } from "../paymaster/paymaster-settings";
-import { CounterSetup } from "./counter-setup";
-import { CounterDisplay } from "./counter-display";
-import { CounterActions } from "./counter-actions";
-import { CounterStatus } from "./counter-status";
-import { SmartAccountInfo } from "./smart-account-info";
-import { ContractInfo } from "./contract-info";
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { usePaymaster } from '@/context/PaymasterContext';
+import { useSmartAccount } from '@/context/SmartAccountContext';
+import { useCounterValue } from '@/hooks/use-counter-value';
+import { PaymasterSettings } from '../paymaster/paymaster-settings';
+import { CounterSetup } from './counter-setup';
+import { CounterDisplay } from './counter-display';
+import { CounterActions } from './counter-actions';
+import { CounterStatus } from './counter-status';
+import { SmartAccountInfo } from './smart-account-info';
+import { ContractInfo } from './contract-info';
 
 export function Counter() {
   const { isConfigured: paymasterConfigured } = usePaymaster();

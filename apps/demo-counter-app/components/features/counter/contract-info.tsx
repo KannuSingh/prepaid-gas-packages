@@ -1,7 +1,7 @@
 // file :demo-counter-app/components/features/counter/contract-info.tsx
-"use client";
+'use client';
 
-import { COUNTER_CONTRACT_ADDRESS } from "@/lib/contracts/counter";
+import { COUNTER_CONTRACT_ADDRESS } from '@/lib/contracts/counter';
 
 export function ContractInfo() {
   return (

@@ -1,4 +1,9 @@
-import { GetPaymasterDataParameters, UserOperation, entryPoint07Address, toPackedUserOperation } from 'viem/account-abstraction';
+import {
+  GetPaymasterDataParameters,
+  UserOperation,
+  entryPoint07Address,
+  toPackedUserOperation,
+} from 'viem/account-abstraction';
 import { fromHex } from 'viem';
 import { generateProof, SemaphoreProof } from '@semaphore-protocol/proof';
 import { Identity } from '@semaphore-protocol/identity';

@@ -1,17 +1,16 @@
 // file :demo-counter-app/components/features/counter/counter-setup.tsx
-"use client";
+'use client';
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Settings, Loader2 } from "lucide-react";
-import { usePaymaster } from "@/context/PaymasterContext";
-import { useSmartAccount } from "@/context/SmartAccountContext";
-import { PaymasterSettings } from "../paymaster/paymaster-settings";
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Settings, Loader2 } from 'lucide-react';
+import { usePaymaster } from '@/context/PaymasterContext';
+import { useSmartAccount } from '@/context/SmartAccountContext';
+import { PaymasterSettings } from '../paymaster/paymaster-settings';
 
 export function CounterSetup() {
   const { paymasterConfig, isConfigured: paymasterConfigured } = usePaymaster();
-  const { smartAccountClient, isLoading: smartAccountLoading } =
-    useSmartAccount();
+  const { smartAccountClient, isLoading: smartAccountLoading } = useSmartAccount();
 
   return (
     <Card className="w-full max-w-md mx-auto">
@@ -23,12 +22,8 @@ export function CounterSetup() {
           <div className="text-xs text-muted-foreground space-y-2">
             <div className="flex items-center justify-between">
               <span>Paymaster Configuration:</span>
-              <span
-                className={
-                  paymasterConfigured ? "text-green-600" : "text-red-600"
-                }
-              >
-                {paymasterConfigured ? "✅ Configured" : "❌ Required"}
+              <span className={paymasterConfigured ? 'text-green-600' : 'text-red-600'}>
+                {paymasterConfigured ? '✅ Configured' : '❌ Required'}
               </span>
             </div>
 
@@ -42,18 +37,10 @@ export function CounterSetup() {
               <span>Smart Account Client:</span>
               <span
                 className={
-                  smartAccountClient
-                    ? "text-green-600"
-                    : smartAccountLoading
-                      ? "text-yellow-600"
-                      : "text-red-600"
+                  smartAccountClient ? 'text-green-600' : smartAccountLoading ? 'text-yellow-600' : 'text-red-600'
                 }
               >
-                {smartAccountClient
-                  ? "✅ Ready"
-                  : smartAccountLoading
-                    ? "⏳ Creating..."
-                    : "❌ Waiting"}
+                {smartAccountClient ? '✅ Ready' : smartAccountLoading ? '⏳ Creating...' : '❌ Waiting'}
               </span>
             </div>
 
@@ -73,14 +60,11 @@ export function CounterSetup() {
             </PaymasterSettings>
           )}
 
-          {paymasterConfigured &&
-            !smartAccountClient &&
-            !smartAccountLoading && (
-              <div className="text-xs text-red-600 bg-red-50 dark:bg-red-900/20 p-2 rounded">
-                Smart account creation failed. Please try reconfiguring
-                paymaster.
-              </div>
-            )}
+          {paymasterConfigured && !smartAccountClient && !smartAccountLoading && (
+            <div className="text-xs text-red-600 bg-red-50 dark:bg-red-900/20 p-2 rounded">
+              Smart account creation failed. Please try reconfiguring paymaster.
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
