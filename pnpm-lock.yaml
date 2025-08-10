@@ -4,6 +4,9 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+overrides:
+  '@noble/curves': 1.2.0
+
 importers:
 
   .:
@@ -81,8 +84,8 @@ importers:
         specifier: 15.4.1
         version: 15.4.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       permissionless:
-        specifier: ^0.2.50
-        version: 0.2.50(ox@0.6.7(typescript@5.8.3)(zod@3.22.4))(viem@2.31.7(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.22.4))
+        specifier: ^0.2.53
+        version: 0.2.53(ox@0.6.7(typescript@5.8.3)(zod@3.22.4))(viem@2.31.7(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.22.4))
       poseidon-lite:
         specifier: ^0.3.0
         version: 0.3.0
@@ -96,7 +99,7 @@ importers:
         specifier: ^3.3.1
         version: 3.3.1
       viem:
-        specifier: ^2.31.7
+        specifier: ^2.28.1
         version: 2.31.7(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.22.4)
     devDependencies:
       '@eslint/eslintrc':
@@ -179,7 +182,7 @@ importers:
         specifier: ^5.7.3
         version: 5.8.3
       viem:
-        specifier: ^2.31.3
+        specifier: ^2.28.1
         version: 2.31.7(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.22.4)
       vitest:
         specifier: ^2.1.8
@@ -234,7 +237,7 @@ importers:
         specifier: ^5.7.3
         version: 5.8.3
       viem:
-        specifier: ^2.31.3
+        specifier: ^2.28.1
         version: 2.31.7(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.22.4)
       vitest:
         specifier: ^2.1.8
@@ -1131,10 +1134,6 @@ packages:
 
   '@noble/curves@1.2.0':
     resolution: {integrity: sha512-oYclrNgRaM9SsBUBVbb8M6DTV7ZHRTKugureoYEncY5c65HOmRzvSiTE3y5CYaPYJA/GVkrhXEoF0M3Ya9PMnw==}
-
-  '@noble/curves@1.9.2':
-    resolution: {integrity: sha512-HxngEd2XUcg9xi20JkwlLCtYwfoFw4JGkuZpT+WlsPD4gB/cxkvTD8fSsoAnphGZhFdZYKeQIPCuFlWPm1uE0g==}
-    engines: {node: ^14.21.3 || >=16}
 
   '@noble/hashes@1.3.2':
     resolution: {integrity: sha512-MVC8EAQp7MvEcm30KWENFjgR+Mkmf+D189XJTkFIlwohU5hcBbn1ZkKq7KVTi2Hme3PMGF390DaL52beVrIihQ==}
@@ -4939,8 +4938,8 @@ packages:
     resolution: {integrity: sha512-//nshmD55c46FuFw26xV/xFAaB5HF9Xdap7HJBBnrKdAd6/GxDBaNA1870O79+9ueg61cZLSVc+OaFlfmObYVQ==}
     engines: {node: '>= 14.16'}
 
-  permissionless@0.2.50:
-    resolution: {integrity: sha512-e0guzxYzj5692CfNNS2g6dcOFrUcbABgUyOQZ+H4xKB5sOrvRqd+Fm/E4caOqB+8bKwqZhftMwb/pbjLL2u3wA==}
+  permissionless@0.2.53:
+    resolution: {integrity: sha512-i6oBYayleORBLCpXjavtdUmWvli6mI/mSySCR7WrAXyhOiuImwnQjZ4bzMPUYzj7j1au2FY6IkyyPkK/NJBe2g==}
     peerDependencies:
       ox: ^0.6.7
       viem: ^2.28.1
@@ -6978,10 +6977,6 @@ snapshots:
     dependencies:
       '@noble/hashes': 1.3.2
 
-  '@noble/curves@1.9.2':
-    dependencies:
-      '@noble/hashes': 1.8.0
-
   '@noble/hashes@1.3.2': {}
 
   '@noble/hashes@1.8.0': {}
@@ -8091,7 +8086,7 @@ snapshots:
 
   '@scure/bip32@1.7.0':
     dependencies:
-      '@noble/curves': 1.9.2
+      '@noble/curves': 1.2.0
       '@noble/hashes': 1.8.0
       '@scure/base': 1.2.6
 
@@ -11644,7 +11639,7 @@ snapshots:
   ox@0.6.7(typescript@5.8.3)(zod@3.22.4):
     dependencies:
       '@adraffy/ens-normalize': 1.11.0
-      '@noble/curves': 1.9.2
+      '@noble/curves': 1.2.0
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
@@ -11660,7 +11655,7 @@ snapshots:
     dependencies:
       '@adraffy/ens-normalize': 1.11.0
       '@noble/ciphers': 1.3.0
-      '@noble/curves': 1.9.2
+      '@noble/curves': 1.2.0
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0
@@ -11750,7 +11745,7 @@ snapshots:
 
   pathval@2.0.1: {}
 
-  permissionless@0.2.50(ox@0.6.7(typescript@5.8.3)(zod@3.22.4))(viem@2.31.7(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.22.4)):
+  permissionless@0.2.53(ox@0.6.7(typescript@5.8.3)(zod@3.22.4))(viem@2.31.7(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.22.4)):
     dependencies:
       viem: 2.31.7(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.22.4)
     optionalDependencies:
@@ -13005,7 +13000,7 @@ snapshots:
 
   viem@2.31.7(bufferutil@4.0.9)(typescript@5.8.3)(utf-8-validate@5.0.10)(zod@3.22.4):
     dependencies:
-      '@noble/curves': 1.9.2
+      '@noble/curves': 1.2.0
       '@noble/hashes': 1.8.0
       '@scure/bip32': 1.7.0
       '@scure/bip39': 1.6.0

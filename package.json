@@ -31,6 +31,8 @@
     "typecheck": "turbo typecheck",
     "test": "turbo test",
     "clean": "turbo clean",
+    "clean:node-modules": "rm -rf node_modules && rm -rf apps/*/node_modules && rm -rf packages/*/node_modules && rm -rf tools/*/node_modules",
+    "clean:all": "pnpm run clean && pnpm run clean:node-modules",
     "analyze": "turbo analyze",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md}\"",
@@ -52,5 +54,18 @@
   "engines": {
     "node": ">=20",
     "pnpm": ">=10"
+  },
+  "pnpm": {
+    "overrides": {
+      "@noble/curves": "1.2.0"
+    },
+    "ignoredBuiltDependencies": [
+      "@tailwindcss/oxide",
+      "bufferutil",
+      "esbuild",
+      "sharp",
+      "unrs-resolver",
+      "utf-8-validate"
+    ]
   }
 }
