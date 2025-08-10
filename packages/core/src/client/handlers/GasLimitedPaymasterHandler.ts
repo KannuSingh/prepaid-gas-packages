@@ -6,7 +6,7 @@ import {
 import { parsePaymasterContext } from '../../utils';
 import { GAS_LIMITED_POSTOP_GAS_LIMIT } from '@prepaid-gas/constants';
 import { createPublicClient, http, PublicClient } from 'viem';
-import { getChainById } from '../../utils';
+import { getChainById } from '@prepaid-gas/constants';
 import { GAS_LIMITED_PAYMASTER_ABI } from '@prepaid-gas/constants';
 import { GetPaymasterStubDataV7Parameters } from '../index';
 import { PaymasterHandler, PaymasterHandlerConfig } from './PaymasterHandler';
