@@ -21,7 +21,7 @@ const paymaster = PrepaidGasPaymaster.createForNetwork(84532);
 // Create context
 const context = encodePaymasterContext(
   '0x3BEeC075aC5A77fFE0F9ee4bbb3DCBd07fA93fbf', // paymaster address
-  'eyJpZGVudGl0eSI6ImRhdGEifQ=='               // identity (base64)
+  'eyJpZGVudGl0eSI6ImRhdGEifQ==' // identity (base64)
 );
 ```
 
@@ -34,7 +34,7 @@ const stubData = await paymaster.getPaymasterStubData({
   callData: '0x...',
   context,
   chainId: 84532,
-  entryPointAddress: '0x0000000071727De22E5E9d8BAf0edAc6f37da032'
+  entryPointAddress: '0x0000000071727De22E5E9d8BAf0edAc6f37da032',
 });
 ```
 
@@ -51,7 +51,7 @@ const paymasterData = await paymaster.getPaymasterData({
   preVerificationGas: 50000n,
   maxFeePerGas: 1000000000n,
   maxPriorityFeePerGas: 1000000000n,
-  context
+  context,
 });
 ```
 
@@ -96,19 +96,15 @@ paymaster.getSubgraphClient()           // Subgraph access
 ### Utility Functions
 
 ```typescript
-import { 
-  encodePaymasterContext, 
-  parsePaymasterContext,
-  PrepaidGasPaymasterMode 
-} from '@prepaid-gas/core';
+import { encodePaymasterContext, parsePaymasterContext, PrepaidGasPaymasterMode } from '@prepaid-gas/core';
 
-// Context encoding/decoding  
+// Context encoding/decoding
 const context = encodePaymasterContext(paymasterAddress, identity);
 const { paymasterAddress, identityHex } = parsePaymasterContext(context);
 
 // Operation modes
-PrepaidGasPaymasterMode.VALIDATION_MODE      // Real operations
-PrepaidGasPaymasterMode.GAS_ESTIMATION_MODE  // Gas estimation
+PrepaidGasPaymasterMode.VALIDATION_MODE; // Real operations
+PrepaidGasPaymasterMode.GAS_ESTIMATION_MODE; // Gas estimation
 ```
 
 ## Privacy Notice
@@ -117,9 +113,9 @@ PrepaidGasPaymasterMode.GAS_ESTIMATION_MODE  // Gas estimation
 
 ## Supported Networks
 
-| Network | Chain ID | Status |
-|---------|----------|--------|
-| Base Sepolia | 84532 | ✅ Active (Testnet) |
+| Network      | Chain ID | Status              |
+| ------------ | -------- | ------------------- |
+| Base Sepolia | 84532    | ✅ Active (Testnet) |
 
 ## License
 

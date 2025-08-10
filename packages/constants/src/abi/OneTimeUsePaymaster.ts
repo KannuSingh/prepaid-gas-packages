@@ -12,60 +12,60 @@ import { BASE_PAYMASTER_ABI } from './shared';
  */
 export const ONE_TIME_USE_PAYMASTER_SPECIFIC_ABI = [
   {
-    "inputs": [],
-    "name": "NullifierAlreadyUsed",
-    "type": "error"
+    inputs: [],
+    name: 'NullifierAlreadyUsed',
+    type: 'error',
   },
   {
-    "anonymous": false,
-    "inputs": [
+    anonymous: false,
+    inputs: [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "sender",
-        "type": "address"
+        indexed: true,
+        internalType: 'address',
+        name: 'sender',
+        type: 'address',
       },
       {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "userOpHash",
-        "type": "bytes32"
+        indexed: true,
+        internalType: 'bytes32',
+        name: 'userOpHash',
+        type: 'bytes32',
       },
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "actualGasCost",
-        "type": "uint256"
+        indexed: false,
+        internalType: 'uint256',
+        name: 'actualGasCost',
+        type: 'uint256',
       },
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "nullifierUsed",
-        "type": "uint256"
-      }
+        indexed: false,
+        internalType: 'uint256',
+        name: 'nullifierUsed',
+        type: 'uint256',
+      },
     ],
-    "name": "UserOpSponsoredWithNullifier",
-    "type": "event"
+    name: 'UserOpSponsoredWithNullifier',
+    type: 'event',
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
     ],
-    "name": "usedNullifiers",
-    "outputs": [
+    name: 'usedNullifiers',
+    outputs: [
       {
-        "internalType": "bool",
-        "name": "",
-        "type": "bool"
-      }
+        internalType: 'bool',
+        name: '',
+        type: 'bool',
+      },
     ],
-    "stateMutability": "view",
-    "type": "function"
-  }
+    stateMutability: 'view',
+    type: 'function',
+  },
 ] as const satisfies Abi;
 
 /**

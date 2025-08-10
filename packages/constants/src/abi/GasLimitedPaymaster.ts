@@ -12,55 +12,55 @@ import { BASE_PAYMASTER_ABI } from './shared';
  */
 export const GAS_LIMITED_PAYMASTER_SPECIFIC_ABI = [
   {
-    "anonymous": false,
-    "inputs": [
+    anonymous: false,
+    inputs: [
       {
-        "indexed": true,
-        "internalType": "address",
-        "name": "sender",
-        "type": "address"
+        indexed: true,
+        internalType: 'address',
+        name: 'sender',
+        type: 'address',
       },
       {
-        "indexed": true,
-        "internalType": "bytes32",
-        "name": "userOpHash",
-        "type": "bytes32"
+        indexed: true,
+        internalType: 'bytes32',
+        name: 'userOpHash',
+        type: 'bytes32',
       },
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "actualGasCost",
-        "type": "uint256"
+        indexed: false,
+        internalType: 'uint256',
+        name: 'actualGasCost',
+        type: 'uint256',
       },
       {
-        "indexed": false,
-        "internalType": "uint256",
-        "name": "nullifierUsed",
-        "type": "uint256"
-      }
+        indexed: false,
+        internalType: 'uint256',
+        name: 'nullifierUsed',
+        type: 'uint256',
+      },
     ],
-    "name": "UserOpSponsoredWithNullifier",
-    "type": "event"
+    name: 'UserOpSponsoredWithNullifier',
+    type: 'event',
   },
   {
-    "inputs": [
+    inputs: [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
     ],
-    "name": "nullifierGasUsage",
-    "outputs": [
+    name: 'nullifierGasUsage',
+    outputs: [
       {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
+        internalType: 'uint256',
+        name: '',
+        type: 'uint256',
+      },
     ],
-    "stateMutability": "view",
-    "type": "function"
-  }
+    stateMutability: 'view',
+    type: 'function',
+  },
 ] as const satisfies Abi;
 
 /**

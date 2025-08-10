@@ -1,6 +1,6 @@
 /**
  * ABI exports for PrepaidGas paymaster contracts
- * 
+ *
  * Optimized ABIs with shared base functionality to reduce bundle size.
  * Each paymaster exports one complete ABI and optionally specific-only items.
  */

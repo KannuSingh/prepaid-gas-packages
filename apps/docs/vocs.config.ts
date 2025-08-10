@@ -24,9 +24,7 @@ export default defineConfig({
     },
     {
       text: 'Core',
-      items: [
-        { text: 'SDK Integration', link: '/core/' },
-      ],
+      items: [{ text: 'SDK Integration', link: '/core/' }],
     },
     // {
     //   text: 'Data Package',

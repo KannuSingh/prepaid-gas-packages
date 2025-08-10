@@ -1,23 +1,16 @@
 // file :demo-counter-app/components/features/paymaster/pool-selector.tsx
-"use client";
+'use client';
 
-import { useState, useEffect, useRef } from "react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  ArrowLeft,
-  CheckCircle,
-  AlertTriangle,
-  Loader2,
-  Search,
-  Fuel,
-} from "lucide-react";
-import { Identity } from "@semaphore-protocol/core";
-import { formatEther } from "viem";
-import { ApiClient } from "@/lib/api-client";
-import { useGasData } from "@/hooks/use-gas-data";
+import { useState, useEffect, useRef } from 'react';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ArrowLeft, CheckCircle, AlertTriangle, Loader2, Search, Fuel } from 'lucide-react';
+import { Identity } from '@semaphore-protocol/core';
+import { formatEther } from 'viem';
+import { ApiClient } from '@/lib/api-client';
+import { useGasData } from '@/hooks/use-gas-data';
 
 interface CouponOption {
   paymasterAddress: string;
@@ -43,13 +36,7 @@ function formatGasAmount(amount: bigint): string {
   return `${formatEther(amount)} ETH`;
 }
 
-function GasUsageDisplay({
-  gasData,
-  isLoading,
-}: {
-  gasData: GasData | null;
-  isLoading: boolean;
-}) {
+function GasUsageDisplay({ gasData, isLoading }: { gasData: GasData | null; isLoading: boolean }) {
   if (isLoading) {
     return (
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
@@ -73,17 +60,13 @@ function GasUsageDisplay({
   return (
     <div className="space-y-1">
       <div className="flex items-center gap-2">
-        <Fuel
-          className={`h-3 w-3 ${isLowBalance ? "text-destructive" : "text-green-600"}`}
-        />
+        <Fuel className={`h-3 w-3 ${isLowBalance ? 'text-destructive' : 'text-green-600'}`} />
         <span className="text-xs font-medium">Gas Balance</span>
       </div>
       <div className="text-xs space-y-0.5">
         <div className="flex justify-between">
           <span className="text-muted-foreground">Deposited:</span>
-          <span className="font-mono">
-            {formatGasAmount(BigInt(joiningFee))}
-          </span>
+          <span className="font-mono">{formatGasAmount(BigInt(joiningFee))}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">Used:</span>
@@ -91,47 +74,29 @@ function GasUsageDisplay({
         </div>
         <div className="flex justify-between border-t pt-0.5">
           <span className="text-muted-foreground">Remaining:</span>
-          <span
-            className={`font-mono font-medium ${isLowBalance ? "text-destructive" : "text-green-600"}`}
-          >
+          <span className={`font-mono font-medium ${isLowBalance ? 'text-destructive' : 'text-green-600'}`}>
             {formatGasAmount(remainingGas)}
           </span>
         </div>
         {/* Add usage percentage */}
         <div className="flex justify-between text-xs text-muted-foreground">
           <span>Usage:</span>
-          <span>
-            {((Number(gasUsed) / Number(joiningFee)) * 100).toFixed(1)}%
-          </span>
+          <span>{((Number(gasUsed) / Number(joiningFee)) * 100).toFixed(1)}%</span>
         </div>
       </div>
-      {isLowBalance && (
-        <div className="text-xs text-destructive">
-          ⚠️ Low balance - consider topping up
-        </div>
-      )}
+      {isLowBalance && <div className="text-xs text-destructive">⚠️ Low balance - consider topping up</div>}
     </div>
   );
 }
 
-export function PoolSelector({
-  identity,
-  onBack,
-  onSelectPool,
-  isLoading,
-}: PoolSelectorProps) {
+export function PoolSelector({ identity, onBack, onSelectPool, isLoading }: PoolSelectorProps) {
   const [availableCoupons, setAvailableCoupons] = useState<CouponOption[]>([]);
   const [selectedCouponId, setSelectedCouponId] = useState<string>();
   const [isSearchingCoupons, setIsSearchingCoupons] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
   // Gas data hook
-  const {
-    gasDataMap,
-    isLoading: isLoadingGasData,
-    fetchGasData,
-    clearGasData,
-  } = useGasData();
+  const { gasDataMap, isLoading: isLoadingGasData, fetchGasData, clearGasData } = useGasData();
 
   // Track if search has been completed for this identity
   const searchedIdentityRef = useRef<string | null>(null);
@@ -187,11 +152,11 @@ export function PoolSelector({
           }
         }
       } catch (error) {
-        console.error("Error searching for coupons:", error);
+        console.error('Error searching for coupons:', error);
 
         // Only update state if component is still mounted
         if (isMountedRef.current) {
-          setSearchError("Failed to search for available pools");
+          setSearchError('Failed to search for available pools');
         }
       } finally {
         // Only update loading state if component is still mounted
@@ -221,17 +186,13 @@ export function PoolSelector({
           <ArrowLeft className="h-4 w-4 mr-2" />
           Back
         </Button>
-        <div className="text-sm text-muted-foreground">
-          Identity: {identity.commitment.toString().slice(0, 8)}...
-        </div>
+        <div className="text-sm text-muted-foreground">Identity: {identity.commitment.toString().slice(0, 8)}...</div>
       </div>
 
       {isSearchingCoupons ? (
         <div className="text-center py-8">
           <Search className="h-8 w-8 animate-pulse mx-auto mb-4 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            Searching blockchain for your pools...
-          </p>
+          <p className="text-sm text-muted-foreground">Searching blockchain for your pools...</p>
         </div>
       ) : searchError ? (
         <Alert variant="destructive">
@@ -242,31 +203,26 @@ export function PoolSelector({
         <Alert variant="destructive">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription>
-            No paymaster pools found for this identity. Make sure you have
-            joined a pool using this identity.
+            No paymaster pools found for this identity. Make sure you have joined a pool using this identity.
           </AlertDescription>
         </Alert>
       ) : (
         <div className="space-y-3">
-          <Label className="text-base font-medium">
-            Select Paymaster Pool ({availableCoupons.length} found)
-          </Label>
+          <Label className="text-base font-medium">Select Paymaster Pool ({availableCoupons.length} found)</Label>
           <div className="space-y-2 max-h-80 overflow-y-auto">
             {availableCoupons.map((coupon) => {
               const gasData = gasDataMap[coupon.paymasterAddress];
-              const hasLowBalance =
-                gasData &&
-                gasData.remainingGas <= BigInt(gasData.joiningFee) / BigInt(10);
+              const hasLowBalance = gasData && gasData.remainingGas <= BigInt(gasData.joiningFee) / BigInt(10);
 
               return (
                 <Card
                   key={coupon.paymasterAddress}
                   className={`cursor-pointer transition-colors ${
                     selectedCouponId === coupon.paymasterAddress
-                      ? "border-primary bg-primary/5"
+                      ? 'border-primary bg-primary/5'
                       : hasLowBalance
-                        ? "border-destructive/30 hover:border-destructive/50"
-                        : "hover:border-muted-foreground/50"
+                        ? 'border-destructive/30 hover:border-destructive/50'
+                        : 'hover:border-muted-foreground/50'
                   }`}
                   onClick={() => {
                     setSelectedCouponId(coupon.paymasterAddress);
@@ -276,21 +232,14 @@ export function PoolSelector({
                     <div className="flex items-start justify-between">
                       <div className="space-y-3 flex-1">
                         <div className="flex items-center justify-between">
-                          <div className="font-medium">
-                            Pool #{coupon.paymasterAddress}
-                          </div>
+                          <div className="font-medium">Pool #{coupon.paymasterAddress}</div>
                           {selectedCouponId === coupon.paymasterAddress && (
                             <CheckCircle className="h-5 w-5 text-primary" />
                           )}
                         </div>
 
                         {/* Gas Usage Information */}
-                        {gasData && (
-                          <GasUsageDisplay
-                            gasData={gasData}
-                            isLoading={isLoadingGasData}
-                          />
-                        )}
+                        {gasData && <GasUsageDisplay gasData={gasData} isLoading={isLoadingGasData} />}
                       </div>
                     </div>
                   </CardContent>
@@ -299,18 +248,14 @@ export function PoolSelector({
             })}
           </div>
 
-          <Button
-            onClick={handleSelectPool}
-            disabled={isLoading || !selectedCouponId}
-            className="w-full"
-          >
+          <Button onClick={handleSelectPool} disabled={isLoading || !selectedCouponId} className="w-full">
             {isLoading ? (
               <>
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
                 Saving Configuration...
               </>
             ) : (
-              "Save Paymaster Configuration"
+              'Save Paymaster Configuration'
             )}
           </Button>
         </div>
