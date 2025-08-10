@@ -9,5 +9,3 @@ export {
 } from './encoding';
 
 export type { ParsedPaymasterContext } from './encoding';
-
-export { getChainById } from './validation';
