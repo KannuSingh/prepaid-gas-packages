@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vocs dev",
     "build": "vocs build",
-    "preview": "vocs preview"
+    "preview": "vocs preview",
+    "clean": "rm -rf .vocs && rm -rf node_modules/.cache"
   },
   "dependencies": {
     "react": "latest",
