@@ -46,11 +46,9 @@
   "dependencies": {
     "@prepaid-gas/constants": "workspace:*",
     "@prepaid-gas/data": "workspace:*",
-    "@semaphore-protocol/core": "^4.11.1",
     "@semaphore-protocol/group": "^4.11.1",
     "@semaphore-protocol/identity": "^4.11.1",
-    "@semaphore-protocol/proof": "^4.11.1",
-    "poseidon-lite": "^0.3.0"
+    "@semaphore-protocol/proof": "^4.11.1"
   },
   "peerDependencies": {
     "viem": "^2.31.3"
