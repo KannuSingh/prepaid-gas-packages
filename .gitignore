@@ -34,5 +34,8 @@ lerna-debug.log*
 # Build outputs
 *.tsbuildinfo
 
+# Bundle analysis
+rollup-dist
+
 #AI
 CLAUDE.md
