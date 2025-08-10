@@ -1,4 +1,4 @@
 {
   "*.{ts,tsx,js,jsx,json,md}": ["prettier --write"],
-  "*.{ts,tsx}": ["eslint --fix", "bash -c 'pnpm typecheck'"]
+  "*.{ts,tsx}": ["eslint --fix", "tsc --noEmit --incremental"]
 }

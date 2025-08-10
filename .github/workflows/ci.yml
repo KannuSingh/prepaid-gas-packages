@@ -20,10 +20,24 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Extract pnpm version from package.json
+        id: get-pnpm-version
+        run: |
+          if jq -e '.packageManager' package.json > /dev/null; then
+            PM_FIELD=$(jq -r '.packageManager' package.json)
+            if [[ $PM_FIELD == pnpm@* ]]; then
+              echo "PNPM_VERSION=${PM_FIELD#pnpm@}" >> $GITHUB_ENV
+            else
+              echo "PNPM_VERSION=latest" >> $GITHUB_ENV
+            fi
+          else
+            echo "PNPM_VERSION=latest" >> $GITHUB_ENV
+          fi
+
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: '10.4.1'
+          version: ${{ env.PNPM_VERSION }}
 
       - name: Get pnpm store directory
         shell: bash
