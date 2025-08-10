@@ -50,8 +50,9 @@
     "@semaphore-protocol/group": "^4.11.1",
     "@semaphore-protocol/identity": "^4.11.1",
     "@semaphore-protocol/proof": "^4.11.1",
-    "permissionless": "^0.2.50",
-    "poseidon-lite": "^0.3.0",
+    "poseidon-lite": "^0.3.0"
+  },
+  "peerDependencies": {
     "viem": "^2.31.3"
   },
   "devDependencies": {
@@ -65,6 +66,7 @@
     "rollup-plugin-visualizer": "^6.0.3",
     "tsup": "^8.3.5",
     "typescript": "^5.7.3",
+    "viem": "^2.31.3",
     "vitest": "^2.1.8"
   }
 }

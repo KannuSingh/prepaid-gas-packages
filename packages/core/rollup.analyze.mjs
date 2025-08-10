@@ -21,7 +21,6 @@ export default defineConfig({
     '@semaphore-protocol/group', 
     '@semaphore-protocol/identity',
     '@semaphore-protocol/proof',
-    'permissionless',
     'viem',
     'poseidon-lite',
     // Workspace packages
