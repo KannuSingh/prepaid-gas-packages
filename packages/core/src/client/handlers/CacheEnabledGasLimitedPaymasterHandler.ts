@@ -21,7 +21,7 @@ import {
 import { GetPaymasterStubDataV7Parameters } from '../index';
 import { PaymasterHandler, PaymasterHandlerConfig } from './PaymasterHandler';
 import { PaymasterHandlerUtils } from './PaymasterHandlerUtils';
-import { getChainById } from '../../utils';
+import { getChainById } from '@prepaid-gas/constants';
 
 // Gas cost constants - measured from actual usage
 const AVERAGE_CACHED_FLOW_GAS_COST = 150_000n;

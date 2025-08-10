@@ -1,10 +1,10 @@
-import { GetPaymasterDataParameters, UserOperation, entryPoint07Address } from 'viem/account-abstraction';
+import { GetPaymasterDataParameters, UserOperation, entryPoint07Address, toPackedUserOperation } from 'viem/account-abstraction';
 import { fromHex } from 'viem';
-import { getPackedUserOperation } from 'permissionless';
 import { generateProof, SemaphoreProof } from '@semaphore-protocol/proof';
 import { Identity } from '@semaphore-protocol/identity';
 import { Group } from '@semaphore-protocol/group';
-import { generatePaymasterData, getChainById, PrepaidGasPaymasterMode } from '../../utils';
+import { generatePaymasterData, PrepaidGasPaymasterMode } from '../../utils';
+import { getChainById } from '@prepaid-gas/constants';
 import { getMessageHash } from '../../utils/getMessageHash';
 import { GetPaymasterStubDataV7Parameters, ProofGenerationParams, ProofGenerationResult } from '../index';
 import type { Activity } from '@prepaid-gas/data';
@@ -83,7 +83,7 @@ export class PaymasterHandlerUtils {
     }
 
     // Get message hash
-    const packedUserOpForHash = getPackedUserOperation(userOperation);
+    const packedUserOpForHash = toPackedUserOperation(userOperation);
     const messageHash = getMessageHash(packedUserOpForHash, BigInt(chain.id), entryPoint07Address);
 
     // Get pool members from subgraph

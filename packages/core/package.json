@@ -21,7 +21,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "test": "vitest",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist rollup-dist",
+    "analyze": "rollup -c rollup.analyze.mjs && open rollup-dist/bundle-analysis.html"
   },
   "publishConfig": {
     "access": "public",
@@ -43,22 +44,27 @@
   },
   "license": "MIT",
   "dependencies": {
-    "@prepaid-gas/data": "workspace:*",
     "@prepaid-gas/constants": "workspace:*",
-    "@semaphore-protocol/core": "^4.11.1",
+    "@prepaid-gas/data": "workspace:*",
     "@semaphore-protocol/group": "^4.11.1",
     "@semaphore-protocol/identity": "^4.11.1",
-    "@semaphore-protocol/proof": "^4.11.1",
-    "permissionless": "^0.2.50",
-    "poseidon-lite": "^0.3.0",
+    "@semaphore-protocol/proof": "^4.11.1"
+  },
+  "peerDependencies": {
     "viem": "^2.31.3"
   },
   "devDependencies": {
     "@prepaid-gas/eslint-config": "workspace:*",
     "@prepaid-gas/typescript-config": "workspace:*",
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.4",
     "eslint": "^9.17.0",
+    "rollup": "^4.46.2",
+    "rollup-plugin-visualizer": "^6.0.3",
     "tsup": "^8.3.5",
     "typescript": "^5.7.3",
+    "viem": "^2.31.3",
     "vitest": "^2.1.8"
   }
 }
