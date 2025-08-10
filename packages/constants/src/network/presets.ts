@@ -6,6 +6,8 @@
  * including subgraph URLs, RPC endpoints, and contract addresses.
  */
 
+import { baseSepolia } from 'viem/chains';
+import type { Chain } from 'viem';
 import type { NetworkName, ChainId, PaymasterType } from './config';
 
 /**
@@ -82,6 +84,53 @@ export const BASE_SEPOLIA_PRESET: NetworkPreset = {
   isProduction: false,
   deploymentStatus: 'active',
 };
+
+/**
+ * ========================================
+ * VIEM CHAIN SUPPORT
+ * ========================================
+ */
+
+/**
+ * Mapping of supported chain IDs to viem Chain objects
+ * Only includes chains that are actually supported by the paymaster system
+ */
+const SUPPORTED_CHAINS: Record<ChainId, Chain> = {
+  84532: baseSepolia,
+} as const;
+
+/**
+ * Get viem Chain object by chain ID
+ *
+ * @param chainId - The chain ID to look up
+ * @returns Chain configuration or undefined if not found
+ *
+ * @example
+ * ```typescript
+ * const chain = getChainById(84532); // Base Sepolia
+ * if (chain) {
+ *   console.log(chain.name); // "Base Sepolia"
+ * }
+ * ```
+ */
+export function getChainById(chainId: number): Chain | undefined {
+  return SUPPORTED_CHAINS[chainId as ChainId];
+}
+
+/**
+ * Get all supported viem Chain objects
+ *
+ * @returns Array of supported Chain objects
+ *
+ * @example
+ * ```typescript
+ * const chains = getSupportedChains();
+ * console.log(chains.length); // 1 (currently only Base Sepolia)
+ * ```
+ */
+export function getSupportedChains(): Chain[] {
+  return Object.values(SUPPORTED_CHAINS);
+}
 
 /**
  * ========================================
