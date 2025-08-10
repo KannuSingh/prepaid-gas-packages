@@ -10,6 +10,7 @@ export { BASE_PAYMASTER_ABI } from './shared';
 export { combineAbis, filterAbiByType } from './utils';
 
 // Complete paymaster ABIs (optimized with shared base)
+// Each file now exports properly typed ABIs with full viem type inference
 export * from './OneTimeUsePaymaster';
 export * from './GasLimitedPaymaster';
 export * from './CacheEnabledGasLimitedPaymaster';
