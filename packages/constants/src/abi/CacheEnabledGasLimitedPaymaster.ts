@@ -1,4 +1,18 @@
-export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI = [
+/**
+ * CacheEnabledGasLimitedPaymaster specific ABI items
+ * Contains only functions and events unique to this paymaster implementation
+ */
+
+import type { Abi } from 'viem';
+import { BASE_PAYMASTER_ABI } from './shared';
+import { combineAbis } from './utils';
+
+/**
+ * ABI items specific to CacheEnabledGasLimitedPaymaster
+ * Excludes common BasePaymaster functionality
+ */
+export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_SPECIFIC_ABI = [
+  // Constructor
   {
     inputs: [
       {
@@ -20,6 +34,8 @@ export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI = [
     stateMutability: 'nonpayable',
     type: 'constructor',
   },
+  
+  // Cache Enabled specific errors
   {
     inputs: [],
     name: 'AllNullifierSlotsActive',
@@ -48,11 +64,6 @@ export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI = [
   {
     inputs: [],
     name: 'InvalidDataLength',
-    type: 'error',
-  },
-  {
-    inputs: [],
-    name: 'InvalidEntryPoint',
     type: 'error',
   },
   {
@@ -102,225 +113,56 @@ export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI = [
   },
   {
     inputs: [],
-    name: 'OnlyPrepaidGasEntrypoint',
-    type: 'error',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: 'owner',
-        type: 'address',
-      },
-    ],
-    name: 'OwnableInvalidOwner',
-    type: 'error',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'address',
-        name: 'account',
-        type: 'address',
-      },
-    ],
-    name: 'OwnableUnauthorizedAccount',
+    name: 'NullifierSlotNotActive',
     type: 'error',
   },
   {
     inputs: [],
-    name: 'PoolHasNoMembers',
+    name: 'PoolDead',
     type: 'error',
   },
   {
     inputs: [],
-    name: 'PoolIsDead',
+    name: 'ProofLengthMismatch',
     type: 'error',
   },
   {
     inputs: [],
-    name: 'ProofVerificationFailed',
+    name: 'RootNotFound',
     type: 'error',
   },
   {
     inputs: [],
-    name: 'ScopeMismatch',
+    name: 'ScopeNotSupported',
     type: 'error',
   },
   {
     inputs: [],
-    name: 'SenderNotCached',
+    name: 'TreeDepthTooSmall',
     type: 'error',
   },
   {
     inputs: [],
-    name: 'UnauthorizedCaller',
+    name: 'TreeIsFull',
     type: 'error',
   },
   {
     inputs: [],
-    name: 'UnknownStateRoot',
+    name: 'UserNullifierAlreadyExists',
     type: 'error',
   },
   {
     inputs: [],
-    name: 'UserOpExceedsGasAmount',
+    name: 'WithdrawAmountExceedsRevenue',
     type: 'error',
   },
   {
     inputs: [],
-    name: 'WithdrawalNotAllowed',
+    name: 'ZeroValueProhibited',
     type: 'error',
   },
-  {
-    inputs: [],
-    name: 'ZeroAddress',
-    type: 'error',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: 'address',
-        name: '_depositor',
-        type: 'address',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: '_commitment',
-        type: 'uint256',
-      },
-    ],
-    name: 'Deposited',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: '_index',
-        type: 'uint256',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: '_leaf',
-        type: 'uint256',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: '_root',
-        type: 'uint256',
-      },
-    ],
-    name: 'LeafInserted',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: 'bytes32',
-        name: 'userOpHash',
-        type: 'bytes32',
-      },
-      {
-        indexed: true,
-        internalType: 'uint256',
-        name: 'nullifier',
-        type: 'uint256',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'gasUsed',
-        type: 'uint256',
-      },
-      {
-        indexed: false,
-        internalType: 'uint8',
-        name: 'index',
-        type: 'uint8',
-      },
-    ],
-    name: 'NullifierConsumed',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: 'address',
-        name: 'previousOwner',
-        type: 'address',
-      },
-      {
-        indexed: true,
-        internalType: 'address',
-        name: 'newOwner',
-        type: 'address',
-      },
-    ],
-    name: 'OwnershipTransferred',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [],
-    name: 'PoolDied',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: 'address',
-        name: 'withdrawAddress',
-        type: 'address',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'amount',
-        type: 'uint256',
-      },
-    ],
-    name: 'RevenueWithdrawn',
-    type: 'event',
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: 'address',
-        name: 'sender',
-        type: 'address',
-      },
-      {
-        indexed: true,
-        internalType: 'bytes32',
-        name: 'userOpHash',
-        type: 'bytes32',
-      },
-      {
-        indexed: false,
-        internalType: 'uint256',
-        name: 'actualGasCost',
-        type: 'uint256',
-      },
-    ],
-    name: 'UserOpSponsored',
-    type: 'event',
-  },
+  
+  // Constants
   {
     inputs: [],
     name: 'JOINING_AMOUNT',
@@ -352,7 +194,7 @@ export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI = [
     name: 'MEMBERSHIP_VERIFIER',
     outputs: [
       {
-        internalType: 'contract IVerifier',
+        internalType: 'address',
         name: '',
         type: 'address',
       },
@@ -399,26 +241,15 @@ export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI = [
     stateMutability: 'view',
     type: 'function',
   },
-  {
-    inputs: [
-      {
-        internalType: 'uint32',
-        name: 'unstakeDelaySec',
-        type: 'uint32',
-      },
-    ],
-    name: 'addStake',
-    outputs: [],
-    stateMutability: 'payable',
-    type: 'function',
-  },
+  
+  // State variables and functions
   {
     inputs: [],
     name: 'currentRoot',
     outputs: [
       {
         internalType: 'uint256',
-        name: '_root',
+        name: '',
         type: 'uint256',
       },
     ],
@@ -443,9 +274,9 @@ export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI = [
     name: 'currentTreeDepth',
     outputs: [
       {
-        internalType: 'uint256',
-        name: '_depth',
-        type: 'uint256',
+        internalType: 'uint32',
+        name: '',
+        type: 'uint32',
       },
     ],
     stateMutability: 'view',
@@ -456,9 +287,9 @@ export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI = [
     name: 'currentTreeSize',
     outputs: [
       {
-        internalType: 'uint256',
-        name: '_size',
-        type: 'uint256',
+        internalType: 'uint32',
+        name: '',
+        type: 'uint32',
       },
     ],
     stateMutability: 'view',
@@ -481,94 +312,13 @@ export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI = [
     inputs: [
       {
         internalType: 'uint256',
-        name: '_commitment',
+        name: 'userCommitment',
         type: 'uint256',
       },
-    ],
-    name: 'deposit',
-    outputs: [],
-    stateMutability: 'payable',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'entryPoint',
-    outputs: [
-      {
-        internalType: 'contract IEntryPoint',
-        name: '',
-        type: 'address',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'getDeposit',
-    outputs: [
       {
         internalType: 'uint256',
-        name: '',
+        name: 'nullifier',
         type: 'uint256',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        components: [
-          {
-            internalType: 'address',
-            name: 'sender',
-            type: 'address',
-          },
-          {
-            internalType: 'uint256',
-            name: 'nonce',
-            type: 'uint256',
-          },
-          {
-            internalType: 'bytes',
-            name: 'initCode',
-            type: 'bytes',
-          },
-          {
-            internalType: 'bytes',
-            name: 'callData',
-            type: 'bytes',
-          },
-          {
-            internalType: 'bytes32',
-            name: 'accountGasLimits',
-            type: 'bytes32',
-          },
-          {
-            internalType: 'uint256',
-            name: 'preVerificationGas',
-            type: 'uint256',
-          },
-          {
-            internalType: 'bytes32',
-            name: 'gasFees',
-            type: 'bytes32',
-          },
-          {
-            internalType: 'bytes',
-            name: 'paymasterAndData',
-            type: 'bytes',
-          },
-          {
-            internalType: 'bytes',
-            name: 'signature',
-            type: 'bytes',
-          },
-        ],
-        internalType: 'struct PackedUserOperation',
-        name: 'userOp',
-        type: 'tuple',
       },
     ],
     name: 'getMessageHash',
@@ -579,20 +329,25 @@ export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI = [
         type: 'bytes32',
       },
     ],
-    stateMutability: 'view',
+    stateMutability: 'pure',
     type: 'function',
   },
   {
-    inputs: [],
-    name: 'getRevenue',
-    outputs: [
+    inputs: [
+      {
+        internalType: 'address',
+        name: 'recipient',
+        type: 'address',
+      },
       {
         internalType: 'uint256',
-        name: '',
+        name: 'amount',
         type: 'uint256',
       },
     ],
-    stateMutability: 'view',
+    name: 'getRevenue',
+    outputs: [],
+    stateMutability: 'nonpayable',
     type: 'function',
   },
   {
@@ -615,58 +370,10 @@ export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI = [
     type: 'function',
   },
   {
-    inputs: [],
-    name: 'owner',
-    outputs: [
+    inputs: [
       {
-        internalType: 'address',
+        internalType: 'uint256',
         name: '',
-        type: 'address',
-      },
-    ],
-    stateMutability: 'view',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'enum IPaymaster.PostOpMode',
-        name: 'mode',
-        type: 'uint8',
-      },
-      {
-        internalType: 'bytes',
-        name: 'context',
-        type: 'bytes',
-      },
-      {
-        internalType: 'uint256',
-        name: 'actualGasCost',
-        type: 'uint256',
-      },
-      {
-        internalType: 'uint256',
-        name: 'actualUserOpFeePerGas',
-        type: 'uint256',
-      },
-    ],
-    name: 'postOp',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'renounceOwnership',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'uint256',
-        name: '_index',
         type: 'uint256',
       },
     ],
@@ -674,7 +381,7 @@ export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI = [
     outputs: [
       {
         internalType: 'uint256',
-        name: '_root',
+        name: '',
         type: 'uint256',
       },
     ],
@@ -697,37 +404,22 @@ export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI = [
   {
     inputs: [
       {
-        internalType: 'address',
-        name: 'newOwner',
-        type: 'address',
-      },
-    ],
-    name: 'transferOwnership',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [],
-    name: 'unlockStake',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'bytes32',
+        internalType: 'uint256',
         name: '',
-        type: 'bytes32',
+        type: 'uint256',
       },
     ],
     name: 'userNullifiers',
     outputs: [
       {
         internalType: 'uint256',
-        name: '',
+        name: 'nullifier',
         type: 'uint256',
+      },
+      {
+        internalType: 'bool',
+        name: 'isActive',
+        type: 'bool',
       },
     ],
     stateMutability: 'view',
@@ -736,132 +428,162 @@ export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI = [
   {
     inputs: [
       {
-        internalType: 'address',
+        internalType: 'uint256',
         name: '',
-        type: 'address',
+        type: 'uint256',
       },
     ],
     name: 'userNullifiersStates',
     outputs: [
       {
-        internalType: 'uint256',
+        internalType: 'bool',
         name: '',
-        type: 'uint256',
+        type: 'bool',
       },
     ],
     stateMutability: 'view',
     type: 'function',
   },
+  
+  // Events specific to CacheEnabled
   {
+    anonymous: false,
     inputs: [
       {
-        components: [
-          {
-            internalType: 'address',
-            name: 'sender',
-            type: 'address',
-          },
-          {
-            internalType: 'uint256',
-            name: 'nonce',
-            type: 'uint256',
-          },
-          {
-            internalType: 'bytes',
-            name: 'initCode',
-            type: 'bytes',
-          },
-          {
-            internalType: 'bytes',
-            name: 'callData',
-            type: 'bytes',
-          },
-          {
-            internalType: 'bytes32',
-            name: 'accountGasLimits',
-            type: 'bytes32',
-          },
-          {
-            internalType: 'uint256',
-            name: 'preVerificationGas',
-            type: 'uint256',
-          },
-          {
-            internalType: 'bytes32',
-            name: 'gasFees',
-            type: 'bytes32',
-          },
-          {
-            internalType: 'bytes',
-            name: 'paymasterAndData',
-            type: 'bytes',
-          },
-          {
-            internalType: 'bytes',
-            name: 'signature',
-            type: 'bytes',
-          },
-        ],
-        internalType: 'struct PackedUserOperation',
-        name: 'userOp',
-        type: 'tuple',
-      },
-      {
-        internalType: 'bytes32',
-        name: 'userOpHash',
-        type: 'bytes32',
-      },
-      {
-        internalType: 'uint256',
-        name: 'maxCost',
-        type: 'uint256',
-      },
-    ],
-    name: 'validatePaymasterUserOp',
-    outputs: [
-      {
-        internalType: 'bytes',
-        name: 'context',
-        type: 'bytes',
-      },
-      {
-        internalType: 'uint256',
-        name: 'validationData',
-        type: 'uint256',
-      },
-    ],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'address payable',
-        name: 'withdrawAddress',
-        type: 'address',
-      },
-    ],
-    name: 'withdrawStake',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
-  },
-  {
-    inputs: [
-      {
-        internalType: 'address payable',
-        name: 'withdrawAddress',
+        indexed: true,
+        internalType: 'address',
+        name: 'user',
         type: 'address',
       },
       {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'amount',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'commitment',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint32',
+        name: 'leafIndex',
+        type: 'uint32',
+      },
+    ],
+    name: 'Deposited',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'leaf',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint32',
+        name: 'leafIndex',
+        type: 'uint32',
+      },
+    ],
+    name: 'LeafInserted',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: 'uint256',
+        name: 'userCommitment',
+        type: 'uint256',
+      },
+      {
+        indexed: true,
+        internalType: 'uint256',
+        name: 'nullifier',
+        type: 'uint256',
+      },
+    ],
+    name: 'NullifierConsumed',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [],
+    name: 'PoolDied',
+    type: 'event',
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'recipient',
+        type: 'address',
+      },
+      {
+        indexed: false,
         internalType: 'uint256',
         name: 'amount',
         type: 'uint256',
       },
     ],
-    name: 'withdrawTo',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function',
+    name: 'RevenueWithdrawn',
+    type: 'event',
   },
-] as const;
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: 'bytes32',
+        name: 'userOpHash',
+        type: 'bytes32',
+      },
+      {
+        indexed: true,
+        internalType: 'address',
+        name: 'sender',
+        type: 'address',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'nullifier',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'gasUsed',
+        type: 'uint256',
+      },
+      {
+        indexed: false,
+        internalType: 'uint256',
+        name: 'scope',
+        type: 'uint256',
+      },
+    ],
+    name: 'UserOpSponsored',
+    type: 'event',
+  },
+] as const satisfies Abi;
+
+/**
+ * Complete ABI for CacheEnabledGasLimitedPaymaster
+ * Combines base paymaster functionality with specific functions
+ */
+export const CACHE_ENABLED_GAS_LIMITED_PAYMASTER_ABI = combineAbis([
+  BASE_PAYMASTER_ABI,
+  CACHE_ENABLED_GAS_LIMITED_PAYMASTER_SPECIFIC_ABI,
+]);
