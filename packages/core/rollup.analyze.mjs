@@ -45,7 +45,7 @@ export default defineConfig({
     visualizer({
       filename: 'rollup-dist/bundle-analysis.html',
       template: 'treemap', // 'sunburst', 'network', 'raw-data', 'list'
-      title: 'Prepaid Gas Core Bundle Analysis (Rollup)',
+      title: '@prepaid-gas/core Bundle Analysis',
       sourcemap: true,
       gzipSize: true,
       brotliSize: true,

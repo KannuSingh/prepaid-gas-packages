@@ -21,8 +21,8 @@
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "test": "vitest",
-    "clean": "rm -rf dist",
-    "analyze": "rollup -c rollup.config.mjs"
+    "clean": "rm -rf dist rollup-dist",
+    "analyze": "rollup -c rollup.analyze.mjs && open rollup-dist/bundle-analysis.html"
   },
   "publishConfig": {
     "access": "public",
