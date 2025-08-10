@@ -1,5 +1,5 @@
 {
   "*.{ts,tsx,js,jsx,json,md}": ["prettier --write"],
   "*.{ts,tsx}": ["eslint --fix"],
-  "*": ["tsc --noEmit --incremental"]
+  "*.{ts,tsx}": ["tsc --noEmit --incremental"]
 }
