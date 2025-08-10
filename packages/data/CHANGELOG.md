@@ -1,5 +1,37 @@
 # @prepaid-gas/data
 
+## 0.0.6
+
+### Patch Changes
+
+- ## Performance and Type Safety Improvements
+
+  ### @prepaid-gas/constants
+  - Implement proper ABI type inference with viem for better TypeScript support
+  - Add shared ABI utilities and base patterns for reduced bundle size
+  - Optimize paymaster ABIs with shared base pattern
+  - Add viem Chain support and getChainById utility
+  - Add bundle analysis tooling for package optimization
+
+  ### @prepaid-gas/core
+  - Update viem dependency for improved compatibility
+  - Remove permissionless dependency and optimize peer dependencies
+  - Add Rollup bundle analyzer for package size monitoring
+  - Improve TypeScript types and API consistency
+
+  ### @prepaid-gas/data
+  - Clean up unused imports for better tree-shaking
+  - Add Rollup bundle analyzer
+  - Improve query builder performance
+
+  ### General Improvements
+  - Standardize package scripts across all packages
+  - Add comprehensive bundle analysis configuration
+  - Improve code formatting and linting consistency
+
+- Updated dependencies
+  - @prepaid-gas/constants@0.0.6
+
 ## 0.0.5
 
 ### Patch Changes

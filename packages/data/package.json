@@ -1,6 +1,6 @@
 {
   "name": "@prepaid-gas/data",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Data layer for Prepaid Gas with fluent query builders",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
