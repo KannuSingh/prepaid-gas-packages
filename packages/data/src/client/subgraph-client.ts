@@ -1,5 +1,5 @@
 import { GraphQLClient } from 'graphql-request';
-import { getNetworkPreset, type NetworkPreset, type ChainId } from '@prepaid-gas/constants';
+import { getNetworkPreset, type ChainId } from '@prepaid-gas/constants';
 import { QueryBuilder } from '../query/query-builder.js';
 
 /**
